@@ -1,10 +1,11 @@
 # bot.py
 import asyncio
-
 import discord
-from sql_con import ZonixDB
+
+from bybit_con import create_session
 from config import Config
-from handler.place_order import place_order
+from handler.place_order import h_place_order
+from sql_con import ZonixDB
 
 # Client setup
 intents = discord.Intents.default()
@@ -12,8 +13,10 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 config = Config()
+
 dbcon = ZonixDB(config)  
 CHANNEL = None
+session = create_session(config.BYBIT_API_KEY, config.BYBIT_API_SECRET)
 
 def is_order(message):
     return "Leverage Cross x25" in message
@@ -37,7 +40,7 @@ async def on_message(message):
     
     if is_order(message.content):
         await asyncio.sleep(1)
-        place_order(dbcon, message.id)
+        h_place_order(dbcon, session, message.id)
 
 
 client.run(config.TOKEN)
