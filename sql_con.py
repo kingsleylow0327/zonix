@@ -13,7 +13,6 @@ class ZonixDB():
             config.DB_SCHEMA,
             config.DB_USERNAME,
             config.DB_PASSWORD)
-        self.cursor = self.create_cursor()
  
     def _create_pool(self, host, port, database, user, password):
         try:
@@ -25,39 +24,28 @@ class ZonixDB():
                 database=database,
                 user=user,
                 password=password)
-
-            connection_object = pool.get_connection()
-            if not connection_object.is_connected():
-                logger.info("DB Not connceted")
-                return None
             
-            logger.info("DB Connection Established")
-            return connection_object
+            logger.info("DB Pool Created")
+            return pool
 
         except Exception as e:
             logger.info(e)
-            logger.info("DB Connection Failed")
+            logger.info("DB Pool Failed")
             return None
-
-    def create_cursor(self, buffer=False):
-        # if need to iterate using cursor, set buffer to true
-        # https://docs.oracle.com/cd/E17952_01/connector-python-en/connector-python-tutorial-cursorbuffered.html
-        if not self.pool.is_connected():
-            logger.info("DB Not connceted")
-            return None
-
-        self.cursor = self.pool.cursor(dictionary=True, buffered=buffer)
-        return self.cursor
     
-    def close_cursor(self):
-        self.cursor.close()
+    def dbcon_manager(self, sql):
+        connection_object = self.pool.get_connection()
+        row = None
+        with connection_object as connection:
+            with connection.cursor(dictionary=True) as cursor:
+                cursor.execute(sql)
+                row = cursor.fetchone()
+        return row
     
     def get_order_detail_uat(self, message_id):
         sql = "select * from {} where message_id = {}".format(self.config.ORDER_TABLE, message_id)
-        try:
-            self.cursor.execute(sql)
-            return self.cursor.fetchone()
-        except Exception as e:
-            logger.info(e)
-            logger.info(sql)
-            return None
+        return self.dbcon_manager(sql)
+    
+    def close_cursor(self):
+        self.cursor.close()
+

@@ -28,7 +28,7 @@ def is_order(message):
 
 @client.event
 async def on_ready():
-    logger.info('Cornix Is Booted Up!')
+    logger.info('Zonix Is Booted Up!')
     global CHANNEL
     CHANNEL = client.get_channel(int(config.RECEIVER_CHANNEL_ID))
     #await channel.send('Cornix Is Booted Up!')
@@ -43,9 +43,16 @@ async def on_message(message):
     if message.author.id != int(config.ZODIAC_ID):
         return
     
-    if is_order(message.content):
-        await asyncio.sleep(1)
-        h_place_order(dbcon, session, message.id)
+    if not is_order(message.content):
+        return
+    
+    ret = "Empty Row"
+    for i in range(2):
+        await asyncio.sleep(2)
+        ret = h_place_order(dbcon, session, message.id)
+        if ret == "Order Placed":
+            break
 
+    logger.info(ret)
 
 client.run(config.TOKEN)

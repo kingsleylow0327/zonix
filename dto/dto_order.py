@@ -9,7 +9,7 @@ class dtoOrder():
         self.stop_loss = stop_loss
     
     def _change_side(self, side):
-        return "Sell" if side == "SHORT" else "Buy"
+        return "Sell" if side.upper() == "SHORT" else "Buy"
     
     def _strip_coin(self, symbol):
         return symbol.strip().replace("/","")
