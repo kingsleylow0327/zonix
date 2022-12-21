@@ -1,4 +1,9 @@
 from mysql.connector import pooling
+from logger import Logger
+
+# Logger setup
+logger_mod = Logger("DB")
+logger = logger_mod.get_logger()
 
 class ZonixDB():
     def __init__(self, config):
@@ -23,22 +28,22 @@ class ZonixDB():
 
             connection_object = pool.get_connection()
             if not connection_object.is_connected():
-                print("DB Not connceted")
+                logger.info("DB Not connceted")
                 return None
             
-            print("DB Connection Established")
+            logger.info("DB Connection Established")
             return connection_object
 
         except Exception as e:
-            print(e)
-            print("DB Connection Failed")
+            logger.info(e)
+            logger.info("DB Connection Failed")
             return None
 
     def create_cursor(self, buffer=False):
         # if need to iterate using cursor, set buffer to true
         # https://docs.oracle.com/cd/E17952_01/connector-python-en/connector-python-tutorial-cursorbuffered.html
         if not self.pool.is_connected():
-            print("DB Not connceted")
+            logger.info("DB Not connceted")
             return None
 
         self.cursor = self.pool.cursor(dictionary=True, buffered=buffer)
@@ -53,6 +58,6 @@ class ZonixDB():
             self.cursor.execute(sql)
             return self.cursor.fetchone()
         except Exception as e:
-            print(e)
-            print(sql)
+            logger.info(e)
+            logger.info(sql)
             return None

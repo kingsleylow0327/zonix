@@ -5,7 +5,12 @@ import discord
 from bybit_con import create_session
 from config import Config
 from handler.place_order import h_place_order
+from logger import Logger
 from sql_con import ZonixDB
+
+# Logger setup
+logger_mod = Logger("Initialized")
+logger = logger_mod.get_logger()
 
 # Client setup
 intents = discord.Intents.default()
@@ -23,10 +28,10 @@ def is_order(message):
 
 @client.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    logger.info('Cornix Is Booted Up!')
     global CHANNEL
     CHANNEL = client.get_channel(int(config.RECEIVER_CHANNEL_ID))
-    #await channel.send("I am ALIVE!")
+    #await channel.send('Cornix Is Booted Up!')
 
 @client.event
 async def on_message(message):
