@@ -78,5 +78,3 @@ def force_cross_25(session, symbol):
         sell_leverage=25)
     except Exception as e:
         print(e)
-
-
