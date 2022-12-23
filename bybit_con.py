@@ -43,6 +43,7 @@ def handle_execution(message):
     print("\n")
 
 def place_order(session, dtoOrder):
+    force_cross_25(session, dtoOrder.symbol)
     session.place_active_order(
             price=dtoOrder.target_price,
             symbol=dtoOrder.symbol,
@@ -59,28 +60,23 @@ def place_order(session, dtoOrder):
             position_idx=0,
         )
 
-if "__main__" == __name__:
-    target_price = 16660
-
-    order_detail = dtoOrder(
-        target_price,
-        "BTCUSDT",
-        "Buy",
-        0.01,
-        target_price + (target_price * 0.05),
-        target_price - (target_price * 0.05))
-    
-    session = create_session(BYBIT_API_KEY, BYBIT_API_SECRET)
-    ws = create_web_socket(BYBIT_API_KEY, BYBIT_API_SECRET)
-    ws.order_stream(callback=handle_order)
-    ws.execution_stream(callback=handle_execution)
-    #ws.position_stream(callback=handle_position)
+def force_cross_25(session, symbol):
+    try:
+        session.cross_isolated_margin_switch(
+        symbol=symbol,
+        is_isolated=True,
+        buy_leverage=25,
+        sell_leverage=25)
+    except Exception as e:
+        print(e)
 
     try:
-        place_order(session, order_detail)
+        session.cross_isolated_margin_switch(
+        symbol=symbol,
+        is_isolated=False,
+        buy_leverage=25,
+        sell_leverage=25)
     except Exception as e:
-        print("Failed to place oreder")
-        print("Error: " + str(e))
+        print(e)
 
-    while True:
-        time.sleep(1)
+

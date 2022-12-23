@@ -12,4 +12,4 @@ class dtoOrder():
         return "Sell" if side.upper() == "SHORT" else "Buy"
     
     def _strip_coin(self, symbol):
-        return symbol.strip().replace("/","")
+        return symbol.strip().replace("/","").upper()
