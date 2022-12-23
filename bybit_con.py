@@ -1,14 +1,9 @@
-import os
-from dotenv import load_dotenv
-
-import time
-from dto.dto_order import dtoOrder
-from time import sleep
+from logger import Logger
 from pybit import usdt_perpetual
 
-load_dotenv()
-BYBIT_API_KEY = os.getenv('BYBIT_API_KEY')
-BYBIT_API_SECRET = os.getenv('BYBIT_API_SECRET')
+# Logger setup
+logger_mod = Logger("Place Order")
+logger = logger_mod.get_logger()
 
 # Initialize web socket connection instance
 def create_web_socket(api_key, api_secret):    
@@ -44,21 +39,24 @@ def handle_execution(message):
 
 def place_order(session, dtoOrder):
     force_cross_25(session, dtoOrder.symbol)
-    session.place_active_order(
-            price=dtoOrder.target_price,
-            symbol=dtoOrder.symbol,
-            side=dtoOrder.side,
-            order_type="Limit",
-            qty=dtoOrder.quantity,
-            time_in_force="GoodTillCancel",
-            reduce_only=False,
-            close_on_trigger=False,
-            take_profit=dtoOrder.take_profit,
-            tp_trigger_by="LastPrice",
-            stop_loss=dtoOrder.stop_loss,
-            sl_trigger_by="LastPrice",
-            position_idx=0,
-        )
+    try:
+        session.place_active_order(
+                price=dtoOrder.target_price,
+                symbol=dtoOrder.symbol,
+                side=dtoOrder.side,
+                order_type="Limit",
+                qty=dtoOrder.quantity,
+                time_in_force="GoodTillCancel",
+                reduce_only=False,
+                close_on_trigger=False,
+                take_profit=dtoOrder.take_profit,
+                tp_trigger_by="LastPrice",
+                stop_loss=dtoOrder.stop_loss,
+                sl_trigger_by="LastPrice",
+                position_idx=0,
+            )
+    except Exception as e:
+        logger.info(e)
 
 def force_cross_25(session, symbol):
     try:
