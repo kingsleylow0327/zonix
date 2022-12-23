@@ -11,27 +11,23 @@ def h_place_order(dbcon, session, message_id):
     if result is None:
         return "Empty Row"
     
-    result["qty"] = calculate_qty(session, result["entry1"])
-    order_detail = dtoOrder(result["entry1"],
-        result["coinpair"],
-        result["long_short"],
-        result["qty"],
-        result["tp1"],
-        result["stop"])
-    place_order(session, order_detail)
-    # follow_order(order_detail)
+    api_pair_list = dbcon.get_followers_api(result["player_id"])
+    for item in api_pair_list:
+        try:
+            session = create_session(item["api_key"], item["api_secret"])
+            result["qty"] = calculate_qty(session, result["entry1"])
+            order_detail = dtoOrder(result["entry1"],
+                result["coinpair"],
+                result["long_short"],
+                result["qty"],
+                result["tp1"],
+                result["stop"])
+            place_order(session, order_detail)
+        except Exception as e:
+            logger.info("Follower {} not able to place order".format(item["follower_id"]))
+            logger.info(e)
+
     return "Order Placed"
-
-def follow_order(order_detail):
-    # DB get API Key and APi Secret
-
-
-    # Follower Session
-    session = create_session("", "")
-
-    # Calculate Follower quantity
-    order_detail.quantity = calculate_qty(session, order_detail.target_price)
-    place_order(session, order_detail)
 
 def calculate_qty(session, entry_price, percentage = 2):
     wallet = session.get_wallet_balance(coin="USDT")["result"]["USDT"]["equity"]

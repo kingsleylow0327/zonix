@@ -1,3 +1,5 @@
+from config import Config
+
 from mysql.connector import pooling
 from logger import Logger
 
@@ -33,18 +35,26 @@ class ZonixDB():
             logger.info("DB Pool Failed")
             return None
     
-    def dbcon_manager(self, sql):
+    def dbcon_manager(self, sql, get_all=False):
         connection_object = self.pool.get_connection()
         row = None
         with connection_object as connection:
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute(sql)
-                row = cursor.fetchone()
+                row = cursor.fetchall() if get_all else cursor.fetchone()
         return row
     
     def get_order_detail_uat(self, message_id):
-        sql = "select * from {} where message_id = {}".format(self.config.ORDER_TABLE, message_id)
+        sql = "select * from {} where message_id = '{}'".format(self.config.ORDER_TABLE, message_id)
         return self.dbcon_manager(sql)
+
+    def get_followers_api(self, player_id):
+        sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret
+        FROM {} as a
+        Left JOIN {} as f
+        ON f.follower_id = a.player_id
+        where f.player_id = '{}'""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id)
+        return self.dbcon_manager(sql, get_all=True)
     
     def close_cursor(self):
         self.cursor.close()

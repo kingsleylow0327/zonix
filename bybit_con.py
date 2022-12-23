@@ -58,7 +58,6 @@ def place_order(session, dtoOrder):
             sl_trigger_by="LastPrice",
             position_idx=0,
         )
-    
 
 if "__main__" == __name__:
     target_price = 16660
