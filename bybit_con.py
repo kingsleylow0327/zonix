@@ -37,10 +37,27 @@ def handle_execution(message):
     print(message)
     print("\n")
 
-def place_order(session, dtoOrder):
+def place_order(session, dtoOrder, is_multple=False):
     force_cross_25(session, dtoOrder.symbol)
     try:
-        session.place_active_order(
+        if not is_multple:
+            session.place_active_order(
+                    price=dtoOrder.target_price,
+                    symbol=dtoOrder.symbol,
+                    side=dtoOrder.side,
+                    order_type="Limit",
+                    qty=dtoOrder.quantity,
+                    time_in_force="GoodTillCancel",
+                    reduce_only=False,
+                    close_on_trigger=False,
+                    take_profit=dtoOrder.take_profit,
+                    tp_trigger_by="LastPrice",
+                    stop_loss=dtoOrder.stop_loss,
+                    sl_trigger_by="MarkPrice",
+                    position_idx=0,
+                )
+        else:
+            session.place_active_order(
                 price=dtoOrder.target_price,
                 symbol=dtoOrder.symbol,
                 side=dtoOrder.side,
@@ -49,10 +66,8 @@ def place_order(session, dtoOrder):
                 time_in_force="GoodTillCancel",
                 reduce_only=False,
                 close_on_trigger=False,
-                take_profit=dtoOrder.take_profit,
-                tp_trigger_by="LastPrice",
                 stop_loss=dtoOrder.stop_loss,
-                sl_trigger_by="LastPrice",
+                sl_trigger_by="MarkPrice",
                 position_idx=0,
             )
     except Exception as e:

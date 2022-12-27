@@ -1,5 +1,3 @@
-from config import Config
-
 from mysql.connector import pooling
 from logger import Logger
 
