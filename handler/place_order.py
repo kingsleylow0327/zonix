@@ -1,4 +1,5 @@
 from bybit_con import  create_session, place_order
+import decimal
 from dto.dto_order import dtoOrder
 from logger import Logger
 
@@ -15,7 +16,7 @@ def h_place_order(dbcon, session, message_id):
     for item in api_pair_list:
         try:
             session = create_session(item["api_key"], item["api_secret"])
-            result["qty"] = calculate_qty(session, result["entry1"])
+            result["qty"] = calculate_qty(session, result["entry1"], result["coinpair"])
             order_detail = dtoOrder(result["entry1"],
                 result["coinpair"],
                 result["long_short"],
@@ -29,10 +30,13 @@ def h_place_order(dbcon, session, message_id):
 
     return "Order Placed"
 
-def calculate_qty(session, entry_price, percentage = 2):
+def calculate_qty(session, entry_price, coin_info, percentage = 2):
     wallet = session.get_wallet_balance(coin="USDT")["result"]["USDT"]["equity"]
-    qty = (wallet * (percentage / 100) * 25)/entry_price
-    return "{:.3}".format(qty)
+    qty = (wallet * (percentage / 100) * float(coin_info["maxLeverage"]))/entry_price
+    
+    # Make it same decimal place
+    decimal_place = decimal.Decimal(coin_info["qtyStep"]).as_tuple().exponent * -1
+    return format(qty, '.{}f'.format(str(decimal_place)))
 
 def h_place_order_test(dbcon, message_id):
     result = dbcon.get_order_detail_uat(message_id)
@@ -49,25 +53,30 @@ def h_place_order_test(dbcon, message_id):
     # Count number of take profit
     tp_list = [x for x in [result["tp1"], result["tp2"], result["tp3"], result["tp4"]] if x != -1.0]
     tp_num = len(tp_list)
+
+    # Get Coin Info
+    coin_info = get_coin_info(result["coinpair"])
     
     for session in session_list:
         if result["entry2"] == -1.0:
-            total_qty = float(calculate_qty(session, entry_list[0], percentage = 2))
+            total_qty = float(calculate_qty(session, entry_list[0], coin_info, percentage = 2))
             for i in range(tp_num):
                 order_detail = dtoOrder(entry_list[0],
                     result["coinpair"],
                     result["long_short"],
                     total_qty/tp_num,
                     tp_list[i],
-                    result["stop"])
+                    result["stop"],
+                    coin_info["maxLeverage"])
                 place_order(session, order_detail)
         else:
             for i in range(2):
-                total_qty = float(calculate_qty(session, entry_list[i], percentage = 2))
+                total_qty = float(calculate_qty(session, entry_list[i], coin_info, percentage = 2))
                 order_detail = dtoOrder(entry_list[i],
                     result["coinpair"],
                     result["long_short"],
                     total_qty/2,
                     0,
-                    result["stop"])
-                place_order(session, order_detail, is_multple=True)      
+                    result["stop"],
+                    coin_info["maxLeverage"])
+                place_order(session, order_detail, is_multple=True)

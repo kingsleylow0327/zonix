@@ -1,9 +1,18 @@
 from logger import Logger
 from pybit import usdt_perpetual
+import json
+import requests
 
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
+
+def get_coin_info(coin):
+    r = requests.get("https://api-testnet.bybit.com/derivatives/v3/public/instruments-info?category=linear&symbol={}".format(coin))
+    result = json.loads(r.text)
+    return {"qtyStep":result["result"]["list"][0]["lotSizeFilter"]["qtyStep"],
+    "minOrderQty":result["result"]["list"][0]["lotSizeFilter"]["minOrderQty"],
+    "maxLeverage":result["result"]["list"][0]["leverageFilter"]["maxLeverage"]}
 
 # Initialize web socket connection instance
 def create_web_socket(api_key, api_secret):    
@@ -37,8 +46,8 @@ def handle_execution(message):
     print(message)
     print("\n")
 
-def place_order(session, dtoOrder, is_multple=False):
-    force_cross_25(session, dtoOrder.symbol)
+def place_order(session, dtoOrder, is_multple=False, is_condition=False):
+    force_cross_leverage(session, dtoOrder.symbol, dtoOrder['maxLeverage'])
     try:
         if not is_multple:
             session.place_active_order(
@@ -73,13 +82,13 @@ def place_order(session, dtoOrder, is_multple=False):
     except Exception as e:
         logger.info(e)
 
-def force_cross_25(session, symbol):
+def force_cross_leverage(session, symbol, lev):
     try:
         session.cross_isolated_margin_switch(
         symbol=symbol,
         is_isolated=True,
-        buy_leverage=25,
-        sell_leverage=25)
+        buy_leverage=lev,
+        sell_leverage=lev)
     except Exception as e:
         print(e)
 
@@ -87,7 +96,7 @@ def force_cross_25(session, symbol):
         session.cross_isolated_margin_switch(
         symbol=symbol,
         is_isolated=False,
-        buy_leverage=25,
-        sell_leverage=25)
+        buy_leverage=lev,
+        sell_leverage=lev)
     except Exception as e:
         print(e)
