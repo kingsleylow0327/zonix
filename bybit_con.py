@@ -48,6 +48,7 @@ def handle_execution(message):
 
 def place_order(session, dtoOrder, is_multple=False, is_condition=False):
     force_cross_leverage(session, dtoOrder.symbol, dtoOrder['maxLeverage'])
+    force_cross_leverage(session, dtoOrder.symbol, dtoOrder.leverage)
     try:
         if not is_multple:
             session.place_active_order(

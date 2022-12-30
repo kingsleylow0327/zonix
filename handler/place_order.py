@@ -55,7 +55,7 @@ def h_place_order_test(dbcon, message_id):
     tp_num = len(tp_list)
 
     # Get Coin Info
-    coin_info = get_coin_info(result["coinpair"])
+    coin_info = get_coin_info(result["coinpair"].strip().replace("/","").upper())
     
     for session in session_list:
         if result["entry2"] == -1.0:
