@@ -40,6 +40,7 @@ class ZonixDB():
             with connection.cursor(dictionary=True) as cursor:
                 cursor.execute(sql)
                 row = cursor.fetchall() if get_all else cursor.fetchone()
+                connection.commit()
         return row
     
     def get_order_detail_uat(self, message_id):
@@ -47,7 +48,7 @@ class ZonixDB():
         return self.dbcon_manager(sql)
 
     def get_followers_api(self, player_id):
-        sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret
+        sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, a.status
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id

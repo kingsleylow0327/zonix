@@ -6,6 +6,7 @@ import requests
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
+GLOBALDB = None
 
 def get_coin_info(coin):
     r = requests.get("https://api-testnet.bybit.com/derivatives/v3/public/instruments-info?category=linear&symbol={}".format(coin))
@@ -15,11 +16,14 @@ def get_coin_info(coin):
     "maxLeverage":result["result"]["list"][0]["leverageFilter"]["maxLeverage"]}
 
 # Initialize web socket connection instance
-def create_web_socket(api_key, api_secret):    
+def create_web_socket(api_key, api_secret, dbcon):
+    global GLOBALDB
+    GLOBALDB = dbcon   
     ws = usdt_perpetual.WebSocket(
         test=True,
         api_key=api_key,
         api_secret=api_secret)
+    ws.order_stream(handle_order)
     return ws
 
 # Initialize http connection instance
@@ -46,12 +50,12 @@ def handle_execution(message):
     print(message)
     print("\n")
 
-def place_order(session, dtoOrder, is_multple=False, is_condition=False):
-    force_cross_leverage(session, dtoOrder.symbol, dtoOrder['maxLeverage'])
+def place_order(session, dtoOrder, is_multple=False):
     force_cross_leverage(session, dtoOrder.symbol, dtoOrder.leverage)
+    ret = None
     try:
         if not is_multple:
-            session.place_active_order(
+            ret = session.place_active_order(
                     price=dtoOrder.target_price,
                     symbol=dtoOrder.symbol,
                     side=dtoOrder.side,
@@ -60,28 +64,37 @@ def place_order(session, dtoOrder, is_multple=False, is_condition=False):
                     time_in_force="GoodTillCancel",
                     reduce_only=False,
                     close_on_trigger=False,
-                    take_profit=dtoOrder.take_profit,
-                    tp_trigger_by="LastPrice",
                     stop_loss=dtoOrder.stop_loss,
                     sl_trigger_by="MarkPrice",
                     position_idx=0,
                 )
         else:
-            session.place_active_order(
-                price=dtoOrder.target_price,
+            dtoOrder.side = flip_side(dtoOrder.side)
+            ret = session.place_conditional_order(
                 symbol=dtoOrder.symbol,
+                order_type="Market",
                 side=dtoOrder.side,
-                order_type="Limit",
                 qty=dtoOrder.quantity,
+                base_price=dtoOrder.target_price,
+                stop_px=dtoOrder.take_profit,
                 time_in_force="GoodTillCancel",
-                reduce_only=False,
+                trigger_by="MarkPrice",
+                reduce_only=True,
                 close_on_trigger=False,
-                stop_loss=dtoOrder.stop_loss,
-                sl_trigger_by="MarkPrice",
                 position_idx=0,
             )
+
+        return ret
     except Exception as e:
         logger.info(e)
+
+def flip_side(side):
+    ret = side
+    if side == "Buy":
+        ret = "Sell"
+    else:
+        ret = "Buy"
+    return ret
 
 def force_cross_leverage(session, symbol, lev):
     try:

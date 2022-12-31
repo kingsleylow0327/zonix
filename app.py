@@ -49,7 +49,7 @@ async def on_message(message):
     ret = "Empty Row"
     for i in range(2):
         await asyncio.sleep(2)
-        ret = h_place_order(dbcon, session, message.id)
+        ret = h_place_order(dbcon, message.id)
         if ret == "Order Placed":
             break
 
