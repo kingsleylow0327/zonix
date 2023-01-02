@@ -22,8 +22,7 @@ def h_place_order(dbcon, message_id):
     
     # get api list
     api_pair_list = dbcon.get_followers_api(result["player_id"])
-    session_list = [{"session":create_session(x["api_key"], x["api_secret"]),
-        "is_player": x["status"]} for x in api_pair_list]
+    session_list = [{"session":create_session(x["api_key"], x["api_secret"])} for x in api_pair_list]
 
     # Count number of Entry Point
     entry_list = [x for x in [result["entry1"], result["entry2"]] if x != -1.0]
