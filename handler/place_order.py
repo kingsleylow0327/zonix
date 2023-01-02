@@ -56,21 +56,4 @@ def h_place_order(dbcon, message_id):
                         coin_info["maxLeverage"])
                 place_order(item["session"], order_detail)
 
-            # # Conditional
-            # single_current_qty = float(format(total_qty/entry_count/tp_num, '.{}f'.format(str(coin_qty_step))))
-            # exceeding_qty = total_qty/entry_count - (single_current_qty*tp_num) + single_current_qty
-            # exceeding_qty = float(format(exceeding_qty, '.{}f'.format(str(coin_qty_step))))
-            # for i in range(tp_num):
-            #     if i == tp_num -1:
-            #         single_current_qty = exceeding_qty
-            #     print("Conditional: ", single_current_qty)
-            #     order_detail = dtoOrder(entry_list[e],
-            #         result["coinpair"],
-            #         result["long_short"],
-            #         single_current_qty,
-            #         tp_list[i],
-            #         result["stop"],
-            #         coin_info["maxLeverage"])
-            #     place_order(item["session"], order_detail, is_multple=True)
-
-    return "Order Placed"
+    return "Order Placed" 
