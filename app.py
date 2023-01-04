@@ -9,7 +9,7 @@ from logger import Logger
 from sql_con import ZonixDB
 
 # Logger setup
-logger_mod = Logger("Initialized")
+logger_mod = Logger("Event")
 logger = logger_mod.get_logger()
 
 # Client setup

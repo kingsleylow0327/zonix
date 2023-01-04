@@ -22,7 +22,8 @@ def h_place_order(dbcon, message_id):
     
     # get api list
     api_pair_list = dbcon.get_followers_api(result["player_id"])
-    session_list = [{"session":create_session(x["api_key"], x["api_secret"])} for x in api_pair_list]
+    session_list = [{"session":create_session(x["api_key"], x["api_secret"]),
+        "role": x["role"]} for x in api_pair_list]
 
     # Count number of Entry Point
     entry_list = [x for x in [result["entry1"], result["entry2"]] if x != -1.0]
@@ -35,9 +36,14 @@ def h_place_order(dbcon, message_id):
     # Get Coin Info
     coin_info = get_coin_info(result["coinpair"].strip().replace("/","").upper())
     coin_qty_step = str(decimal.Decimal(coin_info["qtyStep"]).as_tuple().exponent * -1)
-            
-    for item in session_list:        
-        for e in range(entry_count): 
+    
+    p_order_id_list = []
+    order_id_list = []
+
+    for item in session_list:
+        is_player = item["role"] == "player"
+        sub_order_id_list = []
+        for e in range(entry_count):
             total_qty = float(calculate_qty(item["session"], entry_list[0], coin_info, percentage = 2))
             # Entry
             single_current_qty = float(format(total_qty/entry_count/tp_num, '.{}f'.format(str(coin_qty_step))))
@@ -53,6 +59,22 @@ def h_place_order(dbcon, message_id):
                         tp_list[i],
                         result["stop"],
                         coin_info["maxLeverage"])
-                place_order(item["session"], order_detail)
+                order = place_order(item["session"], order_detail)
+                if order == "error":
+                    return
+                if is_player:
+                    p_order_id_list.append(order["result"]["order_id"])
+                sub_order_id_list.append(order["result"]["order_id"])
+        order_id_list.append(sub_order_id_list)
+    h_map = {}
+    for i in range(len(p_order_id_list)):
+        h_map[p_order_id_list[i]] = []
+        for o_id in order_id_list:
+            h_map[p_order_id_list[i]].append(o_id[i])
+    
+    # Save into db, using message_id and list of order id
+    dbcon.set_message_player_order(message_id, p_order_id_list)
+    dbcon.set_player_follower_order(h_map)
+
 
     return "Order Placed" 

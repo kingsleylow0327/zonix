@@ -19,3 +19,5 @@ class Config():
         self.FOLLOWER_TABLE = os.getenv('FOLLOWER_TABLE')
         self.BYBIT_API_KEY = os.getenv('BYBIT_API_KEY')
         self.BYBIT_API_SECRET = os.getenv('BYBIT_API_SECRET')
+        self.MESSAGE_PLAYER_TABLE=os.getenv('MESSAGE_PLAYER_TABLE')
+        self.PLAYER_FOLLOWER_TABLE=os.getenv('PLAYER_FOLLOWER_TABLE')

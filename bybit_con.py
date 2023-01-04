@@ -85,10 +85,10 @@ def place_order(session, dtoOrder, is_multple=False):
                 close_on_trigger=False,
                 position_idx=0,
             )
-
         return ret
     except Exception as e:
         logger.info(e)
+        return "error"
 
 def flip_side(side):
     ret = side
