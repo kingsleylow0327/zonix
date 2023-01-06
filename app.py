@@ -5,6 +5,7 @@ import discord
 from bybit_con import create_session
 from config import Config
 from handler.place_order import h_place_order
+from handler.cancel_order import h_cancel_order
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -26,6 +27,10 @@ session = create_session(config.BYBIT_API_KEY, config.BYBIT_API_SECRET)
 def is_order(message):
     return "Leverage Cross x25" in message
 
+def is_cancel(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "CANCEL"
+
 @client.event
 async def on_ready():
     logger.info('Zonix Is Booted Up!')
@@ -43,6 +48,11 @@ async def on_message(message):
     if message.author.id != int(config.ZODIAC_ID):
         return
     
+    if is_cancel(message.content):
+        ret = h_cancel_order(dbcon, message.reference.message_id)
+        logger.info(ret)
+        return
+
     if not is_order(message.content):
         return
     

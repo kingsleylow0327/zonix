@@ -29,8 +29,8 @@ class ZonixDB():
             return pool
 
         except Exception as e:
-            logger.info(e)
-            logger.info("DB Pool Failed")
+            logger.warning(e)
+            logger.warning("DB Pool Failed")
             return None
     
     def dbcon_manager(self, sql, get_all=False):
@@ -38,9 +38,13 @@ class ZonixDB():
         row = None
         with connection_object as connection:
             with connection.cursor(dictionary=True) as cursor:
-                cursor.execute(sql)
-                row = cursor.fetchall() if get_all else cursor.fetchone()
-                connection.commit()
+                try:
+                    cursor.execute(sql)
+                    row = cursor.fetchall() if get_all else cursor.fetchone()
+                    connection.commit()
+                except Exception as e:
+                    logger.warning(sql)
+                    logger.warning(e)
         return row
     
     def get_order_detail_uat(self, message_id):
@@ -52,7 +56,8 @@ class ZonixDB():
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id
-        where f.player_id = '{}'""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id)
+        where f.player_id = '{}'
+        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id)
         return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):
@@ -61,29 +66,39 @@ class ZonixDB():
         VALUES
         {}
         """.format(self.config.MESSAGE_PLAYER_TABLE, giant_string)
-        print(sql)
         return self.dbcon_manager(sql, get_all=True)
     
-    def set_player_follower_order(self, h_map):
+    def set_player_follower_order(self, order_id_map, main_player):
         giant_list = []
-        for i in h_map:
-            giant_list.append(", \n".join(["('{}', '{}')".format(i, id) for id in h_map[i]]))
+        plyer_order_list = order_id_map[main_player]
+        for i in range(len(plyer_order_list)):
+            for j in order_id_map:
+                try:
+                    giant_list.append("('{}','{}','{}')".format(plyer_order_list[i],order_id_map[j][i],j))
+                except Exception as e:
+                    logger.info(e)
+                    pass
+
         giant_string = ", \n".join(giant_list)
 
-        sql = """INSERT INTO {}(player_order, follower_order)
+        sql = """INSERT INTO {}(player_order, follower_order, player_id)
         VALUES
         {}
         """.format(self.config.PLAYER_FOLLOWER_TABLE, giant_string)
-        print(sql)
         return self.dbcon_manager(sql, get_all=True)
     
     def get_related_oder(self, message_id):
-        sql = """select m.message_id, m.player_order, p.follower_order
+        sql = """select o.coinpair, m.message_id, m.player_order, p.follower_order, p.player_id, IF(m.player_order=p.follower_order,'player','') as role
         from {} as m left join {} as p
         ON m.player_order = p.player_order
+        left join {} as o
+        ON o.message_id = m.message_id
         where m.message_id = '{}'
-        """.format(self.config.MESSAGE_PLAYER_TABLE, self.config.PLAYER_FOLLOWER_TABLE, message_id)
-        print(sql)
+        order by p.player_id ASC, role DESC
+        """.format(self.config.MESSAGE_PLAYER_TABLE,
+            self.config.PLAYER_FOLLOWER_TABLE,
+            self.config.ORDER_TABLE,
+            message_id)
         return self.dbcon_manager(sql, get_all=True)
 
 

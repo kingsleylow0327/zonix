@@ -50,11 +50,10 @@ def handle_execution(message):
     print(message)
     print("\n")
 
-def place_order(session, dtoOrder, is_multple=False):
-    force_cross_leverage(session, dtoOrder.symbol, dtoOrder.leverage)
+def place_order(session, dtoOrder, market_out=False):
     ret = None
     try:
-        if not is_multple:
+        if not market_out:
             ret = session.place_active_order(
                     price=dtoOrder.target_price,
                     symbol=dtoOrder.symbol,
@@ -68,26 +67,32 @@ def place_order(session, dtoOrder, is_multple=False):
                     tp_trigger_by="LastPrice",
                     stop_loss=dtoOrder.stop_loss,
                     sl_trigger_by="MarkPrice",
-                    position_idx=0,
                 )
         else:
             dtoOrder.side = flip_side(dtoOrder.side)
-            ret = session.place_conditional_order(
+            ret = session.place_active_order(
                 symbol=dtoOrder.symbol,
-                order_type="Market",
                 side=dtoOrder.side,
+                order_type="Market",
                 qty=dtoOrder.quantity,
-                base_price=dtoOrder.target_price,
-                stop_px=dtoOrder.take_profit,
                 time_in_force="GoodTillCancel",
-                trigger_by="MarkPrice",
                 reduce_only=True,
                 close_on_trigger=False,
-                position_idx=0,
+                
             )
         return ret
     except Exception as e:
-        logger.info(e)
+        logger.warning(e)
+        return "error"
+
+def cancel_order(session, coin, order_id):
+    try:
+        ret = session.cancel_active_order(
+                symbol=coin,
+                order_id=order_id)
+        return ret
+    except Exception as e:
+        logger.warning(e)
         return "error"
 
 def flip_side(side):
@@ -98,21 +103,38 @@ def flip_side(side):
         ret = "Buy"
     return ret
 
-def force_cross_leverage(session, symbol, lev):
-    try:
-        session.cross_isolated_margin_switch(
-        symbol=symbol,
-        is_isolated=True,
-        buy_leverage=lev,
-        sell_leverage=lev)
-    except Exception as e:
-        print(e)
+def order_preset(session, symbol, lev):
+    my_pos = session.my_position(symbol=symbol)["result"][0]
+    # Set TP SL
+    if my_pos["tp_sl_mode"] == "Full":
+        session.full_partial_position_tp_sl_switch(
+            symbol=symbol,
+            tp_sl_mode="Partial"
+        )
+    
+    # Set Position Mode
+    if my_pos["mode"] != "BothSide":
+        session.position_mode_switch(
+            symbol=symbol,
+            mode="BothSide"
+        )
+    
+    # Set Corss and Leverage
+    if my_pos["is_isolated"] != False or my_pos["leverage"] != lev:
+        try:
+            session.cross_isolated_margin_switch(
+            symbol=symbol,
+            is_isolated=True,
+            buy_leverage=lev,
+            sell_leverage=lev)
+        except Exception as e:
+            logger.warning(e)
 
-    try:
-        session.cross_isolated_margin_switch(
-        symbol=symbol,
-        is_isolated=False,
-        buy_leverage=lev,
-        sell_leverage=lev)
-    except Exception as e:
-        print(e)
+        try:
+            session.cross_isolated_margin_switch(
+            symbol=symbol,
+            is_isolated=False,
+            buy_leverage=lev,
+            sell_leverage=lev)
+        except Exception as e:
+            logger.warning(e)
