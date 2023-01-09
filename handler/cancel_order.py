@@ -21,8 +21,9 @@ def h_cancel_order(dbcon, message_id):
     current_id = api_list[0]["follower_id"]
     session = create_session(api_list[0]["api_key"], api_list[0]["api_secret"])
 
-    qty = session.my_position(symbol=coin)["result"][0]["size"]
-    side = session.my_position(symbol=coin)["result"][0]["side"]
+    my_pos = session.my_position(symbol=coin)["result"][0]
+    qty = my_pos["size"]
+    side = my_pos["side"]
     lev = get_coin_info(coin)["maxLeverage"]
     order_detail = dtoOrder(0,
                         coin,
@@ -39,7 +40,9 @@ def h_cancel_order(dbcon, message_id):
             current_id = i["player_id"]
             session = create_session(api_map[i["player_id"]]["api_key"],
                                 api_map[i["player_id"]]["api_secret"])
-            order_detail.quantity = session.my_position(symbol=coin)["result"][0]["size"]
+            my_pos = session.my_position(symbol=coin)["result"][0]                 
+            order_detail.quantity = my_pos["size"]
+            order_detail.side = my_pos["side"]
             order_preset(session, coin, lev)
             place_order(session, order_detail, market_out=True)
         cancel_order(session, coin, i["follower_order"])
