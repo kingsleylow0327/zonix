@@ -1,4 +1,4 @@
-from bybit_con import create_session, cancel_order, get_coin_info, order_preset, place_order
+from bybit_con import create_session, cancel_order, cancel_pos, get_coin_info, order_preset, place_order
 from dto.dto_order import dtoOrder
 from logger import Logger
 
@@ -33,7 +33,7 @@ def h_cancel_order(dbcon, message_id):
                         0,
                         lev)
     order_preset(session, coin, lev)
-    place_order(session, order_detail, market_out=True)
+    cancel_pos(session, coin)
 
     for i in order_list:
         if current_id != i["player_id"]:
@@ -44,7 +44,7 @@ def h_cancel_order(dbcon, message_id):
             order_detail.quantity = my_pos["size"]
             order_detail.side = my_pos["side"]
             order_preset(session, coin, lev)
-            place_order(session, order_detail, market_out=True)
+            cancel_pos(session, coin)
         cancel_order(session, coin, i["follower_order"])
     return "Order Cancelled"
     

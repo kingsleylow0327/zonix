@@ -75,15 +75,17 @@ def place_order(session, dtoOrder, market_out=False):
                 side=dtoOrder.side,
                 order_type="Market",
                 qty=dtoOrder.quantity,
-                time_in_force="GoodTillCancel",
+                time_in_force="ImmediateOrCancel",
                 reduce_only=True,
-                close_on_trigger=False,
-                
+                close_on_trigger=False, 
             )
         return ret
     except Exception as e:
         logger.warning(e)
         return "error"
+
+def cancel_pos(session, coin):
+    return session.close_position(coin)
 
 def cancel_order(session, coin, order_id):
     try:
