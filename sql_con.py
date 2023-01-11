@@ -74,14 +74,17 @@ class ZonixDB():
         for i in range(len(plyer_order_list)):
             for j in order_id_map:
                 try:
-                    giant_list.append("('{}','{}','{}')".format(plyer_order_list[i],order_id_map[j][i],j))
+                    giant_list.append("('{}','{}','{}',{})".format(plyer_order_list[i]["id"],
+                                                                order_id_map[j][i]["id"],
+                                                                j,
+                                                                order_id_map[j][i]["qty"]))
                 except Exception as e:
                     logger.info(e)
                     pass
 
         giant_string = ", \n".join(giant_list)
 
-        sql = """INSERT INTO {}(player_order, follower_order, player_id)
+        sql = """INSERT INTO {}(player_order, follower_order, player_id, coin_amount)
         VALUES
         {}
         """.format(self.config.PLAYER_FOLLOWER_TABLE, giant_string)

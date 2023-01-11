@@ -67,7 +67,9 @@ def h_place_order(dbcon, message_id):
                     continue
                 if is_player:
                     p_order_id_list.append(order["result"]["order_id"])
-                sub_order_id_list.append(order["result"]["order_id"])
+                sub_order_id_list.append(
+                    {"id":order["result"]["order_id"],
+                    "qty":single_current_qty})
         order_id_map[item["player_id"]]=sub_order_id_list
 
     # Save into db, using message_id and list of order id

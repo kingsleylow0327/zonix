@@ -69,10 +69,10 @@ def place_order(session, dtoOrder, market_out=False):
                     sl_trigger_by="MarkPrice",
                 )
         else:
-            dtoOrder.side = flip_side(dtoOrder.side)
+            fliped_side = flip_side(dtoOrder.side)
             ret = session.place_active_order(
                 symbol=dtoOrder.symbol,
-                side=dtoOrder.side,
+                side=fliped_side,
                 order_type="Market",
                 qty=dtoOrder.quantity,
                 time_in_force="ImmediateOrCancel",
