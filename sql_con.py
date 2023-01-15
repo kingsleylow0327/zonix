@@ -103,6 +103,11 @@ class ZonixDB():
             self.config.ORDER_TABLE,
             message_id)
         return self.dbcon_manager(sql, get_all=True)
+    
+    def get_all_player(self):
+        sql = """select * from {}
+        """.format(self.config.API_TABLE)
+        return self.dbcon_manager(sql, get_all=True)
 
 
     def close_cursor(self):

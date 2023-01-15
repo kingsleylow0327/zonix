@@ -1,4 +1,4 @@
-from bybit_con import create_session, cancel_order, cancel_pos, get_coin_info, order_preset, place_order
+from bybit_session import create_session, cancel_order, cancel_pos, get_coin_info, order_preset, place_order
 from dto.dto_order import dtoOrder
 from logger import Logger
 

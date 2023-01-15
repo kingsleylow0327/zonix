@@ -2,7 +2,8 @@
 import asyncio
 import discord
 
-from bybit_con import create_session
+from bybit_session import create_session
+from bybit_websock import create_web_socket
 from config import Config
 from handler.place_order import h_place_order
 from handler.cancel_order import h_cancel_order
@@ -22,7 +23,13 @@ config = Config()
 
 dbcon = ZonixDB(config)  
 CHANNEL = None
-session = create_session(config.BYBIT_API_KEY, config.BYBIT_API_SECRET)
+ws_list = {}
+player_api_list = dbcon.get_all_player()
+logger.info("Creating player websocket")
+for player in player_api_list:
+    ws_list[player['player_id']] = create_web_socket(player['api_key'], player['api_secret'])
+# session = create_session(config.BYBIT_API_KEY, config.BYBIT_API_SECRET)
+logger.info("Done Creating websocket!")
 
 def is_order(message):
     return "Leverage Cross x25" in message

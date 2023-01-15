@@ -1,5 +1,5 @@
 import decimal
-from bybit_con import  create_session, place_order, get_coin_info, order_preset
+from bybit_session import create_session, place_order, get_coin_info, order_preset
 from dto.dto_order import dtoOrder
 from logger import Logger
 

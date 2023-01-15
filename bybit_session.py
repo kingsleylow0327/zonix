@@ -1,7 +1,9 @@
+from dto.dto_order import dtoOrder
 from logger import Logger
 from pybit import usdt_perpetual
 import json
 import requests
+import time
 
 # Logger setup
 logger_mod = Logger("Place Order")
@@ -16,13 +18,15 @@ def get_coin_info(coin):
     "maxLeverage":result["result"]["list"][0]["leverageFilter"]["maxLeverage"]}
 
 # Initialize web socket connection instance
-def create_web_socket(api_key, api_secret, dbcon):
-    global GLOBALDB
-    GLOBALDB = dbcon   
+def create_web_socket(api_key, api_secret):
+    # global GLOBALDB
+    # GLOBALDB = dbcon   
     ws = usdt_perpetual.WebSocket(
         test=True,
         api_key=api_key,
         api_secret=api_secret)
+    # ws.execution_stream(handle_execution)
+    # ws.position_stream(handle_position)
     ws.order_stream(handle_order)
     return ws
 
@@ -36,24 +40,60 @@ def create_session(api_key, api_secret):
 # handle_position is a callback that will be triggered on every new websocket event (push frequency can be 1-60s)
 def handle_position(message):
     print("-----------------Pos Stream--------------------")
-    print(message)
+    print(json.dumps(message, indent=2))
     print("\n")
 
 def handle_order(message):
     print("-----------------Order Stream--------------------")
-    print(message)
+    print(json.dumps(message, indent=2))
     print("\n")
+    data = json.loads(message)["data"]
+    if data != "CreateByPartialTakeProfit":
+        return
+    
+    # Create Session
+    session = create_session(api_key, api_secret)
+    # Check if session have active order:
+    
+
+    # Cancel active order
+
+    # Place Conditional
+    price_decimal = '.{}f'.format(str(data["price"])[::-1].find('.'))
+    base_price = data["price"] * (1.03 if data["side"] == "Sell" else 0.97) # Might need match decimal format
+    base_price = price_decimal.format(str(base_price))
+    order_detail = dtoOrder(base_price,
+                        data["symbol"],
+                        data["side"],
+                        data["qty"] * 4,
+                        data["price"],
+                        0,
+                        0)
+    place_order(session, order_detail, is_conditional=True)
 
 
 def handle_execution(message):
     print("-----------------Execution Stream--------------------")
-    print(message)
+    print(json.dumps(message, indent=2))
     print("\n")
 
-def place_order(session, dtoOrder, market_out=False):
+def place_order(session, dtoOrder, market_out=False, is_conditional=False):
     ret = None
     try:
-        if not market_out:
+        if is_conditional:
+            ret = session.place_conditional_order(
+                symbol=dtoOrder.symbol,
+                order_type="Market",
+                side=dtoOrder.side,
+                qty=dtoOrder.quantity,
+                base_price=dtoOrder.target_price, # 0.97 if Buy Entry Price from WS
+                stop_px=dtoOrder.stop_loss,  # Change to Entry Price from WS
+                time_in_force="GoodTillCancel",
+                trigger_by="MarkPrice",
+                reduce_only=True,
+                close_on_trigger=False
+            )
+        elif not market_out:
             ret = session.place_active_order(
                     price=dtoOrder.target_price,
                     symbol=dtoOrder.symbol,
@@ -91,7 +131,8 @@ def cancel_order(session, coin, order_id):
     try:
         ret = session.cancel_active_order(
                 symbol=coin,
-                order_id=order_id)
+                order_id=order_id,
+                type="TpSlConditional")
         return ret
     except Exception as e:
         logger.warning(e)

@@ -10,7 +10,7 @@ class dtoOrder():
         self.leverage = leverage
     
     def _change_side(self, side):
-        return "Sell" if side.upper() == "SHORT" else "Buy"
+        return "Sell" if side.upper() == "SHORT" or side.upper() == "SELL" else "Buy"
     
     def _strip_coin(self, symbol):
         return symbol.strip().replace("/","").upper()
