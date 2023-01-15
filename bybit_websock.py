@@ -36,9 +36,9 @@ class bybit_ws():
         print("\n")
     
     def handle_order(self, message):
-        print("-----------------Order Stream--------------------")
-        print(json.dumps(message, indent=2))
-        print("\n")
+        # print("-----------------Order Stream--------------------")
+        # print(json.dumps(message, indent=2))
+        # print("\n")
 
         data = message["data"]
         coin = data[0]["symbol"]
@@ -47,9 +47,9 @@ class bybit_ws():
         for item in data:
             if item["create_type"] == "CreateByPartialTakeProfit":
                 data = item
-                print(" CreateByPartialTakeProfit ")
+                # print(" CreateByPartialTakeProfit ")
                 break
-            print(" Not Take Profit ")
+            # print(" Not Take Profit ")
             return
         session = create_session(self.api_key, self.api_secret)
         my_pos = session.my_position(symbol=coin)["result"]
