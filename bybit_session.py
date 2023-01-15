@@ -3,7 +3,6 @@ from logger import Logger
 from pybit import usdt_perpetual
 import json
 import requests
-import time
 
 # Logger setup
 logger_mod = Logger("Place Order")
@@ -17,65 +16,12 @@ def get_coin_info(coin):
     "minOrderQty":result["result"]["list"][0]["lotSizeFilter"]["minOrderQty"],
     "maxLeverage":result["result"]["list"][0]["leverageFilter"]["maxLeverage"]}
 
-# Initialize web socket connection instance
-def create_web_socket(api_key, api_secret):
-    # global GLOBALDB
-    # GLOBALDB = dbcon   
-    ws = usdt_perpetual.WebSocket(
-        test=True,
-        api_key=api_key,
-        api_secret=api_secret)
-    # ws.execution_stream(handle_execution)
-    # ws.position_stream(handle_position)
-    ws.order_stream(handle_order)
-    return ws
-
 # Initialize http connection instance
 def create_session(api_key, api_secret):
     session = usdt_perpetual.HTTP(endpoint="https://api-testnet.bybit.com",
         api_key=api_key,
         api_secret=api_secret)
     return session
-
-# handle_position is a callback that will be triggered on every new websocket event (push frequency can be 1-60s)
-def handle_position(message):
-    print("-----------------Pos Stream--------------------")
-    print(json.dumps(message, indent=2))
-    print("\n")
-
-def handle_order(message):
-    print("-----------------Order Stream--------------------")
-    print(json.dumps(message, indent=2))
-    print("\n")
-    data = json.loads(message)["data"]
-    if data != "CreateByPartialTakeProfit":
-        return
-    
-    # Create Session
-    session = create_session(api_key, api_secret)
-    # Check if session have active order:
-    
-
-    # Cancel active order
-
-    # Place Conditional
-    price_decimal = '.{}f'.format(str(data["price"])[::-1].find('.'))
-    base_price = data["price"] * (1.03 if data["side"] == "Sell" else 0.97) # Might need match decimal format
-    base_price = price_decimal.format(str(base_price))
-    order_detail = dtoOrder(base_price,
-                        data["symbol"],
-                        data["side"],
-                        data["qty"] * 4,
-                        data["price"],
-                        0,
-                        0)
-    place_order(session, order_detail, is_conditional=True)
-
-
-def handle_execution(message):
-    print("-----------------Execution Stream--------------------")
-    print(json.dumps(message, indent=2))
-    print("\n")
 
 def place_order(session, dtoOrder, market_out=False, is_conditional=False):
     ret = None
