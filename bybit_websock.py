@@ -9,7 +9,6 @@ import time
 logger_mod = Logger("Websocket")
 logger = logger_mod.get_logger()
 
-MAX_TAKE_PROFIT = 4
 
 class bybit_ws():
     def __init__(self, api_key, api_secret) -> None:
@@ -60,7 +59,6 @@ class bybit_ws():
         for item in my_pos:
             if item["side"] != data["side"]:
                 stop_px = item["entry_price"]
-                qty = item["size"]
 
         # # Check if session have active order with same side:
         # session_result = session.get_active_order(symbol=coin)["result"]["data"]
@@ -74,9 +72,13 @@ class bybit_ws():
         
         # Cancel active order
         session.cancel_all_active_orders(symbol=coin)
-        session.get_conditional_order(symbol="LTCUSDT")
+        condi = session.get_conditional_order(symbol=coin)
         for item in condi["result"]["data"]:
-            if item["order_status"] == "Untriggered" and item["close_on_trigger"] == False:
+            if item["order_status"] != "Untriggered":
+                continue
+            if item["trigger_by"] == "MarkPrice":
+                qty += item["qty"]
+            if item["close_on_trigger"] == False:
                 session.cancel_conditional_order(
                     symbol=coin,
                     stop_order_id=item["stop_order_id"])
@@ -88,7 +90,7 @@ class bybit_ws():
         order_detail = dtoOrder(base_price,
                             data["symbol"],
                             data["side"],
-                            qty * MAX_TAKE_PROFIT,
+                            qty,
                             0,
                             stop_px,
                             0)

@@ -56,7 +56,7 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                 )
         else:
             fliped_side = flip_side(dtoOrder.side)
-            ret = session.place_active_order(
+            ret = session.place_conditional_order(
                 symbol=dtoOrder.symbol,
                 side=fliped_side,
                 order_type="Market",
