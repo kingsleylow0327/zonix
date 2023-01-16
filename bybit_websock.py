@@ -59,18 +59,8 @@ class bybit_ws():
         for item in my_pos:
             if item["side"] != data["side"]:
                 stop_px = item["entry_price"]
-
-        # # Check if session have active order with same side:
-        # session_result = session.get_active_order(symbol=coin)["result"]["data"]
-        # total_qty = 0
-
-        # print("---------------------------")
-        # for item in session_result:
-        #     if item["order_status"] == "New":
-        #         total_qty += item["qty"]
-        #         print(json.dumps(item, indent=2))
         
-        # Cancel active order
+        # Cancel active order and conditional order
         session.cancel_all_active_orders(symbol=coin)
         condi = session.get_conditional_order(symbol=coin)
         for item in condi["result"]["data"]:
