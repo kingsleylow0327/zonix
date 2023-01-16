@@ -74,7 +74,12 @@ class bybit_ws():
         
         # Cancel active order
         session.cancel_all_active_orders(symbol=coin)
-        session.cancel_all_conditional_orders(symbol=coin)
+        session.get_conditional_order(symbol="LTCUSDT")
+        for item in condi["result"]["data"]:
+            if item["order_status"] == "Untriggered" and item["close_on_trigger"] == False:
+                session.cancel_conditional_order(
+                    symbol=coin,
+                    stop_order_id=item["stop_order_id"])
 
         # Place Conditional
         price_decimal = str(stop_px)[::-1].find('.')
