@@ -34,6 +34,7 @@ def h_cancel_order(dbcon, message_id):
                         lev)
     order_preset(session, coin, lev)
     cancel_pos(session, coin)
+    session.cancel_all_conditional_orders(symbol=coin)
 
     for i in order_list:
         if current_id != i["player_id"]:
@@ -45,6 +46,7 @@ def h_cancel_order(dbcon, message_id):
             order_detail.side = my_pos["side"]
             order_preset(session, coin, lev)
             cancel_pos(session, coin)
+            session.cancel_all_conditional_orders(symbol=coin)
         cancel_order(session, coin, i["follower_order"])
     return "Order Cancelled"
     
