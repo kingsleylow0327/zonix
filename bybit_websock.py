@@ -55,6 +55,7 @@ class bybit_ws():
 
         qty = 0
         stop_px = 0
+        qty_decimal = 0
         # Compare my_pos side with Data
         for item in my_pos:
             if item["side"] != data["side"]:
@@ -66,6 +67,7 @@ class bybit_ws():
         for item in condi["result"]["data"]:
             if item["order_status"] != "Untriggered":
                 continue
+            qty_decimal = str(item["qty"])[::-1].find('.')
             if item["trigger_by"] == "MarkPrice":
                 qty += item["qty"]
             if item["close_on_trigger"] == False:
@@ -77,6 +79,7 @@ class bybit_ws():
         price_decimal = str(stop_px)[::-1].find('.')
         base_price = stop_px * (1.03 if data["side"] == "Sell" else 0.97) # Might need match decimal format
         base_price = round(base_price, price_decimal)
+        qty = round(qty, qty_decimal)
         order_detail = dtoOrder(base_price,
                             data["symbol"],
                             data["side"],
