@@ -11,7 +11,12 @@ def h_cancel_order(dbcon, message_id):
     if order_list is None:
         return "Empty Row"
     coin = order_list[0]["coinpair"].replace("/","").strip()
-    main_player_id = order_list[0]["player_id"]
+    main_player_id = ""
+    for item in order_list:
+        if item["role"] == 'player':
+            main_player_id = item["player_id"]
+    if main_player_id == "":
+        return "Main player not found"
     
     api_list = dbcon.get_followers_api(main_player_id)
     api_map = {}
@@ -49,4 +54,3 @@ def h_cancel_order(dbcon, message_id):
             session.cancel_all_conditional_orders(symbol=coin)
         cancel_order(session, coin, i["follower_order"])
     return "Order Cancelled"
-    
