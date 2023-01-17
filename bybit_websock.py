@@ -21,7 +21,7 @@ class bybit_ws():
         # global GLOBALDB
         # GLOBALDB = dbcon   
         ws = usdt_perpetual.WebSocket(
-            test=True,
+            test=False,
             api_key=api_key,
             api_secret=api_secret)
         # ws.execution_stream(handle_execution)

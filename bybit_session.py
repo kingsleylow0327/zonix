@@ -10,7 +10,7 @@ logger = logger_mod.get_logger()
 GLOBALDB = None
 
 def get_coin_info(coin):
-    r = requests.get("https://api-testnet.bybit.com/derivatives/v3/public/instruments-info?category=linear&symbol={}".format(coin))
+    r = requests.get("https://api.bybit.com/derivatives/v3/public/instruments-info?category=linear&symbol={}".format(coin))
     result = json.loads(r.text)
     return {"qtyStep":result["result"]["list"][0]["lotSizeFilter"]["qtyStep"],
     "minOrderQty":result["result"]["list"][0]["lotSizeFilter"]["minOrderQty"],
@@ -18,7 +18,7 @@ def get_coin_info(coin):
 
 # Initialize http connection instance
 def create_session(api_key, api_secret):
-    session = usdt_perpetual.HTTP(endpoint="https://api-testnet.bybit.com",
+    session = usdt_perpetual.HTTP(
         api_key=api_key,
         api_secret=api_secret)
     return session
