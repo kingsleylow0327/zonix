@@ -48,10 +48,12 @@ async def on_ready():
 async def on_message(message):
     # Channel Block
     if message.channel.id != int(config.RECEIVER_CHANNEL_ID):
+        print("Not Channel: {}".format(message.channel.id))
         return
 
     # User Block
     if message.author.id != int(config.ZODIAC_ID):
+        print("Not Author: {}".format(message.author.id))
         return
     
     if is_cancel(message.content):
@@ -62,6 +64,7 @@ async def on_message(message):
     if not is_order(message.content):
         return
     
+    print("Placing order")
     ret = "Empty Row"
     for i in range(2):
         await asyncio.sleep(2)
