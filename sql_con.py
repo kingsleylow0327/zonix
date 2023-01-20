@@ -51,6 +51,14 @@ class ZonixDB():
         sql = "select * from {} where message_id = '{}'".format(self.config.ORDER_TABLE, message_id)
         return self.dbcon_manager(sql)
 
+    def get_player_api(self, player_id):
+        sql = """SELECT api_key, api_secret
+        FROM {} 
+        where
+        player_id = '{}'
+        """.format(self.config.API_TABLE, player_id)
+        return self.dbcon_manager(sql, get_all=True)
+
     def get_followers_api(self, player_id):
         sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, IF(f.player_id=follower_id,'player','') as role
         FROM {} as a
