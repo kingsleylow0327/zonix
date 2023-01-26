@@ -56,7 +56,7 @@ async def on_ready():
 async def on_message(message):
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         if is_test(message.content):
-            ret = h_test_api(dbcon, message.author.id)
+            ret = h_test_api(dbcon, message.author.id, config.SERVER_IP)
             await message.channel.send(ret)
             logger.info(ret)
         return
@@ -83,7 +83,7 @@ async def on_message(message):
     ret = "Empty Row"
     for i in range(2):
         await asyncio.sleep(2)
-        ret = h_place_order(dbcon, message.id, config.SERVER_IP)
+        ret = h_place_order(dbcon, message.id)
         if ret == "Order Placed":
             break
 
