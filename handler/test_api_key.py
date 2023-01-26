@@ -5,15 +5,41 @@ from logger import Logger
 logger_mod = Logger("API Tester")
 logger = logger_mod.get_logger()
 
-def h_test_api(dbcon, player_id):
+def h_test_api(dbcon, player_id, server_ip):
     player_api = dbcon.get_player_api(player_id)[0]
     session = create_session(player_api['api_key'], player_api['api_secret'])
     try:
-        ret = session.get_conditional_order(symbol="BTCUSDT")['ret_msg']
-        if ret == "OK":
-            return "Player API setup OK!"
-        else:
-            return "Connection Error"
+        ret = session.api_key_info()['result']
+        ret_msg = """
+API Key Permission: {}
+Order: {}
+Position: {}
+USDC Contracts: {}
+Derivatives API V3: {}
+IP: {}
+"""
+        api_info = None
+        for item in ret:
+            if item["api_key"] == player_api['api_key']:
+                api_info = item
+                break
+        if api_info == None:
+            return "No such API"
+        i_api = i_ip = i_order = i_position = i_contract = i_d_v3 = "❌"
+        if server_ip in api_info["ips"]:
+            i_ip = "✅"
+        if "Order" in api_info["permissions"]:
+            i_order = "✅"
+        if "Position" in api_info["permissions"]:
+            i_position = "✅"
+        if "OptionsTrade" in api_info["permissions"]:
+            i_contract = "✅"
+        if "DerivativesTrade" in api_info["permissions"]:
+            i_d_v3 = "✅"
+        if api_info["read_only"] == False:
+            i_api = "✅"
+        ret_msg = ret_msg.format(i_api, i_order, i_position, i_contract, i_d_v3, i_ip)
+        return ret_msg
     except Exception as e:
         logger.warning(e)
         return "API not setup correctly"

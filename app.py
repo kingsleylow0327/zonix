@@ -28,7 +28,10 @@ player_api_list = dbcon.get_all_player()
 logger.info("Creating player websocket, Number: {}".format(len(player_api_list)))
 for player in player_api_list:
     logger.info("Creating websocket, Player: {}".format(player['player_id']))
-    ws_list[player['player_id']] = bybit_ws(player['api_key'], player['api_secret'])
+    try:
+        ws_list[player['player_id']] = bybit_ws(player['api_key'], player['api_secret'])
+    except Exception as e:
+        logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
 logger.info("Done Creating websocket!")
 
 def is_order(message):
@@ -80,7 +83,7 @@ async def on_message(message):
     ret = "Empty Row"
     for i in range(2):
         await asyncio.sleep(2)
-        ret = h_place_order(dbcon, message.id)
+        ret = h_place_order(dbcon, message.id, config.SERVER_IP)
         if ret == "Order Placed":
             break
 
