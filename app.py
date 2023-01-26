@@ -57,7 +57,7 @@ async def on_message(message):
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         if is_test(message.content):
             ret = h_test_api(dbcon, message.author.id, config.SERVER_IP)
-            await message.channel.send(ret)
+            await message.channel.send(ret["msg"])
             if ret["status"] == "-1":
                 logger.info(ret["msg"])
         return
