@@ -58,7 +58,8 @@ async def on_message(message):
         if is_test(message.content):
             ret = h_test_api(dbcon, message.author.id, config.SERVER_IP)
             await message.channel.send(ret)
-            logger.info(ret)
+            if ret["status"] == "-1":
+                logger.info(ret["msg"])
         return
 
     # Channel Block

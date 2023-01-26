@@ -24,7 +24,7 @@ IP: {}
                 api_info = item
                 break
         if api_info == None:
-            return "No such API"
+            return {"status":"OK", "msg": "No Such API"}
         i_api = i_ip = i_order = i_position = i_contract = i_d_v3 = "❌"
         if server_ip in api_info["ips"]:
             i_ip = "✅"
@@ -39,7 +39,7 @@ IP: {}
         if api_info["read_only"] == False:
             i_api = "✅"
         ret_msg = ret_msg.format(i_api, i_order, i_position, i_contract, i_d_v3, i_ip)
-        return ret_msg
+        return {"status":"OK", "msg": ret_msg}
     except Exception as e:
         logger.warning(e)
-        return "API not setup correctly"
+        return {"status":"-1", "msg": e}
