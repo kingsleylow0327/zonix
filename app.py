@@ -43,7 +43,7 @@ def is_cancel(message):
 
 def is_test(message):
     message_list = message.upper().split(" ")
-    return message_list[0].strip() == "/PINGAPI"
+    return message_list[0].strip() == "/FOLLOWSTATUS"
 
 @client.event
 async def on_ready():

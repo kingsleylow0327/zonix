@@ -116,7 +116,14 @@ class ZonixDB():
         sql = """select * from {}
         """.format(self.config.API_TABLE)
         return self.dbcon_manager(sql, get_all=True)
-
+    
+    def get_follow_to(self, follower_id):
+        sql = """SELECT * FROM {}
+        where follower_id != player_id
+        and
+        follower_id = '{}'
+        """.format(self.config.FOLLOWER_TABLE, follower_id)
+        return self.dbcon_manager(sql, get_all=True)
 
     def close_cursor(self):
         self.cursor.close()

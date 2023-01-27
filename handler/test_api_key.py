@@ -5,9 +5,13 @@ from logger import Logger
 logger_mod = Logger("API Tester")
 logger = logger_mod.get_logger()
 
+MIN_WALLET_USDT = 200
+
 def h_test_api(dbcon, player_id, server_ip):
     player_api = dbcon.get_player_api(player_id)[0]
+    follower_list = dbcon.get_follow_to(player_id)
     session = create_session(player_api['api_key'], player_api['api_secret'])
+    wallet_balance = session.get_wallet_balance(coin="USDT")['result']['USDT']['wallet_balance']
     try:
         ret = session.api_key_info()['result']
         ret_msg = """
@@ -16,7 +20,10 @@ Order: {}
 Position: {}
 USDC Contracts: {}
 Derivatives API V3: {}
-IP: {}
+Restricted IP: {}
+
+Wallet Balance >= 200: {}
+Following: {}
 """
         api_info = None
         for item in ret:
@@ -25,7 +32,8 @@ IP: {}
                 break
         if api_info == None:
             return {"status":"OK", "msg": "No Such API"}
-        i_api = i_ip = i_order = i_position = i_contract = i_d_v3 = "❌"
+        i_api = i_ip = i_order = i_position = i_contract = i_d_v3 = i_wallet ="❌"
+        i_follower = "None"
         if server_ip in api_info["ips"]:
             i_ip = "✅"
         if "Order" in api_info["permissions"]:
@@ -38,7 +46,15 @@ IP: {}
             i_d_v3 = "✅"
         if api_info["read_only"] == False:
             i_api = "✅"
-        ret_msg = ret_msg.format(i_api, i_order, i_position, i_contract, i_d_v3, i_ip)
+        if wallet_balance >= MIN_WALLET_USDT:
+            i_wallet = "✅"
+        
+        if len(follower_list) > 1:
+            i_follower = "Following more than 1 player ❌"
+        elif len(follower_list) == 1:
+            i_follower = "<@{}>".format(follower_list[0]['player_id'])
+            
+        ret_msg = ret_msg.format(i_api, i_order, i_position, i_contract, i_d_v3, i_ip, i_wallet, i_follower)
         return {"status":"OK", "msg": ret_msg}
     except Exception as e:
         logger.warning(e)
