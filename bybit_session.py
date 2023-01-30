@@ -46,7 +46,7 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                     side=dtoOrder.side,
                     order_type="Limit",
                     qty=dtoOrder.quantity,
-                    time_in_force="FillOrKill",
+                    time_in_force="GoodTillCancel",
                     reduce_only=False,
                     close_on_trigger=False,
                     take_profit=dtoOrder.take_profit,
