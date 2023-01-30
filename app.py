@@ -23,6 +23,7 @@ config = Config()
 
 dbcon = ZonixDB(config)  
 CHANNEL = None
+MAX_TRIES = 2
 ws_list = {}
 player_api_list = dbcon.get_all_player()
 logger.info("Creating player websocket, Number: {}".format(len(player_api_list)))
@@ -56,8 +57,15 @@ async def on_ready():
 async def on_message(message):
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         if is_test(message.content):
+            message_list = message.content.split(" ")
+            if dbcon.is_admin(message.author.id) and len(message_list) > 1 and "<@" in message_list[1]:
+                player_id = "".join([c for c in message_list[1] if c.isdigit()])
+                ret = h_test_api(dbcon, player_id, config.SERVER_IP)
+                await message.channel.send(ret["msg"])
+                return
+            
             ret = h_test_api(dbcon, message.author.id, config.SERVER_IP)
-            await message.channel.send(ret["msg"])
+            await message.author.send(ret["msg"])
             if ret["status"] == "-1":
                 logger.info(ret["msg"])
         return
@@ -77,17 +85,14 @@ async def on_message(message):
         logger.info(ret)
         return
 
-    if not is_order(message.content):
-        return
-    
-    print("Placing order")
-    ret = "Empty Row"
-    for i in range(2):
-        await asyncio.sleep(2)
-        ret = h_place_order(dbcon, message.id)
-        if ret == "Order Placed":
-            break
+    if is_order(message.content): 
+        ret = "Empty Row"
+        for i in range(MAX_TRIES):
+            await asyncio.sleep(2)
+            ret = h_place_order(dbcon, message.id)
+            if ret == "Order Placed":
+                break
 
-    logger.info(ret)
+        logger.info(ret)
 
 client.run(config.TOKEN)

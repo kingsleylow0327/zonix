@@ -10,11 +10,19 @@ MIN_WALLET_USDT = 200
 def h_test_api(dbcon, player_id, server_ip):
     player_api = dbcon.get_player_api(player_id)[0]
     follower_list = dbcon.get_follow_to(player_id)
-    session = create_session(player_api['api_key'], player_api['api_secret'])
-    wallet_balance = session.get_wallet_balance(coin="USDT")['result']['USDT']['wallet_balance']
+    ERROR_MESSAGE = """
+Player: {}
+API Connection Error, suggest to do following steps:
+1. Double Check your API Key and API Secrete
+2. Set your API IP restricted Adress to **{}** ONLY
+""".format("<@{}>".format(player_id), server_ip)
+
     try:
+        session = create_session(player_api['api_key'], player_api['api_secret'])
+        wallet_balance = session.get_wallet_balance(coin="USDT")['result']['USDT']['wallet_balance']
         ret = session.api_key_info()['result']
         ret_msg = """
+Player: {}
 API Key Permission: {}
 Order: {}
 Position: {}
@@ -54,8 +62,8 @@ Following: {}
         elif len(follower_list) == 1:
             i_follower = "<@{}>".format(follower_list[0]['player_id'])
             
-        ret_msg = ret_msg.format(i_api, i_order, i_position, i_contract, i_d_v3, i_ip, i_wallet, i_follower)
+        ret_msg = ret_msg.format("<@{}>".format(player_id), i_api, i_order, i_position, i_contract, i_d_v3, i_ip, i_wallet, i_follower)
         return {"status":"OK", "msg": ret_msg}
     except Exception as e:
         logger.warning(e)
-        return {"status":"-1", "msg": e}
+        return {"status":"-1", "msg": ERROR_MESSAGE}

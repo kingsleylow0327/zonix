@@ -124,7 +124,12 @@ class ZonixDB():
         follower_id = '{}'
         """.format(self.config.FOLLOWER_TABLE, follower_id)
         return self.dbcon_manager(sql, get_all=True)
+    
+    def is_admin(self, player_id):
+        sql = """SELECT discord_id FROM user 
+        WHERE discord_id='{}'""".format(player_id)
+        ret = self.dbcon_manager(sql, get_all=True)
+        return len(ret) != 0
 
     def close_cursor(self):
         self.cursor.close()
-
