@@ -36,7 +36,7 @@ for player in player_api_list:
 logger.info("Done Creating websocket!")
 
 def is_order(message):
-    return "Leverage Cross x25" in message
+    return "Leverage Cross x10" in message
 
 def is_cancel(message):
     message_list = message.upper().split(" ")
