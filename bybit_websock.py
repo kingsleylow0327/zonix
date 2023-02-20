@@ -2,13 +2,13 @@ from bybit_session import *
 from dto.dto_order import dtoOrder
 from logger import Logger
 from pybit import usdt_perpetual
+from config import Config
 import json
-import time
 
 # Logger setup
 logger_mod = Logger("Websocket")
 logger = logger_mod.get_logger()
-
+CONFIG = Config()
 
 class bybit_ws():
     def __init__(self, api_key, api_secret) -> None:
@@ -19,9 +19,9 @@ class bybit_ws():
     # Initialize web socket connection instance
     def create_web_socket(self, api_key, api_secret):
         # global GLOBALDB
-        # GLOBALDB = dbcon   
+        # GLOBALDB = dbcon
         ws = usdt_perpetual.WebSocket(
-            test=False,
+            test=eval(CONFIG.IS_TEST),
             api_key=api_key,
             api_secret=api_secret)
         # ws.execution_stream(handle_execution)
