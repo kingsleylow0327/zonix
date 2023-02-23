@@ -47,7 +47,7 @@ class ZonixDB():
                     logger.warning(e)
         return row
     
-    def get_order_detail_uat(self, message_id):
+    def get_order_detail(self, message_id):
         sql = "select * from {} where message_id = '{}'".format(self.config.ORDER_TABLE, message_id)
         return self.dbcon_manager(sql)
 

@@ -24,7 +24,7 @@ def get_coin_info(coin):
 def create_session(api_key, api_secret):
     end_point = "https://api.bybit.com"
     if eval(CONFIG.IS_TEST):
-        end_point="https://api-testnet.bybit.com",
+        end_point="https://api-testnet.bybit.com"
     
     session = usdt_perpetual.HTTP(
         endpoint=end_point,

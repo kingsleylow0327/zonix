@@ -6,6 +6,7 @@ from logger import Logger
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
+order_percent = 3
 
 def calculate_qty(session, entry_price, coin_info, percentage = 2):
     wallet = session.get_wallet_balance(coin="USDT")["result"]["USDT"]["equity"]
@@ -16,7 +17,7 @@ def calculate_qty(session, entry_price, coin_info, percentage = 2):
     return format(qty, '.{}f'.format(str(decimal_place)))
 
 def h_place_order(dbcon, message_id):
-    result = dbcon.get_order_detail_uat(message_id)
+    result = dbcon.get_order_detail(message_id)
     if result is None:
         return "Empty Row"
     
@@ -46,7 +47,7 @@ def h_place_order(dbcon, message_id):
         sub_order_id_list = []
         order_preset(item["session"], coin_pair, coin_info["maxLeverage"])
         for e in range(entry_count):
-            total_qty = float(calculate_qty(item["session"], entry_list[0], coin_info, percentage = 2))
+            total_qty = float(calculate_qty(item["session"], entry_list[0], coin_info, percentage = order_percent))
             # Entry
             single_current_qty = float(format(total_qty/entry_count/tp_num, '.{}f'.format(str(coin_qty_step))))
             exceeding_qty = total_qty/entry_count - (single_current_qty*tp_num) + single_current_qty
