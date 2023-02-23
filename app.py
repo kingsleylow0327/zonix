@@ -55,7 +55,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.channel.id == int(config.SENDER_CHANNEL_ID):
+    if message.channel.id == int(config.COMMAND_CHANNEL_ID):
         if is_test(message.content):
             message_list = message.content.split(" ")
             if dbcon.is_admin(message.author.id) and len(message_list) > 1 and "<@" in message_list[1]:
