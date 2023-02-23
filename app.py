@@ -88,7 +88,7 @@ async def on_message(message):
         for i in range(MAX_TRIES):
             await asyncio.sleep(2)
             ret = h_place_order(dbcon, message.id)
-            if ret == "Order Placed":
+            if ret == "Order Placed" or ret == "Order Placed (NR)":
                 break
 
         logger.info(ret)
