@@ -98,7 +98,7 @@ def cancel_all_order(session, coin):
         ret = session.cancel_all_active_orders(
                 symbol=coin)
         if ret["ret_msg"] == "OK":
-            logger.info("Cancel order {ret['result']}")
+            logger.info(f"Cancel order {ret['result']}")
         return
     except Exception as e:
         logger.warning(e)
