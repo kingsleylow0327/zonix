@@ -9,8 +9,8 @@ logger = logger_mod.get_logger()
 def h_cancel_all(dbcon, coin):
     player_api_list = dbcon.get_all_player()
     for i in player_api_list:
-        session = create_session(player_api_list[i]["api_key"], player_api_list[i]["api_secret"])
-        cancel_all_order(session, coin)["result"]
+        session = create_session([i]["api_key"], [i]["api_secret"])
+        cancel_all_order(session, coin)
     return "Cancel All Done"
 
 def h_cancel_order(dbcon, message_id):

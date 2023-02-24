@@ -82,7 +82,7 @@ async def on_message(message):
             logger.info("Not Admin")
             return
 
-        message_list = message.upper().split(" ")
+        message_list = message.content.upper().split(" ")
         if len(message_list) < 2:
             await message.channel.send("Missing Coin")
             return
