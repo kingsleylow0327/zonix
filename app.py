@@ -70,26 +70,26 @@ async def on_message(message):
             
             ret = h_test_api(dbcon, message.author.id, config.SERVER_IP)
             await message.author.send(ret["msg"])
-        return
+            return
+
+        if is_admin_cancel(message.content):
+            if not dbcon.is_admin(message.author.id):
+                logger.info("Not Admin")
+                return
+
+            message_list = message.content.upper().split(" ")
+            if len(message_list) < 2:
+                await message.channel.send("Missing Coin")
+                return
+            
+            coin = message_list[2].replace("/", "")
+            ret = h_cancel_all(dbcon, coin)
+            logger.info(ret)
+            return
 
     # Channel Block
     if message.channel.id != int(config.RECEIVER_CHANNEL_ID):
         print("Not Channel: {}".format(message.channel.id))
-        return
-
-    if is_admin_cancel(message.content):
-        if not dbcon.is_admin(message.author.id):
-            logger.info("Not Admin")
-            return
-
-        message_list = message.content.upper().split(" ")
-        if len(message_list) < 2:
-            await message.channel.send("Missing Coin")
-            return
-        
-        coin = message_list[2].replace("/", "")
-        ret = h_cancel_all(dbcon, coin)
-        logger.info(ret)
         return
 
     # User Block
