@@ -77,14 +77,9 @@ async def on_message(message):
         print("Not Channel: {}".format(message.channel.id))
         return
 
-    # User Block
-    if message.author.id != int(config.ZODIAC_ID):
-        print("Not Author: {}".format(message.author.id))
-        return
-    
     if is_admin_cancel(message.content):
         if not dbcon.is_admin(message.author.id):
-            print("Not Admin")
+            logger.info("Not Admin")
             return
 
         message_list = message.upper().split(" ")
@@ -95,6 +90,11 @@ async def on_message(message):
         coin = message_list[2].replace("/", "")
         ret = h_cancel_all(dbcon, coin)
         logger.info(ret)
+        return
+
+    # User Block
+    if message.author.id != int(config.ZODIAC_ID):
+        print("Not Author: {}".format(message.author.id))
         return
     
     if is_cancel(message.content):
