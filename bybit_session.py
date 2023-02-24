@@ -93,6 +93,17 @@ def cancel_order(session, coin, order_id):
         logger.warning(e)
         return "error"
 
+def cancel_all_order(session, coin):
+    try:
+        ret = session.cancel_all_active_orders(
+                symbol=coin)
+        if ret["ret_msg"] == "OK":
+            print(f"Cancel order {ret['result']}")
+        return
+    except Exception as e:
+        logger.warning(e)
+        return "error"
+
 def flip_side(side):
     ret = side
     if side == "Buy":

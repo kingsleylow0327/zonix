@@ -5,7 +5,7 @@ import discord
 from bybit_websock import bybit_ws
 from config import Config
 from handler.place_order import h_place_order
-from handler.cancel_order import h_cancel_order
+from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
 from logger import Logger
 from sql_con import ZonixDB
@@ -42,6 +42,10 @@ def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL"
 
+def is_admin_cancel(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "CANCEL" and message_list[1] == "-A"
+
 def is_test(message):
     message_list = message.upper().split(" ")
     return message_list[0].strip() == "/FOLLOWSTATUS"
@@ -76,6 +80,21 @@ async def on_message(message):
     # User Block
     if message.author.id != int(config.ZODIAC_ID):
         print("Not Author: {}".format(message.author.id))
+        return
+    
+    if is_admin_cancel(message.content):
+        if not dbcon.is_admin(message.author.id):
+            print("Not Admin")
+            return
+
+        message_list = message.upper().split(" ")
+        if len(message_list) < 2:
+            await message.channel.send("Missing Coin")
+            return
+        
+        coin = message_list[2].replace("/", "")
+        ret = h_cancel_all(dbcon, coin)
+        logger.info(ret)
         return
     
     if is_cancel(message.content):

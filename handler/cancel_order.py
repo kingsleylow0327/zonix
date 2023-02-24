@@ -1,10 +1,17 @@
-from bybit_session import create_session, cancel_order, cancel_pos, get_coin_info, order_preset, place_order
+from bybit_session import create_session, cancel_order, cancel_all_order, cancel_pos, get_coin_info, order_preset, place_order
 from dto.dto_order import dtoOrder
 from logger import Logger
 
 # Logger setup
 logger_mod = Logger("Cancel Order")
 logger = logger_mod.get_logger()
+
+def h_cancel_all(dbcon, coin):
+    player_api_list = dbcon.get_all_player()
+    for i in player_api_list:
+        session = create_session(player_api_list[i]["api_key"], player_api_list[i]["api_secret"])
+        cancel_all_order(session, coin)["result"]
+    return "Cancel All Done"
 
 def h_cancel_order(dbcon, message_id):
     order_list = dbcon.get_related_oder(message_id)
