@@ -82,7 +82,11 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
         return "error"
 
 def cancel_pos(session, coin):
-    return session.close_position(coin)
+    try:
+        return session.close_position(coin)
+    except Exception as e:
+        logger.warning(e)
+        return "error"
 
 def cancel_order(session, coin, order_id):
     try:
