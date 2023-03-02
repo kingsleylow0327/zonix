@@ -65,6 +65,7 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                 )
         else:
             fliped_side = flip_side(dtoOrder.side)
+            pos_idx = 1 if dtoOrder.side == "Buy" else 2
             ret = session.place_active_order(
                 symbol=dtoOrder.symbol,
                 side=fliped_side,
@@ -73,7 +74,7 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                 time_in_force="ImmediateOrCancel",
                 reduce_only=True,
                 close_on_trigger=False,
-                position_idx=0,
+                position_idx=pos_idx,
             )
         return ret
     except Exception as e:
