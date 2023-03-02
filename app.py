@@ -44,7 +44,7 @@ def is_cancel(message):
 
 def is_admin_cancel(message):
     message_list = message.upper().split(" ")
-    return message_list[0] == "CANCEL" and message_list[1] == "-A"
+    return message_list[0] == "CANCEL" and len(message_list) > 1
 
 def is_test(message):
     message_list = message.upper().split(" ")
@@ -83,7 +83,17 @@ async def on_message(message):
                 return
             
             coin = message_list[2].replace("/", "")
-            ret = h_cancel_all(dbcon, coin)
+            option = message_list[1]
+
+            # Cancel Active Order
+            if option == "-A":
+                is_active = True
+            
+            # Cancel Posistion Order
+            elif option == "-P":
+                is_active = False
+
+            ret = h_cancel_all(dbcon, coin, is_active)
             logger.info(ret)
             return
 

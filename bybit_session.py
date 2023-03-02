@@ -65,14 +65,15 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                 )
         else:
             fliped_side = flip_side(dtoOrder.side)
-            ret = session.place_conditional_order(
+            ret = session.place_active_order(
                 symbol=dtoOrder.symbol,
                 side=fliped_side,
                 order_type="Market",
                 qty=dtoOrder.quantity,
                 time_in_force="ImmediateOrCancel",
                 reduce_only=True,
-                close_on_trigger=False, 
+                close_on_trigger=False,
+                position_idx=0,
             )
         return ret
     except Exception as e:
@@ -93,12 +94,20 @@ def cancel_order(session, coin, order_id):
         logger.warning(e)
         return "error"
 
-def cancel_all_order(session, coin):
+def cancel_all_order(session, coin, is_active):
     try:
-        ret = session.cancel_all_active_orders(
-                symbol=coin)
-        if ret["ret_msg"] == "OK":
-            logger.info(f"Cancel order {ret['result']}")
+        if is_active:
+            ret = session.cancel_all_active_orders(symbol=coin)
+            if ret["ret_msg"] == "OK":
+                logger.info(f"Cancel order {ret['result']}")
+        else:
+            pos = session.my_position(symbol=coin)
+            for item in pos["result"]:
+                if item["side"] == "None":
+                    continue
+                dto = dtoOrder(0, item["symbol"], item["side"], item["size"], 0, 0, 0)
+                place_order(session, dto, market_out=True)
+                logger.info(f"Canceled Position {coin}")
         return
     except Exception as e:
         logger.warning(e)

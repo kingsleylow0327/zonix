@@ -6,11 +6,11 @@ from logger import Logger
 logger_mod = Logger("Cancel Order")
 logger = logger_mod.get_logger()
 
-def h_cancel_all(dbcon, coin):
+def h_cancel_all(dbcon, coin, is_active):
     player_api_list = dbcon.get_all_player()
     for i in player_api_list:
         session = create_session(i["api_key"], i["api_secret"])
-        cancel_all_order(session, coin)
+        cancel_all_order(session, coin, is_active)
     return "Cancel All Done"
 
 def h_cancel_order(dbcon, message_id):
