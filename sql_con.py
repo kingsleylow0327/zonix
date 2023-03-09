@@ -50,6 +50,24 @@ class ZonixDB():
     def get_order_detail(self, message_id):
         sql = "select * from {} where message_id = '{}'".format(self.config.ORDER_TABLE, message_id)
         return self.dbcon_manager(sql)
+    
+    def get_order_msg_id(self, message_id):
+        sql = """SELECT order_msg_id FROM {}
+        WHERE message_id = {};
+        """.format(self.config.PLAYER_ORDER,
+                    message_id)
+        return self.dbcon_manager(sql)
+
+    def get_order_detail_by_order(self, order_msg_id):
+        sql = """SELECT p.order_msg_id, o.* 
+        FROM {} as p
+        LEFT join {} as o
+        ON p.message_id = o.message_id
+        WHERE p.order_msg_id = {}
+        """.format(self.config.PLAYER_ORDER,
+                    self.config.ORDER_TABLE,
+                    order_msg_id)
+        return self.dbcon_manager(sql)
 
     def get_player_api(self, player_id):
         sql = """SELECT api_key, api_secret

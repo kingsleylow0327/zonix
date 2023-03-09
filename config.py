@@ -16,6 +16,7 @@ class Config():
         self.DB_USERNAME = os.getenv('DB_USERNAME')
         self.DB_PASSWORD = os.getenv('DB_PASSWORD')
         self.DB_PORT = os.getenv('DB_PORT')
+        self.PLAYER_ORDER = os.getenv('PLAYER_ORDER')
         self.ORDER_TABLE = os.getenv('ORDER_TABLE')
         self.API_TABLE = os.getenv('API_TABLE')
         self.FOLLOWER_TABLE = os.getenv('FOLLOWER_TABLE')

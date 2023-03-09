@@ -1,12 +1,15 @@
 # bot.py
 import asyncio
 import discord
+import re
 
 from bybit_websock import bybit_ws
 from config import Config
+from datetime import datetime
 from handler.place_order import h_place_order
 from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
+from handler.start_thread import h_get_order_detail
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -36,11 +39,18 @@ for player in player_api_list:
 logger.info("Done Creating websocket!")
 
 def is_order(message):
-    return "Leverage Cross x10" in message
+    word_list = ['entry', 'tp', 'stop']
+    pattern = '|'.join(word_list)
+    matches = re.findall(pattern, message, re.IGNORECASE)
+    return len(matches) == len(word_list)
 
 def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL"
+
+def is_market_out(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "/MO"
 
 def is_admin_cancel(message):
     message_list = message.upper().split(" ")
@@ -59,6 +69,31 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Mesage in Thread 
+    if isinstance(message.channel, discord.Thread):
+        if is_cancel(message.content) or is_market_out(message.content):
+            refer_id = dbcon.get_order_detail_by_order(message.channel.id)["message_id"]
+            reply_to = await CHANNEL.fetch_message(int(refer_id))
+            await CHANNEL.send("Cancel", reference=reply_to)
+
+    if message.channel.id == int(config.SENDER_CHANNEL_ID):
+        if is_order(message.content): 
+            ret = "Empty Row"
+            for i in range(MAX_TRIES):
+                await asyncio.sleep(2)
+                reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
+                coin_pair = reg_pat.group(1).strip()
+                long_short = reg_pat.group(2).strip()
+                cur_date = datetime.now().strftime('%h %d')
+                thread_message = f'{cur_date} -- {coin_pair} {long_short} 🔴'
+                f = await message.create_thread(name=thread_message)
+
+                confirm_message = h_get_order_detail(dbcon, message.id)
+                await f.send(confirm_message)
+                break    
+            logger.info(ret)
+            return
+
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
         if is_test(message.content):
             message_list = message.content.split(" ")
@@ -97,16 +132,22 @@ async def on_message(message):
             logger.info(ret)
             return
 
+    # Receiver Channel Part
     # Channel Block
     if message.channel.id != int(config.RECEIVER_CHANNEL_ID):
-        print("Not Channel: {}".format(message.channel.id))
         return
 
     # User Block
     if message.author.id != int(config.ZODIAC_ID):
-        print("Not Author: {}".format(message.author.id))
         return
     
+    if is_order(message.content):
+        return
+    
+    msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
+    thread = client.get_channel(int(msg_id))
+    await thread.send("System Msg: \n" + message.content)
+
     if is_cancel(message.content):
         ret = h_cancel_order(dbcon, message.reference.message_id)
         logger.info(ret)
