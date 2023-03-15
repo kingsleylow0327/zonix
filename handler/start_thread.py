@@ -10,7 +10,7 @@ def h_get_order_detail(dbcon, msg_id):
     tp_list = "\n".join([str(i) for i in tp_list if i != -1])
     stop = ret_json["stop"]
     msg_format = f"""
-Order Received and Placed
+👑 Tradecall received by Zonix Trading Bot 👑
 
 {coin_pair}{long_short}
 
@@ -23,7 +23,7 @@ TP:
 STOP:
 {stop}
 
-* Please contact Admin if above order is not the same as your original order
+**Please type `Cancel` if the above Tradecall is not the same as your posted, contact admin for more inquiry**
 
     """
     return msg_format

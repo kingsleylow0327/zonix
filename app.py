@@ -10,6 +10,7 @@ from handler.place_order import h_place_order
 from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
+from handler.check_price import h_check_price
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -71,26 +72,63 @@ async def on_ready():
 async def on_message(message):
     # Mesage in Thread 
     if isinstance(message.channel, discord.Thread):
-        if is_cancel(message.content) or is_market_out(message.content):
-            refer_id = dbcon.get_order_detail_by_order(message.channel.id)["message_id"]
+        if is_cancel(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            refer_id = order_detail["message_id"]
+            order_msg_id = order_detail["order_msg_id"]
             reply_to = await CHANNEL.fetch_message(int(refer_id))
+            # Check is admin and author
+            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+                # Send message
+                await message.channel.send("Permission Denied")
+                return
+            
+            # Check status
             await CHANNEL.send("Cancel", reference=reply_to)
+            ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
+            logger.info(ret)
+            return
+        
+        if is_market_out(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            refer_id = order_detail["message_id"]
+            order_msg_id = order_detail["order_msg_id"]
+            coin_pair = order_detail["coinpair"].replace("/","").strip()
+            reply_to = await CHANNEL.fetch_message(int(refer_id))
+            # Check is admin and author
+            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+                # Send message
+                await message.channel.send("Permission Denied")
+                return
+            coin_price = h_check_price(coin_pair)
+            await CHANNEL.send("Cancel", reference=reply_to)
+            await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)}")
+            ret = h_cancel_order(dbcon, order_msg_id)
+            logger.info(ret)
+            return
 
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         if is_order(message.content): 
             ret = "Empty Row"
+
+            # Create Thread
+            reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
+            coin_pair = reg_pat.group(1).strip()
+            long_short = reg_pat.group(2).strip()
+            cur_date = datetime.now().strftime('%h %d')
+            thread_message = f'{cur_date} -- {coin_pair} {long_short} 🔴'
+            f = await message.create_thread(name=thread_message)
+
+            # Place Actual Order
             for i in range(MAX_TRIES):
                 await asyncio.sleep(2)
-                reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
-                coin_pair = reg_pat.group(1).strip()
-                long_short = reg_pat.group(2).strip()
-                cur_date = datetime.now().strftime('%h %d')
-                thread_message = f'{cur_date} -- {coin_pair} {long_short} 🔴'
-                f = await message.create_thread(name=thread_message)
+                ret = h_place_order(dbcon, message.id)
+                if ret == "Order Placed" or ret == "Order Placed (NR)":
+                    break
 
-                confirm_message = h_get_order_detail(dbcon, message.id)
-                await f.send(confirm_message)
-                break    
+            # Send feedback message on thread
+            confirm_message = h_get_order_detail(dbcon, message.id)
+            await f.send(confirm_message)
             logger.info(ret)
             return
 
@@ -148,19 +186,5 @@ async def on_message(message):
     thread = client.get_channel(int(msg_id))
     await thread.send("System Msg: \n" + message.content)
 
-    if is_cancel(message.content):
-        ret = h_cancel_order(dbcon, message.reference.message_id)
-        logger.info(ret)
-        return
-
-    if is_order(message.content): 
-        ret = "Empty Row"
-        for i in range(MAX_TRIES):
-            await asyncio.sleep(2)
-            ret = h_place_order(dbcon, message.id)
-            if ret == "Order Placed" or ret == "Order Placed (NR)":
-                break
-
-        logger.info(ret)
 
 client.run(config.TOKEN)

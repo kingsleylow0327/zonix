@@ -45,6 +45,8 @@ class ZonixDB():
                 except Exception as e:
                     logger.warning(sql)
                     logger.warning(e)
+        if not row:
+            return None
         return row
     
     def get_order_detail(self, message_id):
@@ -59,7 +61,7 @@ class ZonixDB():
         return self.dbcon_manager(sql)
 
     def get_order_detail_by_order(self, order_msg_id):
-        sql = """SELECT p.order_msg_id, o.* 
+        sql = """SELECT p.order_msg_id, p.status, o.* 
         FROM {} as p
         LEFT join {} as o
         ON p.message_id = o.message_id
@@ -117,17 +119,21 @@ class ZonixDB():
         return self.dbcon_manager(sql, get_all=True)
     
     def get_related_oder(self, message_id):
-        sql = """select o.coinpair, m.message_id, m.player_order, p.follower_order, p.player_id, IF(m.player_order=p.follower_order,'player','') as role
-        from {} as m left join {} as p
-        ON m.player_order = p.player_order
-        left join {} as o
-        ON o.message_id = m.message_id
-        where m.message_id = '{}'
-        order by p.player_id ASC, role DESC
-        """.format(self.config.MESSAGE_PLAYER_TABLE,
-            self.config.PLAYER_FOLLOWER_TABLE,
-            self.config.ORDER_TABLE,
-            message_id)
+        sql = """SELECT o.coinpair, m.message_id, m.player_order, f.follower_order, f.player_id, IF(m.player_order=f.follower_order,'player','') as role
+        FROM {} as o
+        LEFT JOIN {} as p
+        ON p.message_id = o.message_id
+        LEFT JOIN {} as m 
+        ON p.order_msg_id = m.message_id
+        LEFT JOIN {} as f
+        ON m.player_order = f.player_order
+        WHERE m.message_id = '{}'
+        ORDER BY p.player_id ASC, role DESC
+        """.format(self.config.ORDER_TABLE,
+                   self.config.PLAYER_ORDER,
+                   self.config.MESSAGE_PLAYER_TABLE,
+                   self.config.PLAYER_FOLLOWER_TABLE,
+                   message_id)
         return self.dbcon_manager(sql, get_all=True)
     
     def get_all_player(self):
@@ -146,6 +152,15 @@ class ZonixDB():
     def is_admin(self, player_id):
         sql = """SELECT discord_id FROM user 
         WHERE discord_id='{}'""".format(player_id)
+        ret = self.dbcon_manager(sql, get_all=True)
+        return len(ret) != 0
+    
+    def is_admin_and_order_author(self, message_id, player_id):
+        sql = """SELECT *
+        FROM {} as p, user as u
+        WHERE (p.message_id = '{}' AND p.player_id = '{}')
+        OR (u.discord_id IN ('{}'))
+        """.format(self.config.PLAYER_ORDER, message_id, player_id, player_id)
         ret = self.dbcon_manager(sql, get_all=True)
         return len(ret) != 0
 

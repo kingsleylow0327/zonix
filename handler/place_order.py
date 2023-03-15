@@ -17,7 +17,7 @@ def calculate_qty(session, entry_price, coin_info, percentage = 2):
     return format(qty, '.{}f'.format(str(decimal_place)))
 
 def h_place_order(dbcon, message_id):
-    result = dbcon.get_order_detail(message_id)
+    result = dbcon.get_order_detail_by_order(message_id)
     if result is None:
         return "Empty Row"
     
