@@ -8,6 +8,7 @@ class Config():
         load_dotenv()
         self.TOKEN = os.getenv('DISCORD_TOKEN')
         self.ZODIAC_ID = os.getenv('ZODIAC_ID')
+        self.ZONIX_ID = os.getenv('ZONIX_ID')
         self.SENDER_CHANNEL_ID = os.getenv('SENDER_CHANNEL_ID')
         self.RECEIVER_CHANNEL_ID = os.getenv('RECEIVER_CHANNEL_ID')
         self.COMMAND_CHANNEL_ID = os.getenv('COMMAND_CHANNEL_ID')

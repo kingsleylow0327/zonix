@@ -162,7 +162,16 @@ class ZonixDB():
         OR (u.discord_id IN ('{}'))
         """.format(self.config.PLAYER_ORDER, message_id, player_id, player_id)
         ret = self.dbcon_manager(sql, get_all=True)
+        if ret == None:
+            return False
         return len(ret) != 0
+    
+    def update_market_out_price(self, price, message_id):
+        sql = """UPDATE {}
+        SET mo_price = {}
+        WHERE message_id = '{}'
+        """.format(self.config.ORDER_TABLE, price, message_id)
+        self.dbcon_manager(sql, get_all=True)
 
     def close_cursor(self):
         self.cursor.close()

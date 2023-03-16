@@ -23,7 +23,7 @@ def h_place_order(dbcon, message_id):
     
     # get api list
     api_pair_list = dbcon.get_followers_api(result["player_id"])
-    if len(api_pair_list) == 0:
+    if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
 
     session_list = [{"session":create_session(x["api_key"], x["api_secret"]),

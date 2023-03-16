@@ -51,7 +51,7 @@ def is_cancel(message):
 
 def is_market_out(message):
     message_list = message.upper().split(" ")
-    return message_list[0] == "/MO"
+    return message_list[0] == "MARKETOUT"
 
 def is_admin_cancel(message):
     message_list = message.upper().split(" ")
@@ -72,6 +72,9 @@ async def on_ready():
 async def on_message(message):
     # Mesage in Thread 
     if isinstance(message.channel, discord.Thread):
+        # Zonix ID block
+        if message.author.id == int(config.ZONIX_ID):
+            return
         if is_cancel(message.content):
             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
             refer_id = order_detail["message_id"]
@@ -85,8 +88,10 @@ async def on_message(message):
             
             # Check status
             await CHANNEL.send("Cancel", reference=reply_to)
+            await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret)
+            await message.channel.edit(archived=True)
             return
         
         if is_market_out(message.content):
@@ -102,9 +107,11 @@ async def on_message(message):
                 return
             coin_price = h_check_price(coin_pair)
             await CHANNEL.send("Cancel", reference=reply_to)
-            await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)}")
+            await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
             ret = h_cancel_order(dbcon, order_msg_id)
+            dbcon.update_market_out_price(coin_price, refer_id)
             logger.info(ret)
+            await message.channel.edit(archived=True)
             return
 
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
@@ -181,10 +188,13 @@ async def on_message(message):
     
     if is_order(message.content):
         return
-    
+
+    if is_cancel(message.content):
+        return
+
     msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
     thread = client.get_channel(int(msg_id))
-    await thread.send("System Msg: \n" + message.content)
+    await thread.send(message.content + "\n")
 
 
 client.run(config.TOKEN)
