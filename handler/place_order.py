@@ -7,9 +7,12 @@ from logger import Logger
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
 order_percent = 3
+maximum_wallet = 3000
 
 def calculate_qty(session, entry_price, coin_info, percentage = 2):
     wallet = session.get_wallet_balance(coin="USDT")["result"]["USDT"]["equity"]
+    if float(wallet) > maximum_wallet:
+        wallet = maximum_wallet
     qty = (wallet * (percentage / 100) * float(coin_info["maxLeverage"]))/entry_price
     
     # Make it same decimal place
