@@ -61,6 +61,12 @@ def is_test(message):
     message_list = message.upper().split(" ")
     return message_list[0].strip() == "/FOLLOWSTATUS"
 
+def change_thread_name(old_name, emoji):
+    new_name_list = old_name.split(" ")
+    new_name_list[0] = emoji
+    new_name = " ".join(new_name_list)
+    return new_name
+
 @client.event
 async def on_ready():
     logger.info('Zonix Is Booted Up!')
@@ -72,18 +78,48 @@ async def on_ready():
 async def on_message(message):
     # Mesage in Thread 
     if isinstance(message.channel, discord.Thread):
+
         # Zonix ID block
         if message.author.id == int(config.ZONIX_ID):
+            # Change Title
+            if "All take-profit" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "🤑")
+                await message.channel.edit(name=new_name, archived=True)
+                return
+            if "take-profit" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "🟢")
+                await message.channel.edit(name=new_name)
+                return
+            if "stoploss" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "💸")
+                await message.channel.edit(name=new_name, archived=True)
+                return
             return
+
         if is_cancel(message.content):
             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
             refer_id = order_detail["message_id"]
             order_msg_id = order_detail["order_msg_id"]
+            order_status = order_detail["p_status"]
             reply_to = await CHANNEL.fetch_message(int(refer_id))
             # Check is admin and author
             if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
                 # Send message
-                await message.channel.send("Permission Denied")
+                await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+No record found / wrong reply message\n""")
+                return
+            
+            if order_status != "created":
+
+                # Repeatative Cancel
+                if order_status in ["cancelled", "completed", "break even", "stoploss"]:
+                    await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+This TradeCall was cancelled earlier or closed\n""")
+                    return
+                
+                # Reached Market Out
+                await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\n""")
                 return
             
             # Check status
@@ -91,7 +127,9 @@ async def on_message(message):
             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret)
-            await message.channel.edit(archived=True)
+            thread_name = message.channel.name
+            new_name = change_thread_name(thread_name, "⛔")
+            await message.channel.edit(name=new_name, archived=True)
             return
         
         if is_market_out(message.content):
@@ -99,19 +137,35 @@ async def on_message(message):
             refer_id = order_detail["message_id"]
             order_msg_id = order_detail["order_msg_id"]
             coin_pair = order_detail["coinpair"].replace("/","").strip()
+            order_status = order_detail["p_status"]
             reply_to = await CHANNEL.fetch_message(int(refer_id))
             # Check is admin and author
             if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
                 # Send message
                 await message.channel.send("Permission Denied")
                 return
+            
+            if order_status == "created":
+                # Not yet reach TP
+                await message.channel.send("""Market Out UNSUCCESSFUL
+Market Out Failed, this TradeCall has NOT reached Entry Price, use `CANCEL` instead.\n""")
+                return
+
+            # Repeatative Market Out
+            if order_status in ["cancelled", "completed", "break even", "stoploss"]:
+                await message.channel.send("""🚨Market Out UNSUCCESSFUL
+This TradeCall was cancelled earlier or closed\n""")
+                return
+
             coin_price = h_check_price(coin_pair)
             await CHANNEL.send("Cancel", reference=reply_to)
             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
             ret = h_cancel_order(dbcon, order_msg_id)
             dbcon.update_market_out_price(coin_price, refer_id)
             logger.info(ret)
-            await message.channel.edit(archived=True)
+            thread_name = message.channel.name
+            new_name = change_thread_name(thread_name, "🆘")
+            await message.channel.edit(name=new_name, archived=True)
             return
 
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
@@ -123,8 +177,8 @@ async def on_message(message):
             coin_pair = reg_pat.group(1).strip()
             long_short = reg_pat.group(2).strip()
             cur_date = datetime.now().strftime('%h %d')
-            thread_message = f'{cur_date} -- {coin_pair} {long_short} 🔴'
-            f = await message.create_thread(name=thread_message)
+            thread_message = f'🔴 {cur_date} -- {coin_pair} {long_short}'
+            thread = await message.create_thread(name=thread_message)
 
             # Place Actual Order
             for i in range(MAX_TRIES):
@@ -135,7 +189,9 @@ async def on_message(message):
 
             # Send feedback message on thread
             confirm_message = h_get_order_detail(dbcon, message.id)
-            await f.send(confirm_message)
+            await thread.send(confirm_message)
+            thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
+            await thread.edit(name=thread_message)
             logger.info(ret)
             return
 

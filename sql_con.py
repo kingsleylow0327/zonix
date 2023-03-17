@@ -61,7 +61,7 @@ class ZonixDB():
         return self.dbcon_manager(sql)
 
     def get_order_detail_by_order(self, order_msg_id):
-        sql = """SELECT p.order_msg_id, p.status, o.* 
+        sql = """SELECT p.order_msg_id, p.status as p_status, o.* 
         FROM {} as p
         LEFT join {} as o
         ON p.message_id = o.message_id
