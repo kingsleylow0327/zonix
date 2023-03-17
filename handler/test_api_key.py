@@ -54,8 +54,7 @@ Following: {}
             i_d_v3 = "✅"
         if api_info["read_only"] == False:
             i_api = "✅"
-        if wallet_balance >= MIN_WALLET_USDT:
-            i_wallet = "✅"
+        i_wallet = f"{wallet_balance}"
         
         if len(follower_list) > 1:
             i_follower = "Following more than 1 player ❌"
