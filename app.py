@@ -1,12 +1,16 @@
 # bot.py
 import asyncio
 import discord
+import re
 
 from bybit_websock import bybit_ws
 from config import Config
+from datetime import datetime
 from handler.place_order import h_place_order
 from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
+from handler.start_thread import h_get_order_detail
+from handler.check_price import h_check_price
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -36,11 +40,18 @@ for player in player_api_list:
 logger.info("Done Creating websocket!")
 
 def is_order(message):
-    return "Leverage Cross x10" in message
+    word_list = ['entry', 'tp', 'stop']
+    pattern = '|'.join(word_list)
+    matches = re.findall(pattern, message, re.IGNORECASE)
+    return len(matches) == len(word_list)
 
 def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL"
+
+def is_market_out(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "MARKETOUT"
 
 def is_admin_cancel(message):
     message_list = message.upper().split(" ")
@@ -49,6 +60,12 @@ def is_admin_cancel(message):
 def is_test(message):
     message_list = message.upper().split(" ")
     return message_list[0].strip() == "/FOLLOWSTATUS"
+
+def change_thread_name(old_name, emoji):
+    new_name_list = old_name.split(" ")
+    new_name_list[0] = emoji
+    new_name = " ".join(new_name_list)
+    return new_name
 
 @client.event
 async def on_ready():
@@ -59,6 +76,125 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    # Mesage in Thread 
+    if isinstance(message.channel, discord.Thread):
+
+        # Zonix ID block
+        if message.author.id == int(config.ZONIX_ID):
+            # Change Title
+            if "All take-profit" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "🤑")
+                await message.channel.edit(name=new_name, archived=True)
+                return
+            if "take-profit" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "🟢")
+                await message.channel.edit(name=new_name)
+                return
+            if "stoploss" in message.content.lower():
+                new_name = change_thread_name(message.channel.name, "💸")
+                await message.channel.edit(name=new_name, archived=True)
+                return
+            return
+
+        if is_cancel(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            refer_id = order_detail["message_id"]
+            order_msg_id = order_detail["order_msg_id"]
+            order_status = order_detail["p_status"]
+            reply_to = await CHANNEL.fetch_message(int(refer_id))
+            # Check is admin and author
+            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+                # Send message
+                await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+No record found / wrong reply message\n""")
+                return
+            
+            if order_status != "created":
+
+                # Repeatative Cancel
+                if order_status in ["cancelled", "completed", "break even", "stoploss"]:
+                    await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+This TradeCall was cancelled earlier or closed\n""")
+                    return
+                
+                # Reached Market Out
+                await message.channel.send("""🚨CANCEL UNSUCCESSFUL
+Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\n""")
+                return
+            
+            # Check status
+            await CHANNEL.send("Cancel", reference=reply_to)
+            await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
+            ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
+            logger.info(ret)
+            thread_name = message.channel.name
+            new_name = change_thread_name(thread_name, "⛔")
+            await message.channel.edit(name=new_name, archived=True)
+            return
+        
+        if is_market_out(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            refer_id = order_detail["message_id"]
+            order_msg_id = order_detail["order_msg_id"]
+            coin_pair = order_detail["coinpair"].replace("/","").strip()
+            order_status = order_detail["p_status"]
+            reply_to = await CHANNEL.fetch_message(int(refer_id))
+            # Check is admin and author
+            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+                # Send message
+                await message.channel.send("Permission Denied")
+                return
+            
+            if order_status == "created":
+                # Not yet reach TP
+                await message.channel.send("""Market Out UNSUCCESSFUL
+Market Out Failed, this TradeCall has NOT reached Entry Price, use `CANCEL` instead.\n""")
+                return
+
+            # Repeatative Market Out
+            if order_status in ["cancelled", "completed", "break even", "stoploss"]:
+                await message.channel.send("""🚨Market Out UNSUCCESSFUL
+This TradeCall was cancelled earlier or closed\n""")
+                return
+
+            coin_price = h_check_price(coin_pair)
+            await CHANNEL.send("Cancel", reference=reply_to)
+            await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
+            ret = h_cancel_order(dbcon, order_msg_id)
+            dbcon.update_market_out_price(coin_price, refer_id)
+            logger.info(ret)
+            thread_name = message.channel.name
+            new_name = change_thread_name(thread_name, "🆘")
+            await message.channel.edit(name=new_name, archived=True)
+            return
+
+    if message.channel.id == int(config.SENDER_CHANNEL_ID):
+        if is_order(message.content): 
+            ret = "Empty Row"
+
+            # Create Thread
+            reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
+            coin_pair = reg_pat.group(1).strip()
+            long_short = reg_pat.group(2).strip()
+            cur_date = datetime.now().strftime('%h %d')
+            thread_message = f'🔴 {cur_date} -- {coin_pair} {long_short}'
+            thread = await message.create_thread(name=thread_message)
+
+            # Place Actual Order
+            for i in range(MAX_TRIES):
+                await asyncio.sleep(2)
+                ret = h_place_order(dbcon, message.id)
+                if ret == "Order Placed" or ret == "Order Placed (NR)":
+                    break
+
+            # Send feedback message on thread
+            confirm_message = h_get_order_detail(dbcon, message.id)
+            await thread.send(confirm_message)
+            thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
+            await thread.edit(name=thread_message)
+            logger.info(ret)
+            return
+
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
         if is_test(message.content):
             message_list = message.content.split(" ")
@@ -97,29 +233,24 @@ async def on_message(message):
             logger.info(ret)
             return
 
+    # Receiver Channel Part
     # Channel Block
     if message.channel.id != int(config.RECEIVER_CHANNEL_ID):
-        print("Not Channel: {}".format(message.channel.id))
         return
 
     # User Block
     if message.author.id != int(config.ZODIAC_ID):
-        print("Not Author: {}".format(message.author.id))
         return
     
-    if is_cancel(message.content):
-        ret = h_cancel_order(dbcon, message.reference.message_id)
-        logger.info(ret)
+    if is_order(message.content):
         return
 
-    if is_order(message.content): 
-        ret = "Empty Row"
-        for i in range(MAX_TRIES):
-            await asyncio.sleep(2)
-            ret = h_place_order(dbcon, message.id)
-            if ret == "Order Placed" or ret == "Order Placed (NR)":
-                break
+    if is_cancel(message.content):
+        return
 
-        logger.info(ret)
+    msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
+    thread = client.get_channel(int(msg_id))
+    await thread.send(message.content + "\n")
+
 
 client.run(config.TOKEN)
