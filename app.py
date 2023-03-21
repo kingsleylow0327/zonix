@@ -190,11 +190,10 @@ This TradeCall was cancelled earlier or closed\n""")
             # Send feedback message on thread
             confirm_message = h_get_order_detail(dbcon, message.id)
             await thread.send(confirm_message)
+            thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
             if confirm_message == "This order is not recognized":
                 thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
-                await thread.edit(name=thread_message, archived=True)
                 return
-            thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
             await thread.edit(name=thread_message)
             logger.info(ret)
             return
