@@ -49,6 +49,10 @@ def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL"
 
+def is_achieved_before(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "ACHIEVED BEFORE"
+
 def is_market_out(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "MARKETOUT"
@@ -94,6 +98,16 @@ async def on_message(message):
                 new_name = change_thread_name(message.channel.name, "💸")
                 await message.channel.edit(name=new_name, archived=True)
                 return
+            return
+        
+        if is_achieved_before(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            order_msg_id = order_detail["order_msg_id"]
+            ret = h_cancel_order(dbcon, order_msg_id)
+            logger.info(ret)
+            thread_name = message.channel.name
+            new_name = change_thread_name(thread_name, "⛔")
+            await message.channel.edit(name=new_name, archived=True)
             return
 
         if is_cancel(message.content):
