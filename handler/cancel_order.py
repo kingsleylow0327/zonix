@@ -27,9 +27,14 @@ def h_cancel_order(dbcon, message_id):
     
     api_list = dbcon.get_followers_api(main_player_id)
     api_map = {}
+
+    # Market Out
     for i in range(len(api_list)):
         api_map[api_list[i]["follower_id"]] = api_list[i]
-        
+        session = create_session(api_map[i["player_id"]]["api_key"],
+                                api_map[i["player_id"]]["api_secret"])
+        cancel_pos(session, coin)
+
     current_id = api_list[0]["follower_id"]
     session = create_session(api_list[0]["api_key"], api_list[0]["api_secret"])
 
@@ -45,7 +50,6 @@ def h_cancel_order(dbcon, message_id):
                         0,
                         lev)
     order_preset(session, coin, lev)
-    cancel_pos(session, coin)
     session.cancel_all_conditional_orders(symbol=coin)
 
     for i in order_list:
@@ -57,7 +61,7 @@ def h_cancel_order(dbcon, message_id):
             order_detail.quantity = my_pos["size"]
             order_detail.side = my_pos["side"]
             order_preset(session, coin, lev)
-            cancel_pos(session, coin)
+            # cancel_pos(session, coin)
             session.cancel_all_conditional_orders(symbol=coin)
         cancel_order(session, coin, i["follower_order"])
     return "Order Cancelled"
