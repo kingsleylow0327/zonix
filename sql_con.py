@@ -18,7 +18,7 @@ class ZonixDB():
     def _create_pool(self, host, port, database, user, password, size):
         try:
             pool = pooling.MySQLConnectionPool(pool_name="zonix_pool",
-                pool_size=size,
+                pool_size=int(size),
                 pool_reset_session=True,
                 host=host,
                 port=port,
