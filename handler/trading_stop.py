@@ -10,8 +10,9 @@ def h_trading_stop(dbcon, player_id, order_dto):
     # Shift all stop loss
     for player in api_pair_list:
         session = create_session(player["api_key"], player["api_secret"])
+        side = "Buy" if order_dto.side.upper() == "LONG" else "Sell"
         shift_pos_stoploss(session,
                            order_dto.symbol,
-                           order_dto.side,
+                           side,
                            order_dto.stoploss)
     return "StopLoss Shifted"

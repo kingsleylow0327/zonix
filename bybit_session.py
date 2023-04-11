@@ -163,10 +163,12 @@ def order_preset(session, symbol, lev):
             logger.warning(e)
 
 def shift_pos_stoploss(session, symbol, side, stoploss):
-    ret_value = None
-    ret_value = session.set_trading_stop(
-        symbol=symbol,
-        side=side,
-        stop_loss=stoploss
-    )
-    return ret_value
+    try:
+        session.set_trading_stop(
+            symbol=symbol,
+            side=side,
+            stop_loss=stoploss
+        )
+    except Exception as e:
+        print("Shift Pos Error")
+        logger.warning(e)
