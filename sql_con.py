@@ -12,12 +12,13 @@ class ZonixDB():
             config.DB_PORT,
             config.DB_SCHEMA,
             config.DB_USERNAME,
-            config.DB_PASSWORD)
+            config.DB_PASSWORD,
+            config.POOL_SIZE)
  
-    def _create_pool(self, host, port, database, user, password):
+    def _create_pool(self, host, port, database, user, password, size):
         try:
             pool = pooling.MySQLConnectionPool(pool_name="zonix_pool",
-                pool_size=12,
+                pool_size=size,
                 pool_reset_session=True,
                 host=host,
                 port=port,
