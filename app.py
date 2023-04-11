@@ -11,6 +11,8 @@ from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
 from handler.check_price import h_check_price
+from handler.trading_stop import h_trading_stop
+from dto.dto_order import dtoOrder
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -90,7 +92,26 @@ async def on_message(message):
                 new_name = change_thread_name(message.channel.name, "🤑")
                 await message.channel.edit(name=new_name, archived=True)
                 return
-            if "take-profit" in message.content.lower():
+            if "take-profit" and "target 1" in message.content.lower():
+                # Get Details
+                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+                order_msg_id = order_detail["order_msg_id"]
+                player_id = order_detail["player_id"]
+                order_dto = dtoOrder("",
+                                        order_detail["coinpair"].replace("/",""),
+                                        order_detail["long_short"],
+                                        "",
+                                        "",
+                                        order_detail["entry1"],
+                                        "")
+                # Cancel Active order
+                ret = h_cancel_order(dbcon, order_msg_id)
+                print(ret)
+
+                # Trading Stop
+                ret = h_trading_stop(dbcon, player_id ,order_dto)
+                print(ret)
+
                 new_name = change_thread_name(message.channel.name, "🟢")
                 await message.channel.edit(name=new_name)
                 return
