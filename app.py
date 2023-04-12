@@ -97,13 +97,13 @@ async def on_message(message):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 order_msg_id = order_detail["order_msg_id"]
                 player_id = order_detail["player_id"]
-                order_dto = dtoOrder("",
-                                        order_detail["coinpair"].replace("/",""),
-                                        order_detail["long_short"],
-                                        "",
-                                        "",
-                                        order_detail["entry1"],
-                                        "")
+                order_dto = dtoOrder(order_detail["entry1"],
+                                     order_detail["coinpair"].replace("/",""),
+                                     order_detail["long_short"],
+                                     "",
+                                     "",
+                                     order_detail["entry1"],
+                                     "")
                 # Cancel Active order
                 ret = h_cancel_order(dbcon, order_msg_id)
                 print(ret)
