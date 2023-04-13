@@ -31,8 +31,8 @@ def h_cancel_order(dbcon, message_id):
     # Market Out
     for i in range(len(api_list)):
         api_map[api_list[i]["follower_id"]] = api_list[i]
-        session = create_session(api_map[i["player_id"]]["api_key"],
-                                api_map[i["player_id"]]["api_secret"])
+        session = create_session(api_list[i]["api_key"],
+                                 api_list[i]["api_secret"])
         cancel_pos(session, coin)
 
     current_id = api_list[0]["follower_id"]
