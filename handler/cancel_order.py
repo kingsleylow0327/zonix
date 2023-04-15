@@ -54,15 +54,18 @@ def h_cancel_order(dbcon, message_id, is_not_tp=True):
     session.cancel_all_conditional_orders(symbol=coin)
 
     for i in order_list:
-        if current_id != i["player_id"]:
-            current_id = i["player_id"]
-            session = create_session(api_map[i["player_id"]]["api_key"],
-                                api_map[i["player_id"]]["api_secret"])
-            my_pos = session.my_position(symbol=coin)["result"][0]                 
-            order_detail.quantity = my_pos["size"]
-            order_detail.side = my_pos["side"]
-            order_preset(session, coin, lev)
-            # cancel_pos(session, coin)
-            session.cancel_all_conditional_orders(symbol=coin)
-        cancel_order(session, coin, i["follower_order"])
+        try:
+            if current_id != i["player_id"]:
+                current_id = i["player_id"]
+                session = create_session(api_map[i["player_id"]]["api_key"],
+                                    api_map[i["player_id"]]["api_secret"])
+                my_pos = session.my_position(symbol=coin)["result"][0]                 
+                order_detail.quantity = my_pos["size"]
+                order_detail.side = my_pos["side"]
+                order_preset(session, coin, lev)
+                # cancel_pos(session, coin)
+                session.cancel_all_conditional_orders(symbol=coin)
+            cancel_order(session, coin, i["follower_order"])
+        except Exception as e:
+            print(e)
     return "Order Cancelled"
