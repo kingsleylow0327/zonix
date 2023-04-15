@@ -13,8 +13,13 @@ def h_trading_stop(dbcon, player_id, order_dto):
     for player in api_pair_list:
         session = create_session(player["api_key"], player["api_secret"])
         pos = session.my_position(symbol=order_dto.symbol)["result"]
+        stop_px = 0
         for item in pos:
             if item["side"] == order_dto.side:
+                stop_px = item["entry_price"]
+                price_decimal = str(stop_px)[::-1].find('.')
+                order_dto.target_price = round(order_dto.target_price, price_decimal)
+                order_dto.stop_loss = round(order_dto.stop_loss, price_decimal)
                 order_dto.quantity = item["size"]
                 order_dto.side = "Buy" if order_dto.side == "Sell" else "Buy"
                 place_order(session,
