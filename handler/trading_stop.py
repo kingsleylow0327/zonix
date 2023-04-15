@@ -4,7 +4,7 @@ from sql_con import ZonixDB
 def h_trading_stop(dbcon, player_id, order_dto):
     # Get related follower
     api_pair_list = dbcon.get_followers_api(player_id)
-    multipier = 1.03 if order_dto["side"] == "Buy" else 0.97
+    multipier = 1.03 if order_dto.side == "Buy" else 0.97
     order_dto.target_price = order_dto.target_price * multipier
     if api_pair_list == None or len(api_pair_list) == 0:
         return "StopLoss Shifted (NR)"
