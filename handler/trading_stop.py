@@ -2,6 +2,7 @@ from bybit_session import create_session, place_order
 from sql_con import ZonixDB
 
 def h_trading_stop(dbcon, player_id, order_dto):
+    is_main = True
     # Get related follower
     api_pair_list = dbcon.get_followers_api(player_id)
     multipier = 1.01 if order_dto.side == "Buy" else 0.99
@@ -15,18 +16,24 @@ def h_trading_stop(dbcon, player_id, order_dto):
         stop_px = 0
         for item in pos:
             if item["side"] == order_dto.side:
-                stop_px = item["entry_price"]
-                price_decimal = str(stop_px)[::-1].find('.')
-                order_dto.target_price = stop_px
-                order_dto.stop_loss = order_dto.target_price * multipier
-                order_dto.target_price = round(order_dto.target_price, price_decimal)
-                order_dto.stop_loss = round(order_dto.stop_loss, price_decimal)
+                if is_main:
+                    stop_px = item["entry_price"]
+                    price_decimal = str(stop_px)[::-1].find('.')
+                    order_dto.stop_loss = stop_px
+                    order_dto.target_price = order_dto.stop_loss * multipier
+                    order_dto.target_price = round(order_dto.target_price, price_decimal)
+                    order_dto.stop_loss = round(order_dto.stop_loss, price_decimal)
+                    if order_dto.side == "Sell":
+                        order_dto.side = "Buy"
+                    else:
+                        order_dto.side = "Sell"
+                    is_main = False
                 order_dto.quantity = item["size"]
-                order_dto.side = "Buy" if order_dto.side == "Sell" else "Buy"
-                place_order(session,
-                            order_dto,
-                            market_out=False,
-                            is_conditional=True)
                 break
-        
+        if int(order_dto.quantity) == 0:
+            continue
+        place_order(session,
+                    order_dto,
+                    market_out=False,
+                    is_conditional=True)        
     return "StopLoss Shifted"
