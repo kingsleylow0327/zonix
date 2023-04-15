@@ -13,7 +13,7 @@ def h_cancel_all(dbcon, coin, is_active):
         cancel_all_order(session, coin, is_active)
     return "Cancel All Done"
 
-def h_cancel_order(dbcon, message_id):
+def h_cancel_order(dbcon, message_id, is_not_tp=True):
     order_list = dbcon.get_related_oder(message_id)
     if order_list is None:
         return "Empty Row"
@@ -29,11 +29,12 @@ def h_cancel_order(dbcon, message_id):
     api_map = {}
 
     # Market Out
-    for i in range(len(api_list)):
-        api_map[api_list[i]["follower_id"]] = api_list[i]
-        session = create_session(api_list[i]["api_key"],
-                                 api_list[i]["api_secret"])
-        cancel_pos(session, coin)
+    if is_not_tp:
+        for i in range(len(api_list)):
+            api_map[api_list[i]["follower_id"]] = api_list[i]
+            session = create_session(api_list[i]["api_key"],
+                                     api_list[i]["api_secret"])
+            cancel_pos(session, coin)
 
     current_id = api_list[0]["follower_id"]
     session = create_session(api_list[0]["api_key"], api_list[0]["api_secret"])
