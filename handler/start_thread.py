@@ -24,6 +24,7 @@ STOP:
 {stop}
 
 **Please type `Cancel` if the above Tradecall is not the same as your posted, contact admin for more inquiry**
+<@&1097184657151361117>
 
     """
     return msg_format
