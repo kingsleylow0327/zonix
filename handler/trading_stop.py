@@ -5,7 +5,7 @@ def h_trading_stop(dbcon, player_id, order_dto):
     is_main = True
     # Get related follower
     api_pair_list = dbcon.get_followers_api(player_id)
-    multipier = 1.01 if order_dto.side == "Buy" else 0.99
+    # multipier = 1.01 if order_dto.side == "Buy" else 0.99
     if api_pair_list == None or len(api_pair_list) == 0:
         return "StopLoss Shifted (NR)"
     
@@ -19,10 +19,18 @@ def h_trading_stop(dbcon, player_id, order_dto):
                 if is_main:
                     stop_px = item["entry_price"]
                     price_decimal = str(stop_px)[::-1].find('.')
+                    last_digit = 1
+                    for i in range(price_decimal):
+                        last_digit = last_digit / 10
                     order_dto.stop_loss = stop_px
-                    order_dto.target_price = order_dto.stop_loss * multipier
-                    order_dto.target_price = round(order_dto.target_price, price_decimal)
                     order_dto.stop_loss = round(order_dto.stop_loss, price_decimal)
+                    if order_dto.side == "Buy":
+                        order_dto.target_price = order_dto.stop_loss + last_digit
+                    else:
+                        order_dto.target_price = order_dto.stop_loss - last_digit
+                    order_dto.target_price = round(order_dto.target_price, price_decimal)
+                    print(order_dto.stop_loss)
+                    print(order_dto.target_price)
                     if order_dto.side == "Sell":
                         order_dto.side = "Buy"
                     else:
