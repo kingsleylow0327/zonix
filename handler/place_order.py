@@ -44,6 +44,9 @@ def h_place_order(dbcon, message_id):
     coin_pair = result["coinpair"].strip().replace("/","").upper()
     coin_info = get_coin_info(coin_pair)
     coin_qty_step = str(decimal.Decimal(coin_info["qtyStep"]).as_tuple().exponent * -1)
+
+    # get refer id
+    order_refer_id = result["order_link_id"]
     
     p_order_id_list = []
     order_id_map = {}
@@ -68,6 +71,7 @@ def h_place_order(dbcon, message_id):
                         tp_list[i],
                         result["stop"],
                         coin_info["maxLeverage"])
+                order_detail.order_link_id = f'{order_refer_id}-{str(i+1)}'
                 order = place_order(item["session"], order_detail)
                 if order == "error":
                     logger.warning(item["player_id"])

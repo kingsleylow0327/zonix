@@ -62,6 +62,7 @@ def place_order(session, dtoOrder, market_out=False, is_conditional=False):
                     tp_trigger_by="LastPrice",
                     stop_loss=dtoOrder.stop_loss,
                     sl_trigger_by="MarkPrice",
+                    order_link_id=dtoOrder.order_link_id
                 )
         else:
             fliped_side = flip_side(dtoOrder.side)

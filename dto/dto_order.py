@@ -8,6 +8,7 @@ class dtoOrder():
         self.take_profit = take_profit
         self.stop_loss = stop_loss
         self.leverage = leverage
+        self.order_link_id = ""
     
     def _change_side(self, side):
         return "Sell" if side.upper() == "SHORT" or side.upper() == "SELL" else "Buy"
