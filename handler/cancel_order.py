@@ -14,58 +14,34 @@ def h_cancel_all(dbcon, coin, is_active):
     return "Cancel All Done"
 
 def h_cancel_order(dbcon, message_id, is_not_tp=True):
-    order_list = dbcon.get_related_oder(message_id)
-    if order_list is None:
+    result = dbcon.get_order_detail_by_order(message_id)
+    if result is None:
         return "Empty Row"
-    coin = order_list[0]["coinpair"].replace("/","").strip()
-    main_player_id = ""
-    for item in order_list:
-        if item["role"] == 'player':
-            main_player_id = item["player_id"]
-    if main_player_id == "":
-        return "Main player not found"
     
-    api_list = dbcon.get_followers_api(main_player_id)
-    api_map = {}
+    # get api list
+    api_pair_list = dbcon.get_followers_api(result["player_id"])
+    if api_pair_list == None or len(api_pair_list) == 0:
+        return "Order Placed (NR)"
 
-    # Market Out
-    if is_not_tp:
-        for i in range(len(api_list)):
-            api_map[api_list[i]["follower_id"]] = api_list[i]
-            session = create_session(api_list[i]["api_key"],
-                                     api_list[i]["api_secret"])
-            cancel_pos(session, coin)
+    session_list = [{"session":create_session(x["api_key"], x["api_secret"]),
+        "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
+    
+    # Coin Pair and Refer ID
+    coin_pair = result["coinpair"].strip().replace("/","").upper()
+    order_refer_id = result["order_link_id"]
 
-    current_id = api_list[0]["follower_id"]
-    session = create_session(api_list[0]["api_key"], api_list[0]["api_secret"])
+    for item in session_list:
+        session = item["session"]
+        # Market Out
+        if is_not_tp:
+            cancel_pos(session, coin_pair)
 
-    my_pos = session.my_position(symbol=coin)["result"][0]
-    qty = my_pos["size"]
-    side = my_pos["side"]
-    lev = get_coin_info(coin)["maxLeverage"]
-    order_detail = dtoOrder(0,
-                        coin,
-                        side,
-                        qty,
-                        0,
-                        0,
-                        lev)
-    order_preset(session, coin, lev)
-    session.cancel_all_conditional_orders(symbol=coin)
+        # Cancel Condition
+        session.cancel_all_conditional_orders(symbol=coin_pair)
 
-    for i in order_list:
-        try:
-            if current_id != i["player_id"]:
-                current_id = i["player_id"]
-                session = create_session(api_map[i["player_id"]]["api_key"],
-                                    api_map[i["player_id"]]["api_secret"])
-                my_pos = session.my_position(symbol=coin)["result"][0]                 
-                order_detail.quantity = my_pos["size"]
-                order_detail.side = my_pos["side"]
-                order_preset(session, coin, lev)
-                # cancel_pos(session, coin)
-                session.cancel_all_conditional_orders(symbol=coin)
-            cancel_order(session, coin, i["follower_order"])
-        except Exception as e:
-            print(e)
+        # Cancel Active order
+        for i in range(1, 9):
+            refer_id = f'{order_refer_id}-{str(i)}'
+            cancel_order(session, coin_pair, refer_id)
+
     return "Order Cancelled"

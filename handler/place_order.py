@@ -55,6 +55,7 @@ def h_place_order(dbcon, message_id):
         is_player = item["role"] == "player"
         sub_order_id_list = []
         order_preset(item["session"], coin_pair, coin_info["maxLeverage"])
+        counter = 1
         for e in range(entry_count):
             total_qty = float(calculate_qty(item["session"], entry_list[0], coin_info, percentage = order_percent))
             # Entry
@@ -71,7 +72,8 @@ def h_place_order(dbcon, message_id):
                         tp_list[i],
                         result["stop"],
                         coin_info["maxLeverage"])
-                order_detail.order_link_id = f'{order_refer_id}-{str(i+1)}'
+                order_detail.order_link_id = f'{order_refer_id}-{str(counter)}'
+                counter += 1
                 order = place_order(item["session"], order_detail)
                 if order == "error":
                     logger.warning(item["player_id"])

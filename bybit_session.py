@@ -89,11 +89,11 @@ def cancel_pos(session, coin):
         logger.warning(e)
         return "error"
 
-def cancel_order(session, coin, order_id):
+def cancel_order(session, coin, order_link_id):
     try:
         ret = session.cancel_active_order(
                 symbol=coin,
-                order_id=order_id,
+                order_link_id=order_link_id,
                 type="TpSlConditional")
         return ret
     except Exception as e:
