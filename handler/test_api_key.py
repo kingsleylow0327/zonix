@@ -56,6 +56,8 @@ Following: {}
             i_api = "✅"
         i_wallet = f"{wallet_balance}"
         
+        if follower_list == None:
+            i_follower = "Not Following anyone ❌"
         if len(follower_list) > 1:
             i_follower = "Following more than 1 player ❌"
         elif len(follower_list) == 1:
