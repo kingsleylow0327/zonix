@@ -31,15 +31,15 @@ dbcon = ZonixDB(config)
 CHANNEL = None
 MAX_TRIES = 2
 ws_list = {}
-player_api_list = dbcon.get_all_player()
-logger.info("Creating player websocket, Number: {}".format(len(player_api_list)))
-for player in player_api_list:
-    logger.info("Creating websocket, Player: {}".format(player['player_id']))
-    try:
-        ws_list[player['player_id']] = bybit_ws(player['api_key'], player['api_secret'])
-    except Exception as e:
-        logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
-logger.info("Done Creating websocket!")
+# player_api_list = dbcon.get_all_player()
+# logger.info("Creating player websocket, Number: {}".format(len(player_api_list)))
+# for player in player_api_list:
+#     logger.info("Creating websocket, Player: {}".format(player['player_id']))
+#     try:
+#         ws_list[player['player_id']] = bybit_ws(player['api_key'], player['api_secret'])
+#     except Exception as e:
+#         logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
+# logger.info("Done Creating websocket!")
 
 def is_order(message):
     word_list = ['entry', 'tp', 'stop']
@@ -88,7 +88,8 @@ async def on_message(message):
         # Zonix ID block
         if message.author.id == int(config.ZONIX_ID):
             # Change Title
-            if "All take-profit" in message.content.lower():
+            if "all take-profit" in message.content.lower():
+                # Need cancel here
                 new_name = change_thread_name(message.channel.name, "🤑")
                 await message.channel.edit(name=new_name, archived=True)
                 return
