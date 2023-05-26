@@ -126,7 +126,7 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
             if quantity == '0':
                 logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
                 continue
-            direction = 'closeShort' if item['long_short'] == 'SHORT' else 'closeLong'
+            direction = 'closeShort' if result['long_short'] == 'SHORT' else 'closeLong'
             item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
         else:
             wallet = float(item["session"].get_accounts()["data"]["available_balance"])
@@ -134,7 +134,7 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
                 wallet = 2
             min_order = wallet * order_percent
 
-            direction = 'openShort' if item['long_short'] == 'SHORT' else 'openLong'
+            direction = 'openShort' if result['long_short'] == 'SHORT' else 'openLong'
             qty = min_order * coin_qty_step
             item["session"].order(coin_pair, 'fixed', direction, str(qty), str(result["entry1"]), str(multiplier), 'limit')
 
