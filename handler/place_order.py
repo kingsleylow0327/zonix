@@ -8,7 +8,7 @@ import tapbit.utils as tutils
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
-order_percent = 3
+order_percent = 5
 maximum_wallet = 3000
 
 def calculate_qty(session, entry_price, coin_info, percentage = 2):
@@ -113,7 +113,7 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
     max_lev = float(coin_info["max_leverage"])
     multiplier = float(coin_info["multiplier"])
 
-    coin_qty_step = (max_lev/float(result["entry1"]))/multiplier
+    coin_qty_step = (max_lev/float(result["entry1"])) / multiplier
 
     for item in session_list:
         if is_tpsl:
@@ -136,6 +136,13 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
 
             direction = 'openShort' if result['long_short'] == 'SHORT' else 'openLong'
             qty = min_order * coin_qty_step
-            item["session"].order(coin_pair, 'fixed', direction, str(int(qty)), str(result["entry1"]), str(max_lev), 'limit')
-
+            item["session"].order(coin_pair, 'fixed', direction, str(int(qty)), str(int(result["entry1"])), str(int(max_lev)), 'limit')
+        logger.warning(f""""
+        Wallet: {wallet}
+        max_lev: {max_lev}
+        entry: {result["entry1"]}
+        multiplier: {multiplier}
+        coin_qty_step: {coin_qty_step}
+        min_order: {min_order}
+        """)
     return "Order Placed"
