@@ -120,7 +120,7 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
             position = item["session"].get_position(coin_pair)["data"]
             quantity = '0'
             for pos in position:
-                if pos["side"].upper() == item['long_short'] and pos["quantity"] != "0":
+                if pos["side"].upper() == result['long_short'] and pos["quantity"] != "0":
                     quantity = pos["quantity"]
                     break
             if quantity == '0':
