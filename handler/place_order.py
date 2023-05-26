@@ -114,7 +114,10 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
     multiplier = float(coin_info["multiplier"])
 
     coin_qty_step = (max_lev/float(result["entry1"])) / multiplier
-
+    logger.warning(f""""
+    pair: {api_pair_list}
+    session: {session_list}
+        """)
     for item in session_list:
         if is_tpsl:
             position = item["session"].get_position(coin_pair)["data"]
@@ -130,9 +133,9 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
             item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
         else:
             wallet = float(item["session"].get_accounts()["data"]["available_balance"])
-            if wallet < 2:
-                wallet = 2
-            min_order = wallet * order_percent
+            min_order = 2
+            if wallet * order_percent > 2:
+                min_order = wallet * order_percent
 
             direction = 'openShort' if result['long_short'] == 'SHORT' else 'openLong'
             qty = min_order * coin_qty_step
