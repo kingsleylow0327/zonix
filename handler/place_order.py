@@ -113,7 +113,7 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
     max_lev = float(coin_info["max_leverage"])
     multiplier = float(coin_info["multiplier"])
 
-    coin_qty_step = (max_lev/float(result["entry1"]))*multiplier
+    coin_qty_step = (max_lev/float(result["entry1"]))/multiplier
 
     for item in session_list:
         if is_tpsl:
