@@ -2,6 +2,8 @@ import decimal
 from bybit_session import create_session, place_order, get_coin_info, order_preset
 from dto.dto_order import dtoOrder
 from logger import Logger
+import tapbit.swap_api as tapbit
+import tapbit.utils as tutils
 
 # Logger setup
 logger_mod = Logger("Place Order")
@@ -89,4 +91,51 @@ def h_place_order(dbcon, message_id):
     dbcon.set_message_player_order(message_id, p_order_id_list)
     dbcon.set_player_follower_order(order_id_map, result["player_id"])
 
-    return "Order Placed" 
+    return "Order Placed"
+
+def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
+    result = dbcon.get_order_detail_by_order(message_id)
+    if result is None:
+        return "Empty Row"
+    
+    api_pair_list = dbcon.get_followers_api(result["player_id"])
+    if api_pair_list == None or len(api_pair_list) == 0:
+        return "Order Placed (NR)"
+
+    session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
+        "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
+
+    coin_pair = result["coinpair"].strip().split("/")[0]
+    coin_info = tutils.check_coin(coin_pair)
+    if coin_info == None:
+        logger.warning(f"{coin_pair} not found")
+        return
+    max_lev = float(coin_info["max_leverage"])
+    multiplier = float(coin_info["multiplier"])
+
+    coin_qty_step = (max_lev/float(result["entry1"]))/multiplier
+
+    for item in session_list:
+        if is_tpsl:
+            position = item["session"].get_position(coin_pair)["data"]
+            quantity = '0'
+            for pos in position:
+                if pos["side"].upper() == item['long_short'] and pos["quantity"] != "0":
+                    quantity = pos["quantity"]
+                    break
+            if quantity == '0':
+                logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+                continue
+            direction = 'closeShort' if item['long_short'] == 'SHORT' else 'closeLong'
+            item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
+        else:
+            wallet = float(item["session"].get_accounts()["data"]["available_balance"])
+            if wallet < 2:
+                wallet = 2
+            min_order = wallet * order_percent
+
+            direction = 'openShort' if item['long_short'] == 'SHORT' else 'openLong'
+            qty = min_order * coin_qty_step
+            item["session"].order(coin_pair, 'fixed', direction, str(qty), str(result["entry1"]), str(multiplier), 'limit')
+
+    return "Order Placed"
