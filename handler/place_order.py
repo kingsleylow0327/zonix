@@ -135,13 +135,5 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
 
             direction = 'openShort' if result['long_short'] == 'SHORT' else 'openLong'
             qty = min_order * coin_qty_step
-            item["session"].order(coin_pair, 'fixed', direction, str(int(qty)), str(int(result["entry1"])), str(int(max_lev)), 'limit')
-        logger.warning(f""""
-        Wallet: {wallet}
-        max_lev: {max_lev}
-        entry: {result["entry1"]}
-        multiplier: {multiplier}
-        coin_qty_step: {coin_qty_step}
-        min_order: {min_order}
-        """)
+            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), str(int(result["entry1"])), str(int(max_lev)), 'limit')
     return "Order Placed"
