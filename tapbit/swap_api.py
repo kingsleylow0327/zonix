@@ -24,7 +24,8 @@ class SwapAPI(Client):
         return self._request_without_params(GET, SWAP_ORDER_INFO + '/' + str(instrument_id) + '/' + str(order_id))
     
     def get_order_list(self, instrument_id):
-        return self._request_without_params(GET, SWAP_ORDER_LIST + '/' + str(instrument_id))
+        params = {'instrument_id': instrument_id}
+        return self._request_with_params(GET, SWAP_ORDER_LIST, params)
 
     def cancel(self, order_id):
         params = {'order_id': order_id}

@@ -151,7 +151,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     for item in session_list:
         position = item["session"].get_position(coin_pair)["data"]
         quantity = '0'
-        if position != None:
+        if len(position) != 0:
             for pos in position:
                 if pos["side"].upper() == side and pos["quantity"] != "0":
                     quantity = pos["quantity"]
@@ -170,7 +170,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
                               'market')
 
         order_list = item["session"].get_order_list(coin_pair)["data"]
-        if order_list != None:
+        if len(order_list) != 0:
             for order in order_list:
                 if coin_pair in order["contract_code"] and side in order["direction"].upper():
                     item["session"].cancel(order["order_id"])
