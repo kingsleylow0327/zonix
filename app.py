@@ -140,8 +140,8 @@ async def on_message(message):
         alpha=config.ALPHA
         sub_alpha = config.SUB_ALPHA.split(',')
         coin_pair = None
-        if is_tapbit_exit(message.content) and (message.author.id == alpha or message.author.id in sub_alpha):
-            message_list = message.upper().split(" ")
+        if is_tapbit_exit(message.content) and (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
+            message_list = message.content.upper().split(" ")
             side = None
             if "LONG" in message_list:
                 side = "LONG"
@@ -150,9 +150,9 @@ async def on_message(message):
             if side == None:
                 return
             
-            if "ETH" in message.upper():
+            if "ETH" in message_list:
                 coin_pair = "ETH"
-            elif "BTC" in message.upper():
+            elif "BTC" in message_list:
                 coin_pair = "BTC"
             else:
                 return
