@@ -137,3 +137,40 @@ def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
             qty = min_order * coin_qty_step
             item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), str(int(result["entry1"])), str(int(max_lev)), 'limit')
     return "Order Placed"
+
+def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
+    side=side.upper()
+    coin_pair = coin_pair.upper()
+    api_pair_list = dbcon.get_followers_api(author)
+    if api_pair_list == None or len(api_pair_list) == 0:
+        return "Order Placed (NR)"
+
+    session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
+        "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
+    
+    for item in session_list:
+        position = item["session"].get_position(coin_pair)["data"]
+        quantity = '0'
+        for pos in position:
+            if pos["side"].upper() == side and pos["quantity"] != "0":
+                quantity = pos["quantity"]
+                break
+        if quantity == '0':
+            logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+            continue
+        # cancel order here
+        order_list = item["session"].get_order_list(coin_pair)["data"]
+
+        for order in order_list:
+            if coin_pair in order["contract_code"] and side in order["direction"].upper():
+                item["session"].cancel(order["order_id"])
+
+        direction = 'closeShort' if side == 'SHORT' else 'closeLong'
+        item["session"].order(coin_pair, 
+                              'crossed', 
+                              direction, 
+                              str(int(item["quantity"])), 
+                              str(int(item["mark_price"])), 
+                              str(item['leverage']), 
+                              'market')
+        return "Order canceled"

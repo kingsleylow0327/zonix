@@ -6,7 +6,7 @@ import re
 from bybit_websock import bybit_ws
 from config import Config
 from datetime import datetime
-from handler.place_order import h_place_order, h_tapbit_place_order
+from handler.place_order import h_place_order, h_tapbit_place_order, h_tapbit_cancel_order
 from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
@@ -40,6 +40,10 @@ ws_list = {}
 #     except Exception as e:
 #         logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
 # logger.info("Done Creating websocket!")
+
+def is_tapbit_exit(message):
+    message_list = message.upper().split(" ")
+    return "EXIT" in message_list
 
 def is_order(message):
     word_list = ['entry', 'tp', 'stop']
@@ -88,10 +92,6 @@ async def on_message(message):
         # Zonix ID block
         if message.author.id == int(config.ZONIX_ID):
             # Change Title
-            if "all entry targets achieved" in message.content.lower():
-                ret = h_tapbit_place_order(dbcon, message.id, True)
-                return
-
             if "all take-profit" in message.content.lower():
                 # Need cancel here
                 new_name = change_thread_name(message.channel.name, "🤑")
@@ -209,6 +209,27 @@ async def on_message(message):
 #             return
 
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
+        alpha=config.ALPHA
+        sub_alpha = config.SUB_ALPHA.split(',')
+        coin_pair = None
+        if is_tapbit_exit(message) and (message.author.id == alpha or message.author.id in sub_alpha):
+            message_list = message.upper().split(" ")
+            side = None
+            if "LONG" in message_list:
+                side = "LONG"
+            elif "SHORT" in message_list:
+                side = "SHORT"
+            if side == None:
+                return
+            
+            if "ETH" in message.upper():
+                coin_pair = "ETH"
+            elif "BTC" in message.upper():
+                coin_pair = "BTC"
+            else:
+                return
+            ret = h_tapbit_cancel_order(alpha, dbcon, coin_pair, side)
+
         if is_order(message.content): 
             ret = "Empty Row"
 

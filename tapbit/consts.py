@@ -47,3 +47,4 @@ SWAP_TICKETS = '/api/usdt/instruments/ticker_list'
 SWAP_CANCEL = '/api/v1/usdt/cancel_order'
 SWAP_TPSL = '/api/v1/usdt/plan_close_order'
 SWAP_POSITION = '/api/v1/usdt/position_list'
+SWAP_ORDER_LIST="/api/v1/usdt/open_order_list"
