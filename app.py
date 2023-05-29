@@ -136,83 +136,11 @@ async def on_message(message):
                 return
             return
 
-#         if is_cancel(message.content):
-#             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-#             refer_id = order_detail["message_id"]
-#             order_msg_id = order_detail["order_msg_id"]
-#             order_status = order_detail["p_status"]
-#             reply_to = await CHANNEL.fetch_message(int(refer_id))
-#             # Check is admin and author
-#             if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
-#                 # Send message
-#                 await message.channel.send("""🚨CANCEL UNSUCCESSFUL
-# No record found / wrong reply message\n""")
-#                 return
-            
-#             if order_status != "created":
-
-#                 # Repeatative Cancel
-#                 if order_status in ["cancelled", "completed", "break even", "stoploss"]:
-#                     await message.channel.send("""🚨CANCEL UNSUCCESSFUL
-# This TradeCall was cancelled earlier or closed\n""")
-#                     return
-                
-#                 # Reached Market Out
-#                 await message.channel.send("""🚨CANCEL UNSUCCESSFUL
-# Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\n""")
-#                 return
-            
-#             # Check status
-#             await CHANNEL.send("Cancel", reference=reply_to)
-#             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
-#             ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
-#             logger.info(ret)
-#             thread_name = message.channel.name
-#             new_name = change_thread_name(thread_name, "⛔")
-#             await message.channel.edit(name=new_name, archived=True)
-#             return
-        
-#         if is_market_out(message.content):
-#             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-#             refer_id = order_detail["message_id"]
-#             order_msg_id = order_detail["order_msg_id"]
-#             coin_pair = order_detail["coinpair"].replace("/","").strip()
-#             order_status = order_detail["p_status"]
-#             reply_to = await CHANNEL.fetch_message(int(refer_id))
-#             # Check is admin and author
-#             if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
-#                 # Send message
-#                 await message.channel.send("Permission Denied")
-#                 return
-            
-#             if order_status == "created":
-#                 # Not yet reach TP
-#                 await message.channel.send("""Market Out UNSUCCESSFUL
-# Market Out Failed, this TradeCall has NOT reached Entry Price, use `CANCEL` instead.\n""")
-#                 return
-
-#             # Repeatative Market Out
-#             if order_status in ["cancelled", "completed", "break even", "stoploss"]:
-#                 await message.channel.send("""🚨Market Out UNSUCCESSFUL
-# This TradeCall was cancelled earlier or closed\n""")
-#                 return
-
-#             coin_price = h_check_price(coin_pair)
-#             await CHANNEL.send("Cancel", reference=reply_to)
-#             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
-#             ret = h_cancel_order(dbcon, order_msg_id)
-#             dbcon.update_market_out_price(coin_price, refer_id)
-#             logger.info(ret)
-#             thread_name = message.channel.name
-#             new_name = change_thread_name(thread_name, "🆘")
-#             await message.channel.edit(name=new_name, archived=True)
-#             return
-
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         alpha=config.ALPHA
         sub_alpha = config.SUB_ALPHA.split(',')
         coin_pair = None
-        if is_tapbit_exit(message) and (message.author.id == alpha or message.author.id in sub_alpha):
+        if is_tapbit_exit(message.content) and (message.author.id == alpha or message.author.id in sub_alpha):
             message_list = message.upper().split(" ")
             side = None
             if "LONG" in message_list:
