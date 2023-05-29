@@ -151,26 +151,28 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     for item in session_list:
         position = item["session"].get_position(coin_pair)["data"]
         quantity = '0'
-        for pos in position:
-            if pos["side"].upper() == side and pos["quantity"] != "0":
-                quantity = pos["quantity"]
-                break
-        if quantity == '0':
-            logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
-            continue
-        # cancel order here
-        order_list = item["session"].get_order_list(coin_pair)["data"]
+        if position != None:
+            for pos in position:
+                if pos["side"].upper() == side and pos["quantity"] != "0":
+                    quantity = pos["quantity"]
+                    break
+            if quantity == '0':
+                logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+                continue
 
-        for order in order_list:
-            if coin_pair in order["contract_code"] and side in order["direction"].upper():
-                item["session"].cancel(order["order_id"])
-
-        direction = 'closeShort' if side == 'SHORT' else 'closeLong'
-        item["session"].order(coin_pair, 
+            direction = 'closeShort' if side == 'SHORT' else 'closeLong'
+            item["session"].order(coin_pair, 
                               'crossed', 
                               direction, 
                               str(int(item["quantity"])), 
                               str(int(item["mark_price"])), 
                               str(item['leverage']), 
                               'market')
+
+        order_list = item["session"].get_order_list(coin_pair)["data"]
+        if order_list != None:
+            for order in order_list:
+                if coin_pair in order["contract_code"] and side in order["direction"].upper():
+                    item["session"].cancel(order["order_id"])
+
         return "Order canceled"
