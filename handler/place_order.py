@@ -164,9 +164,9 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             item["session"].order(coin_pair, 
                               'crossed', 
                               direction, 
-                              str(int(item["quantity"])), 
-                              str(int(item["mark_price"])), 
-                              str(item['leverage']), 
+                              str(int(quantity)), 
+                              str(int(pos["mark_price"])), 
+                              str(pos['leverage']), 
                               'market')
 
         order_list = item["session"].get_order_list(coin_pair)["data"]
