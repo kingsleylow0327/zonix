@@ -165,7 +165,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
                               'crossed', 
                               direction, 
                               str(int(quantity)), 
-                              str(int(pos["mark_price"])), 
+                              str(int(float(pos["mark_price"]))), 
                               str(pos['leverage']), 
                               'market')
 
