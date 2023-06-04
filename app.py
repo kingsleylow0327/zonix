@@ -41,6 +41,18 @@ ws_list = {}
 #         logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
 # logger.info("Done Creating websocket!")
 
+def is_tapbit_order(message):
+    regex_pattern = r"^(.*?) \[(.*?)\] \$(\d+(?:\.\d{1,2})?)$"
+
+    matches = re.match(regex_pattern, message, re.IGNORECASE)
+    if matches:
+        symbol = matches.group(1)
+        action = matches.group(2)
+        amount = matches.group(3)
+        return {"coinpair": symbol, "long_short": action.upper(), "entry1": amount}
+    
+    return False
+
 def is_tapbit_exit(message):
     message_list = message.upper().split(" ")
     return "EXIT" in message_list
@@ -161,33 +173,47 @@ async def on_message(message):
                     return
             ret = h_tapbit_cancel_order(alpha, dbcon, coin_pair, side)
 
-        if is_order(message.content): 
-            ret = "Empty Row"
-
-            # Create Thread
-            reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
-            coin_pair = reg_pat.group(1).strip()
-            long_short = reg_pat.group(2).strip()
+        if is_tapbit_order(message.content):
+            order = is_tapbit_order(message.content)
             cur_date = datetime.now().strftime('%h %d')
-            thread_message = f'🔴 {cur_date} -- {coin_pair} {long_short}'
+            thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
-
-            # Place Actual Order
-            for i in range(MAX_TRIES):
-                await asyncio.sleep(2)
-                ret = h_tapbit_place_order(dbcon, message.id)
-                if ret == "Order Placed" or ret == "Order Placed (NR)":
-                    break
-
-            # Send feedback message on thread
-            confirm_message = h_get_order_detail(dbcon, message.id)
-            await thread.send(confirm_message)
-            thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
-            if confirm_message == "This order is not recognized":
-                thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
-                return
+            ret = h_tapbit_place_order(order, dbcon, config.ALPHA)
+            if ret == "Order Placed":
+                thread_message = f'🟢 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
+            else:
+                thread_message = ret
+                logger.info(ret)
             await thread.edit(name=thread_message)
-            logger.info(ret)
+            return            
+
+        if is_order(message.content): 
+            # ret = "Empty Row"
+
+            # # Create Thread
+            # reg_pat = re.search("(?i)(.*\n)(long|short)", message.content)
+            # coin_pair = reg_pat.group(1).strip()
+            # long_short = reg_pat.group(2).strip()
+            # cur_date = datetime.now().strftime('%h %d')
+            # thread_message = f'🔴 {cur_date} -- {coin_pair} {long_short}'
+            # thread = await message.create_thread(name=thread_message)
+
+            # # Place Actual Order
+            # for i in range(MAX_TRIES):
+            #     await asyncio.sleep(2)
+            #     ret = h_tapbit_place_order(dbcon, message.id)
+            #     if ret == "Order Placed" or ret == "Order Placed (NR)":
+            #         break
+
+            # # Send feedback message on thread
+            # confirm_message = h_get_order_detail(dbcon, message.id)
+            # await thread.send(confirm_message)
+            # thread_message = f"🟡 {cur_date} -- {coin_pair} {long_short}"
+            # if confirm_message == "This order is not recognized":
+            #     thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
+            #     return
+            # await thread.edit(name=thread_message)
+            # logger.info(ret)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):

@@ -93,49 +93,45 @@ def h_place_order(dbcon, message_id):
 
     return "Order Placed"
 
-def h_tapbit_place_order(dbcon, message_id, is_tpsl=False):
-    result = dbcon.get_order_detail_by_order(message_id)
-    if result is None:
-        return "Empty Row"
-    
-    api_pair_list = dbcon.get_followers_api(result["player_id"])
+def h_tapbit_place_order(order, dbcon, alpha):
+    api_pair_list = dbcon.get_followers_api(alpha)
     if api_pair_list == None or len(api_pair_list) == 0:
-        return "Order Placed (NR)"
+        return "Alpha Error"
 
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
 
-    coin_pair = result["coinpair"].strip().split("/")[0]
+    coin_pair = order["coinpair"].strip().split("/")[0]
     coin_info = tutils.check_coin(coin_pair)
     if coin_info == None:
         logger.warning(f"{coin_pair} not found")
-        return
+        return "Coin Error"
     max_lev = float(coin_info["max_leverage"])
     multiplier = float(coin_info["multiplier"])
 
-    coin_qty_step = (max_lev/float(result["entry1"])) / multiplier
+    coin_qty_step = (max_lev/float(order["entry1"])) / multiplier
     for item in session_list:
-        if is_tpsl:
-            position = item["session"].get_position(coin_pair)["data"]
-            quantity = '0'
-            for pos in position:
-                if pos["side"].upper() == result['long_short'] and pos["quantity"] != "0":
-                    quantity = pos["quantity"]
-                    break
-            if quantity == '0':
-                logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
-                continue
-            direction = 'closeShort' if result['long_short'] == 'SHORT' else 'closeLong'
-            item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
-        else:
+        # if is_tpsl:
+        #     position = item["session"].get_position(coin_pair)["data"]
+        #     quantity = '0'
+        #     for pos in position:
+        #         if pos["side"].upper() == result['long_short'] and pos["quantity"] != "0":
+        #             quantity = pos["quantity"]
+        #             break
+        #     if quantity == '0':
+        #         logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+        #         continue
+        #     direction = 'closeShort' if result['long_short'] == 'SHORT' else 'closeLong'
+        #     item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
+        if True:
             wallet = float(item["session"].get_accounts()["data"]["available_balance"])
             min_order = 2
             if wallet * (order_percent/100) > 2:
                 min_order = wallet * (order_percent/100)
 
-            direction = 'openShort' if result['long_short'] == 'SHORT' else 'openLong'
+            direction = 'openShort' if order['long_short'] == 'SELL' else 'openLong'
             qty = min_order * coin_qty_step
-            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), str(int(result["entry1"])), str(int(max_lev)), 'limit')
+            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), str(int(order["entry1"])), str(int(max_lev)), 'limit')
     return "Order Placed"
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
