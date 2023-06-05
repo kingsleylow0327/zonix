@@ -96,12 +96,12 @@ def h_place_order(dbcon, message_id):
 def h_tapbit_place_order(order, dbcon, alpha):
     api_pair_list = dbcon.get_followers_api(alpha)
     if api_pair_list == None or len(api_pair_list) == 0:
-        return "Alpha Error"
+        return "Alpha/Follower Error"
 
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
 
-    coin_pair = order["coinpair"].strip().split("/")[0]
+    coin_pair = order["coinpair"].split("USDT")[0].strip()
     coin_info = tutils.check_coin(coin_pair)
     if coin_info == None:
         logger.warning(f"{coin_pair} not found")
