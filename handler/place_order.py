@@ -131,7 +131,9 @@ def h_tapbit_place_order(order, dbcon, alpha):
 
             direction = 'openShort' if order['long_short'] == 'SELL' else 'openLong'
             qty = min_order * coin_qty_step
-            entry = '{0:.2f}'.format(float(order["entry1"]))
+            price_pre = coin_info['price_precision']
+            deci_place = '{0:.' + price_pre + 'f}'
+            entry = deci_place.format(float(order["entry1"]))
             item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit')
     return "Order Placed"
 
