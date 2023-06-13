@@ -151,6 +151,8 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
         position = item["session"].get_position(coin_pair)["data"]
         quantity = '0'
         if len(position) != 0:
+            logger.warning('--------------------')
+            logger.warning(f'Attempting to close: {item["player_id"]}')
             for pos in position:
                 if pos["side"].upper() == side and pos["quantity"] != "0":
                     quantity = pos["quantity"]
@@ -160,6 +162,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
                 continue
 
             direction = 'closeShort' if side == 'SHORT' else 'closeLong'
+            logger.warning('Placing close position')
             item["session"].order(coin_pair, 
                               'crossed', 
                               direction, 
@@ -172,6 +175,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
         if len(order_list) != 0:
             for order in order_list:
                 if coin_pair in order["contract_code"] and side in order["direction"].upper():
+                    logger.warning('Close order')
                     item["session"].cancel(order["order_id"])
 
         return "Order canceled"
