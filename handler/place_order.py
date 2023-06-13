@@ -160,7 +160,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             for pos in position:
                 if pos["side"].upper() == side and pos["quantity"] != "0":
                     quantity = pos["quantity"]
-                    break
+                    continue
             if quantity == '0':
                 logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
                 continue
