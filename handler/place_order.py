@@ -143,11 +143,6 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     api_pair_list = dbcon.get_followers_api(author)
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
-    
-    logger.warning('---------API LIST-----------')
-    for item in api_pair_list:
-        print(item)
-    logger.warning('---------API LIST-----------')
 
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
@@ -155,9 +150,10 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     for item in session_list:
         position = item["session"].get_position(coin_pair)["data"]
         quantity = '0'
+        logger.warning('--------------------')
+        logger.warning(f'Attempting to close: {item["player_id"]}')
+        print(len(position))
         if len(position) != 0:
-            logger.warning('--------------------')
-            logger.warning(f'Attempting to close: {item["player_id"]}')
             for pos in position:
                 if pos["side"].upper() == side and pos["quantity"] != "0":
                     quantity = pos["quantity"]
