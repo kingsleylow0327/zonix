@@ -148,14 +148,10 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
     
     for item in session_list:
-        logger.warning(item)
-    
-    for item in session_list:
         logger.warning('--------------------')
         logger.warning(f'Attempting to close: {item["player_id"]}')
         position = item["session"].get_position(coin_pair)["data"]
         quantity = '0'
-        print(len(position))
         if len(position) != 0:
             for pos in position:
                 if pos["side"].upper() == side and pos["quantity"] != "0":
