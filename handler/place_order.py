@@ -145,7 +145,9 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
         return "Order Placed (NR)"
     
     logger.warning('---------API LIST-----------')
-    logger.warning(api_pair_list)
+    for item in api_pair_list:
+        print(item)
+    logger.warning('---------API LIST-----------')
 
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
