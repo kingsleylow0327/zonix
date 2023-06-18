@@ -33,12 +33,10 @@ class Client(object):
         header = utils.get_header(self.API_KEY, sign, timestamp)
         # print(timestamp)
 
-        print("url:", url)
-        logging.info("url:" + '"' + url + '"')
+        # print("url:", url)
         # print("headers:", header)
         # logging.info("headers:" + str(header))
-        print("body:", body)
-        logging.info("body:" + body)
+        # print("body:", body)
 
         # send request
         response = None
@@ -53,6 +51,8 @@ class Client(object):
 
         # exception handle
         if not str(response.status_code).startswith('2'):
+            logging.info("url:", url)
+            logging.info("body:" + body)
             raise exceptions.APIException(response)
         try:
             return response.json()

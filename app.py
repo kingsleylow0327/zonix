@@ -42,14 +42,17 @@ ws_list = {}
 # logger.info("Done Creating websocket!")
 
 def is_tapbit_order(message):
-    regex_pattern = r"^(.*?) \[(.*?)\] \$(\d+(?:\.\d{1,2})?)$"
+    regex_pattern = r"^(.*?) \[(.*?)\] \$(\d+(?:\.\d{1,2})?)( \-(\$(\d+(?:\.\d{1,2})?)|(\d+(?:\.\d{1,2})?)%))?$"
 
     matches = re.match(regex_pattern, message, re.IGNORECASE)
     if matches:
         symbol = matches.group(1)
         action = matches.group(2)
         amount = matches.group(3)
-        return {"coinpair": symbol, "long_short": action.upper(), "entry1": amount}
+        stop_lost = matches.group(6)
+        if matches.group(7) :
+            stop_lost = int(amount) * (1 - float(matches.group(7))/100)
+        return {"coinpair": symbol, "long_short": action.upper(), "entry1": amount, "stop_lost": stop_lost}
     
     return False
 

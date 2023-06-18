@@ -123,7 +123,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
         #         continue
         #     direction = 'closeShort' if result['long_short'] == 'SHORT' else 'closeLong'
         #     item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
-        if True:
+        try:
             wallet = float(item["session"].get_accounts()["data"]["available_balance"])
             min_order = 2
             if wallet * (order_percent/100) > 2:
@@ -134,7 +134,11 @@ def h_tapbit_place_order(order, dbcon, alpha):
             price_pre = coin_info['price_precision']
             deci_place = '{0:.' + price_pre + 'f}'
             entry = deci_place.format(float(order["entry1"]))
-            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit')
+            stop_lost = deci_place.format(float(order["stop_lost"]))
+            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', stop_lost=stop_lost)
+        except Exception as e:
+            logger.error(f"{item['player_id']} attempt to place order but failed")
+            logger.error(e)
     return "Order Placed"
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
@@ -148,34 +152,35 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
     
     for item in session_list:
-        logger.warning('--------------------')
-        logger.warning(f'Attempting to close: {item["player_id"]}')
-        position = item["session"].get_position(coin_pair)["data"]
-        quantity = '0'
-        if len(position) != 0:
-            for pos in position:
-                if pos["side"].upper() == side and pos["quantity"] != "0":
-                    quantity = pos["quantity"]
-                    break
-            if quantity == '0':
-                logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
-                continue
+        try:
+            position = item["session"].get_position(coin_pair)["data"]
+            quantity = '0'
+            if len(position) != 0:
+                for pos in position:
+                    if pos["side"].upper() == side and pos["quantity"] != "0":
+                        quantity = pos["quantity"]
+                        break
+                if quantity == '0':
+                    logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+                    continue
 
-            direction = 'closeShort' if side == 'SHORT' else 'closeLong'
-            logger.warning('Placing close position')
-            item["session"].order(coin_pair, 
-                              'crossed', 
-                              direction, 
-                              str(int(quantity)), 
-                              str(int(float(pos["mark_price"]))), 
-                              str(pos['leverage']), 
-                              'market')
+                direction = 'closeShort' if side == 'SHORT' else 'closeLong'
+                item["session"].order(coin_pair, 
+                                'crossed', 
+                                direction, 
+                                str(int(quantity)), 
+                                str(int(float(pos["mark_price"]))), 
+                                str(pos['leverage']), 
+                                'market')
 
-        order_list = item["session"].get_order_list(coin_pair)["data"]
-        if len(order_list) != 0:
-            for order in order_list:
-                if coin_pair in order["contract_code"] and side in order["direction"].upper():
-                    logger.warning('Close order')
-                    item["session"].cancel(order["order_id"])
+            order_list = item["session"].get_order_list(coin_pair)["data"]
+            if len(order_list) != 0:
+                for order in order_list:
+                    if coin_pair in order["contract_code"] and side in order["direction"].upper():
+                        item["session"].cancel(order["order_id"])
+
+        except Exception as e:
+            logger.error(f"{item['player_id']} attempt to close order but failed")
+            logger.error(e)
 
     return "Order canceled"
