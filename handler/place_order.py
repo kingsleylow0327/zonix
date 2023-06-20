@@ -139,8 +139,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
             entry = deci_place.format(float(order["entry1"]))
             stop_lost = deci_place.format(float(order["stop_lost"]))
             response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
-            logger.info(f"{item['player_id']} order success!")
-            logger.info(response)
+            logger.info(f"{item['player_id']} {response}")
             logger.info(json.dumps(order))
         except Exception as e:
             exception_type, exception_object, exception_traceback = sys.exc_info()

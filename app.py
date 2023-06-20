@@ -51,7 +51,8 @@ def is_tapbit_order(message):
         amount = matches.group(3)
         stop_lost = matches.group(6)
         if matches.group(7) :
-            stop_lost = int(amount) * (1 - float(matches.group(7))/100)
+            multiplier = (1 + float(matches.group(7))/100) if action.upper() == "SELL" else (1 - float(matches.group(7))/100)
+            stop_lost = int(amount) * multiplier
         return {"coinpair": symbol, "long_short": action.upper(), "entry1": amount, "stop_lost": stop_lost}
     
     return False
