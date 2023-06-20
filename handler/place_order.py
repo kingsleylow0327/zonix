@@ -1,4 +1,7 @@
 import decimal
+import os
+import sys
+import json
 from bybit_session import create_session, place_order, get_coin_info, order_preset
 from dto.dto_order import dtoOrder
 from logger import Logger
@@ -135,10 +138,13 @@ def h_tapbit_place_order(order, dbcon, alpha):
             deci_place = '{0:.' + price_pre + 'f}'
             entry = deci_place.format(float(order["entry1"]))
             stop_lost = deci_place.format(float(order["stop_lost"]))
-            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', stop_lost=stop_lost)
+            item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
         except Exception as e:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
             logger.error(f"{item['player_id']} attempt to place order but failed")
-            logger.error(e)
+            logger.error(json.dumps(order))
+            logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
     return "Order Placed"
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
