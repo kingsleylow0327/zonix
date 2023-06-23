@@ -113,6 +113,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
     multiplier = float(coin_info["multiplier"])
 
     coin_qty_step = (max_lev/float(order["entry1"])) / multiplier
+    logger.info(json.dumps(order))
     for item in session_list:
         # if is_tpsl:
         #     position = item["session"].get_position(coin_pair)["data"]
@@ -142,7 +143,6 @@ def h_tapbit_place_order(order, dbcon, alpha):
                 stop_lost = deci_place.format(float(order["stop_lost"]))
             response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
             logger.info(f"{item['player_id']} {response}")
-            logger.info(json.dumps(order))
         except Exception as e:
             exception_type, exception_object, exception_traceback = sys.exc_info()
             filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
