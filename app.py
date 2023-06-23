@@ -173,6 +173,9 @@ async def on_message(message):
                 elif "BTC" in word:
                     coin_pair = "BTC"
                     break
+                elif "LINK" in word:
+                    coin_pair = "LINK"
+                    break
                 else:
                     return
             ret = h_tapbit_cancel_order(alpha, dbcon, coin_pair, side)
