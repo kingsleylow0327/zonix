@@ -113,6 +113,13 @@ def h_tapbit_place_order(order, dbcon, alpha):
     multiplier = float(coin_info["multiplier"])
 
     coin_qty_step = (max_lev/float(order["entry1"])) / multiplier
+    direction = 'openShort' if order['long_short'] == 'SELL' else 'openLong'
+    price_pre = coin_info['price_precision']
+    deci_place = '{0:.' + price_pre + 'f}'
+    entry = deci_place.format(float(order["entry1"]))
+    stop_lost = ""
+    if (order["stop_lost"] != None):
+        stop_lost = deci_place.format(float(order["stop_lost"]))
     logger.info(json.dumps(order))
     for item in session_list:
         # if is_tpsl:
@@ -133,14 +140,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
             if wallet * (order_percent/100) > 2:
                 min_order = wallet * (order_percent/100)
 
-            direction = 'openShort' if order['long_short'] == 'SELL' else 'openLong'
             qty = min_order * coin_qty_step
-            price_pre = coin_info['price_precision']
-            deci_place = '{0:.' + price_pre + 'f}'
-            entry = deci_place.format(float(order["entry1"]))
-            stop_lost = ""
-            if (order["stop_lost"] != None or order["stop_lost"] != ""):
-                stop_lost = deci_place.format(float(order["stop_lost"]))
             response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
             logger.info(f"{item['player_id']} {response}")
         except Exception as e:
