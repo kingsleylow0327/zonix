@@ -137,7 +137,9 @@ def h_tapbit_place_order(order, dbcon, alpha):
             price_pre = coin_info['price_precision']
             deci_place = '{0:.' + price_pre + 'f}'
             entry = deci_place.format(float(order["entry1"]))
-            stop_lost = deci_place.format(float(order["stop_lost"]))
+            stop_lost = ""
+            if (order["stop_lost"] != None or order["stop_lost"] != ""):
+                stop_lost = deci_place.format(float(order["stop_lost"]))
             response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
             logger.info(f"{item['player_id']} {response}")
             logger.info(json.dumps(order))
