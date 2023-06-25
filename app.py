@@ -103,54 +103,54 @@ async def on_ready():
 @client.event
 async def on_message(message):
     # Mesage in Thread 
-    if isinstance(message.channel, discord.Thread):
+    # if isinstance(message.channel, discord.Thread):
 
-        # Zonix ID block
-        if message.author.id == int(config.ZONIX_ID):
-            # Change Title
-            if "all take-profit" in message.content.lower():
-                # Need cancel here
-                new_name = change_thread_name(message.channel.name, "🤑")
-                await message.channel.edit(name=new_name, archived=True)
-                return
-            if "take-profit" and "target 1" in message.content.lower():
-                # Get Details
-                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-                order_msg_id = order_detail["order_msg_id"]
-                player_id = order_detail["player_id"]
-                order_dto = dtoOrder(order_detail["entry1"],
-                                     order_detail["coinpair"].replace("/",""),
-                                     order_detail["long_short"],
-                                     "",
-                                     "",
-                                     order_detail["entry1"],
-                                     "")
-                # Cancel Active order
-                ret = h_cancel_order(dbcon, order_msg_id, is_not_tp=False)
-                print(ret)
+    #     # Zonix ID block
+    #     if message.author.id == int(config.ZONIX_ID):
+    #         # Change Title
+    #         if "all take-profit" in message.content.lower():
+    #             # Need cancel here
+    #             new_name = change_thread_name(message.channel.name, "🤑")
+    #             await message.channel.edit(name=new_name, archived=True)
+    #             return
+    #         if "take-profit" and "target 1" in message.content.lower():
+    #             # Get Details
+    #             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+    #             order_msg_id = order_detail["order_msg_id"]
+    #             player_id = order_detail["player_id"]
+    #             order_dto = dtoOrder(order_detail["entry1"],
+    #                                  order_detail["coinpair"].replace("/",""),
+    #                                  order_detail["long_short"],
+    #                                  "",
+    #                                  "",
+    #                                  order_detail["entry1"],
+    #                                  "")
+    #             # Cancel Active order
+    #             ret = h_cancel_order(dbcon, order_msg_id, is_not_tp=False)
+    #             print(ret)
 
-                # Trading Stop
-                ret = h_trading_stop(dbcon, player_id ,order_dto)
-                print(ret)
+    #             # Trading Stop
+    #             ret = h_trading_stop(dbcon, player_id ,order_dto)
+    #             print(ret)
 
-                new_name = change_thread_name(message.channel.name, "🟢")
-                await message.channel.edit(name=new_name)
-                return
-            if "stoploss" in message.content.lower():
-                new_name = change_thread_name(message.channel.name, "💸")
-                await message.channel.edit(name=new_name, archived=True)
-                return
+    #             new_name = change_thread_name(message.channel.name, "🟢")
+    #             await message.channel.edit(name=new_name)
+    #             return
+    #         if "stoploss" in message.content.lower():
+    #             new_name = change_thread_name(message.channel.name, "💸")
+    #             await message.channel.edit(name=new_name, archived=True)
+    #             return
     
-            if is_achieved_before(message.content):
-                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-                order_msg_id = order_detail["order_msg_id"]
-                ret = h_cancel_order(dbcon, order_msg_id)
-                logger.info(ret)
-                thread_name = message.channel.name
-                new_name = change_thread_name(thread_name, "⛔")
-                await message.channel.edit(name=new_name, archived=True)
-                return
-            return
+    #         if is_achieved_before(message.content):
+    #             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+    #             order_msg_id = order_detail["order_msg_id"]
+    #             ret = h_cancel_order(dbcon, order_msg_id)
+    #             logger.info(ret)
+    #             thread_name = message.channel.name
+    #             new_name = change_thread_name(thread_name, "⛔")
+    #             await message.channel.edit(name=new_name, archived=True)
+    #             return
+    #         return
 
     if message.channel.id == int(config.SENDER_CHANNEL_ID):
         alpha=config.ALPHA
