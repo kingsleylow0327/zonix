@@ -23,7 +23,7 @@ logger = logger_mod.get_logger()
 # Client setup
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
+client = discord.AutoShardedClient(intents=intents)
 
 config = Config()
 
@@ -224,6 +224,7 @@ async def on_message(message):
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
+        return
         if is_test(message.content):
             message_list = message.content.split(" ")
             if dbcon.is_admin(message.author.id) and len(message_list) > 1 and "<@" in message_list[1]:

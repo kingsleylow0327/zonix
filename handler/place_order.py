@@ -116,11 +116,13 @@ def h_tapbit_place_order(order, dbcon, alpha):
     direction = 'openShort' if order['long_short'] == 'SELL' else 'openLong'
     price_pre = coin_info['price_precision']
     deci_place = '{0:.' + price_pre + 'f}'
-    entry = deci_place.format(float(order["entry1"]))
+    order["entry1"] = deci_place.format(float(order["entry1"]))
     stop_lost = ""
     if (order["stop_lost"] != None):
         stop_lost = deci_place.format(float(order["stop_lost"]))
-    logger.info(json.dumps(order))
+        order["stop_lost"] = stop_lost
+    logger.info(f"Order Param: {json.dumps(order)}")
+    sucess_number = 0
     for item in session_list:
         # if is_tpsl:
         #     position = item["session"].get_position(coin_pair)["data"]
@@ -141,14 +143,20 @@ def h_tapbit_place_order(order, dbcon, alpha):
                 min_order = wallet * (order_percent/100)
 
             qty = min_order * coin_qty_step
-            response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), entry, str(int(max_lev)), 'limit', sl=stop_lost)
-            logger.info(f"{item['player_id']} {response}")
+            response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), order["entry1"], str(int(max_lev)), 'limit', sl=stop_lost)
+            if (response["message"] == None):
+                sucess_number += 1
+                logger.info(f"{item['player_id']} order Sucess!")
+            else:
+                logger.error(f"{item['player_id']} {response}")
         except Exception as e:
             exception_type, exception_object, exception_traceback = sys.exc_info()
             filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
             logger.error(f"{item['player_id']} attempt to place order but failed")
             logger.error(json.dumps(order))
             logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
+    logger.info(f"Failing Number: {len(session_list) - sucess_number}")
+    logger.info("-------------")
     return "Order Placed"
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):

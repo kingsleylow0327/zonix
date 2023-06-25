@@ -29,7 +29,7 @@ class Client(object):
 
         body = json.dumps(params) if method == c.POST else ""
         sign = utils.sign(utils.pre_hash(timestamp, method, request_path, str(body)), self.API_SECRET_KEY)
-        print(utils.pre_hash(timestamp, method, request_path, str(body)))
+        # print(utils.pre_hash(timestamp, method, request_path, str(body)))
         header = utils.get_header(self.API_KEY, sign, timestamp)
         # print(timestamp)
 
