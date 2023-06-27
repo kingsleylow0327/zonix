@@ -3,7 +3,6 @@ import asyncio
 import discord
 import re
 
-from bybit_websock import bybit_ws
 from config import Config
 from datetime import datetime
 from handler.place_order import h_place_order, h_tapbit_place_order, h_tapbit_cancel_order
@@ -186,12 +185,13 @@ async def on_message(message):
             thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
             ret = h_tapbit_place_order(order, dbcon, config.ALPHA)
-            if ret == "Order Placed":
+            if ret["message"] == "Order Placed":
                 thread_message = f'🟢 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             else:
-                thread_message = ret
-                logger.info(ret)
+                thread_message = ret["message"]
+                logger.info(ret["message"])
             await thread.edit(name=thread_message)
+            await thread.send(ret["data"])
             return            
 
         if is_order(message.content): 
@@ -277,9 +277,9 @@ async def on_message(message):
     if is_cancel(message.content):
         return
 
-    msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
-    thread = client.get_channel(int(msg_id))
-    await thread.send(message.content + "\n")
+    # msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
+    # thread = client.get_channel(int(msg_id))
+    # await thread.send(message.content + "\n")
 
 
 client.run(config.TOKEN)

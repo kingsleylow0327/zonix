@@ -123,6 +123,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
         order["stop_lost"] = stop_lost
     logger.info(f"Order Param: {json.dumps(order)}")
     sucess_number = 0
+    failed_message = ""
     for item in session_list:
         # if is_tpsl:
         #     position = item["session"].get_position(coin_pair)["data"]
@@ -148,6 +149,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
                 sucess_number += 1
                 logger.info(f"{item['player_id']} order Sucess!")
             else:
+                failed_message += f"{item['player_id']} {response} \n"
                 logger.error(f"{item['player_id']} {response}")
         except Exception as e:
             exception_type, exception_object, exception_traceback = sys.exc_info()
@@ -155,9 +157,17 @@ def h_tapbit_place_order(order, dbcon, alpha):
             logger.error(f"{item['player_id']} attempt to place order but failed")
             logger.error(json.dumps(order))
             logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
+            failed_message += f"{item['player_id']} {e} {exception_type} \n"
     logger.info(f"Failing Number: {len(session_list) - sucess_number}")
     logger.info("-------------")
-    return "Order Placed"
+
+    sucess_message = f"""
+    Order Json: {json.dumps(order)}
+    Total Player: {len(session_list)}
+    Failing Number: {len(session_list) - sucess_number} \n\n
+    """
+    return {"messsage": "Order Placed",
+            "data": sucess_message + failed_message}
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     side=side.upper()
