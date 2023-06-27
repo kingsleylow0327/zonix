@@ -162,10 +162,11 @@ def h_tapbit_place_order(order, dbcon, alpha):
     logger.info("-------------")
 
     sucess_message = f"""
-    Order Json: {json.dumps(order)}
-    Total Player: {len(session_list)}
-    Failing Number: {len(session_list) - sucess_number} \n\n
-    """
+Order Json: {json.dumps(order)}
+
+Total Player: {len(session_list)}
+Failing Number: {len(session_list) - sucess_number} \n\n
+"""
     return {"message": "Order Placed",
             "data": sucess_message + failed_message}
 
