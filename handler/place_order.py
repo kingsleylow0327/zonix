@@ -166,7 +166,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
     Total Player: {len(session_list)}
     Failing Number: {len(session_list) - sucess_number} \n\n
     """
-    return {"messsage": "Order Placed",
+    return {"message": "Order Placed",
             "data": sucess_message + failed_message}
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
