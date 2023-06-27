@@ -138,7 +138,8 @@ def h_tapbit_place_order(order, dbcon, alpha):
         #     direction = 'closeShort' if result['long_short'] == 'SHORT' else 'closeLong'
         #     item["session"].place_tpsl(coin_pair, str(result['tp1']), result['stop'], quantity, direction)
         try:
-            wallet = float(item["session"].get_accounts()["data"]["available_balance"])
+            wallet = item["session"].get_accounts()
+            wallet = float(wallet["data"]["available_balance"])
             min_order = 2
             if wallet * (order_percent/100) > 2:
                 min_order = wallet * (order_percent/100)
@@ -150,14 +151,14 @@ def h_tapbit_place_order(order, dbcon, alpha):
                 logger.info(f"{item['player_id']} order Sucess!")
             else:
                 failed_message += f"{item['player_id']} {response} \n"
-                logger.error(f"{item['player_id']} {response}")
+                logger.error(f"{item['player_id']}: {response}")
         except Exception as e:
             exception_type, exception_object, exception_traceback = sys.exc_info()
             filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
             logger.error(f"{item['player_id']} attempt to place order but failed")
             logger.error(json.dumps(order))
             logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
-            failed_message += f"{item['player_id']} {e} {exception_type} \n"
+            failed_message += f"{item['player_id']}: {e} {exception_type} \n"
     logger.info(f"Failing Number: {len(session_list) - sucess_number}")
     logger.info("-------------")
 
