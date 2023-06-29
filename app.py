@@ -156,6 +156,8 @@ async def on_message(message):
         sub_alpha = config.SUB_ALPHA.split(',')
         coin_pair = None
         if is_tapbit_exit(message.content) and (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
+            thread_message = f'🔴 {message.content.upper()}'
+            thread = await message.create_thread(name=thread_message)
             message_list = message.content.upper().split(" ")
             side = None
             if "LONG" in message_list:
@@ -178,6 +180,21 @@ async def on_message(message):
                 else:
                     return
             ret = h_tapbit_cancel_order(alpha, dbcon, coin_pair, side)
+            toArchive = True
+            await thread.send(ret["data"])
+            if ret["message"] == "Order Canceled":
+                thread_message = f'🟢 {message.content.upper()}'
+            if "order" in ret:
+                thread_message = f'🟡 {message.content.upper()}'
+                toArchive = False
+                await thread.send(ret["order"])
+            if "position" in ret:
+                thread_message = f'🟡 {message.content.upper()}'
+                toArchive = False
+                await thread.send(ret["position"])
+
+            await thread.edit(name=thread_message, archived=toArchive)
+            return
 
         if is_tapbit_order(message.content):
             order = is_tapbit_order(message.content)
@@ -185,13 +202,13 @@ async def on_message(message):
             thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
             ret = h_tapbit_place_order(order, dbcon, config.ALPHA)
-            toArchive = False
+            toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Placed":
                 thread_message = f'🟢 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
-                toArchive = True
-            elif "error" in ret:
+            if "error" in ret:
                 thread_message = f'🟡 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
+                toArchive = False
                 await thread.send(ret["error"])
 
             await thread.edit(name=thread_message, archived=toArchive)
