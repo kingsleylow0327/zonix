@@ -97,6 +97,7 @@ def h_place_order(dbcon, message_id):
     return "Order Placed"
 
 def h_tapbit_place_order(order, dbcon, alpha):
+    ret_json = {"message": "Order Placed"}
     api_pair_list = dbcon.get_followers_api(alpha)
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Alpha/Follower Error"
@@ -162,14 +163,16 @@ def h_tapbit_place_order(order, dbcon, alpha):
     logger.info(f"Failing Number: {len(session_list) - sucess_number}")
     logger.info("-------------")
 
-    sucess_message = f"""
+    header_message = f"""
 Order Json: {json.dumps(order)}
 
 Total Player: {len(session_list)}
-Failing Number: {len(session_list) - sucess_number} \n\n
+Failing Number: {len(session_list) - sucess_number} \n
 """
-    return {"message": "Order Placed",
-            "data": sucess_message + failed_message}
+    ret_json["data"] = header_message
+    if failed_message != "":
+        ret_json["error"] = failed_message
+    return ret_json
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     side=side.upper()

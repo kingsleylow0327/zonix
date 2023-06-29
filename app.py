@@ -185,13 +185,16 @@ async def on_message(message):
             thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
             ret = h_tapbit_place_order(order, dbcon, config.ALPHA)
+            toArchive = False
+            await thread.send(ret["data"])
             if ret["message"] == "Order Placed":
                 thread_message = f'🟢 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
-            else:
-                thread_message = ret["message"]
-                logger.info(ret["message"])
-            await thread.edit(name=thread_message)
-            await thread.send(ret["data"])
+                toArchive = True
+            elif "error" in ret:
+                thread_message = f'🟡 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
+                await thread.send(ret["error"])
+
+            await thread.edit(name=thread_message, archived=toArchive)
             return            
 
         if is_order(message.content): 
