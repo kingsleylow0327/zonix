@@ -256,7 +256,7 @@ Failing Position: {len(session_list) - sucess_position} \n
 """
         ret_json["data"] = header_message
         if failed_order != "":
-            ret_json["order"] = failed_order
+            ret_json["order"] = "Failing Order: \n" + failed_order
         if failed_position != "":
-            ret_json["position"] = failed_position
+            ret_json["position"] = "Failing Position: \n" + failed_position
     return ret_json
