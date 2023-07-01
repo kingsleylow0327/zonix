@@ -146,7 +146,8 @@ def h_tapbit_place_order(order, dbcon, alpha):
                 min_order = wallet * (order_percent/100)
 
             qty = min_order * coin_qty_step
-            response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), order["entry1"], str(int(max_lev)), 'limit', sl=stop_lost)
+            tri = "latest" if stop_lost == "" else "mark"
+            response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), order["entry1"], str(int(max_lev)), 'limit', sl=stop_lost, tri=tri)
             if (response["message"] == None):
                 sucess_number += 1
                 logger.info(f"{item['player_id']} order Sucess!")

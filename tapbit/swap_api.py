@@ -10,9 +10,10 @@ class SwapAPI(Client):
     def get_accounts(self):
         return self._request_without_params(GET, SWAP_ACCOUNT)
 
-    def order(self, instrument_id, margin_mode, direction, quantity, order_price, leverage, order_type, tp="", sl=""):
+    def order(self, instrument_id, margin_mode, direction, quantity, order_price, leverage, order_type, tp="", sl="", tri=""):
         params = {'instrument_id': instrument_id, 'margin_mode': margin_mode, 'direction': direction, 'quantity': quantity,
-                  'order_price': order_price, "leverage": leverage, "order_type": order_type, "take_profit_price": tp, "stop_lose_price": sl}
+                  'order_price': order_price, "leverage": leverage, "order_type": order_type, "take_profit_price": tp, "stop_lose_price": sl,
+                  "trigger_way": tri}
         return self._request_with_params(POST, SWAP_ORDER, params)
     
     def tpsl(self, instrument_id, plan_type, order_type, quantity, order_price, trigger_price, direction):
