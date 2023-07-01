@@ -218,8 +218,8 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             quantity = '0'
             if len(position) != 0:
                 for pos in position:
-                    if market_price == "":
-                        market_price = pos["mark_price"]
+                    if "market_price" not in order_json:
+                        order_json["mark_price"] = pos["mark_price"]
                     if pos["side"].upper() == side and pos["quantity"] != "0":
                         quantity = pos["quantity"]
                         break
