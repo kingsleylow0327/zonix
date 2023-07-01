@@ -181,9 +181,11 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     sucess_position = 0
     failed_order = ""
     failed_position = ""
+    market_price = ""
     side=side.upper()
     coin_pair = coin_pair.upper()
     api_pair_list = dbcon.get_followers_api(author)
+    order_json = {"coin" : coin_pair, "side" : side}
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
 
@@ -216,6 +218,8 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             quantity = '0'
             if len(position) != 0:
                 for pos in position:
+                    if market_price == "":
+                        market_price = pos["mark_price"]
                     if pos["side"].upper() == side and pos["quantity"] != "0":
                         quantity = pos["quantity"]
                         break
@@ -248,7 +252,7 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             failed_position += f"{item['player_id']}: {e} {exception_type} \n"
     
         header_message = f"""
-Order Json: {json.dumps(order)}
+Order Json: {json.dumps(order_json)}
 
 Total Player: {len(session_list)}
 Failing Order: {len(session_list) - sucess_order}
