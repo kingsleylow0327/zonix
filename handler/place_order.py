@@ -232,8 +232,8 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
                 response = item["session"].order(coin_pair, 
                                 'crossed', 
                                 direction, 
-                                str(int(quantity)), 
-                                str(int(float(pos["mark_price"]))), 
+                                str(quantity), 
+                                str(pos["mark_price"]), 
                                 str(pos['leverage']), 
                                 'market')
                 if (response["message"] == None):
