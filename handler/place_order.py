@@ -181,7 +181,6 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     sucess_position = 0
     failed_order = ""
     failed_position = ""
-    market_price = ""
     side=side.upper()
     coin_pair = coin_pair.upper()
     api_pair_list = dbcon.get_followers_api(author)
