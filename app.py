@@ -106,7 +106,7 @@ async def on_message(message):
                                      order_detail["entry1"],
                                      "")
                 # Cancel Active order
-                ret = h_cancel_order(dbcon, order_msg_id, is_not_tp=False)
+                ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
                 print(ret)
 
                 # Trading Stop
@@ -196,7 +196,7 @@ This TradeCall was cancelled earlier or closed\n""")
             coin_price = h_check_price(coin_pair)
             await CHANNEL.send("Cancel", reference=reply_to)
             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
-            ret = h_cancel_order(dbcon, order_msg_id)
+            ret = h_cancel_order(dbcon, order_detail)
             dbcon.update_market_out_price(coin_price, refer_id)
             logger.info(ret)
             thread_name = message.channel.name
