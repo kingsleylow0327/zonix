@@ -13,8 +13,8 @@ def h_cancel_all(dbcon, coin, is_active):
         cancel_all_order(session, coin, is_active)
     return "Cancel All Done"
 
-def h_cancel_order(dbcon, message_id, is_not_tp=True):
-    result = dbcon.get_order_detail_by_order(message_id)
+def h_cancel_order(dbcon, order_detail, is_not_tp=True):
+    result = order_detail
     if result is None:
         return "Empty Row"
     

@@ -124,7 +124,7 @@ async def on_message(message):
             if is_achieved_before(message.content):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 order_msg_id = order_detail["order_msg_id"]
-                ret = h_cancel_order(dbcon, order_msg_id)
+                ret = h_cancel_order(dbcon, order_detail)
                 logger.info(ret)
                 thread_name = message.channel.name
                 new_name = change_thread_name(thread_name, "⛔")
@@ -161,7 +161,7 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             # Check status
             await CHANNEL.send("Cancel", reference=reply_to)
             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
-            ret = h_cancel_order(dbcon, order_msg_id) # cannot use refer_id, this id is from cornix, must get id from order_detail
+            ret = h_cancel_order(dbcon, order_detail) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret)
             thread_name = message.channel.name
             new_name = change_thread_name(thread_name, "⛔")
