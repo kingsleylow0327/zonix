@@ -29,8 +29,6 @@ def h_trading_stop(dbcon, player_id, order_dto):
                     else:
                         order_dto.target_price = order_dto.stop_loss - last_digit
                     order_dto.target_price = round(order_dto.target_price, price_decimal)
-                    print(order_dto.stop_loss)
-                    print(order_dto.target_price)
                     if order_dto.side == "Sell":
                         order_dto.side = "Buy"
                     else:
