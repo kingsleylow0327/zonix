@@ -106,8 +106,8 @@ async def on_message(message):
                                      order_detail["entry1"],
                                      "")
                 # Cancel Active order
-                ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
-                print(ret)
+                # ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
+                # print(ret)
 
                 # Trading Stop
                 ret = h_trading_stop(dbcon, player_id ,order_dto)
