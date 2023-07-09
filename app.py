@@ -106,8 +106,8 @@ async def on_message(message):
                                      order_detail["entry1"],
                                      "")
                 # Cancel Active order
-                # ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
-                # print(ret)
+                ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
+                print(ret)
 
                 # Trading Stop
                 ret = h_trading_stop(dbcon, player_id ,order_dto)
@@ -117,6 +117,8 @@ async def on_message(message):
                 await message.channel.edit(name=new_name)
                 return
             if "stoploss" in message.content.lower():
+                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+                ret = h_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "💸")
                 await message.channel.edit(name=new_name, archived=True)
                 return

@@ -35,9 +35,8 @@ def h_cancel_order(dbcon, order_detail, is_not_tp=True):
         # Market Out
         if is_not_tp:
             cancel_pos(session, coin_pair)
-
-        # Cancel Condition
-        session.cancel_all_conditional_orders(symbol=coin_pair)
+            # Cancel Condition
+            session.cancel_all_conditional_orders(symbol=coin_pair)
 
         # Cancel Active order
         for i in range(1, 9):
