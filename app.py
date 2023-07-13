@@ -89,7 +89,8 @@ async def on_message(message):
         if message.author.id == int(config.ZONIX_ID):
             # Change Title
             if "all take-profit" in message.content.lower():
-                # Need cancel here
+                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+                h_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "🤑")
                 await message.channel.edit(name=new_name, archived=True)
                 return
@@ -125,7 +126,6 @@ async def on_message(message):
     
             if is_achieved_before(message.content):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-                order_msg_id = order_detail["order_msg_id"]
                 ret = h_cancel_order(dbcon, order_detail)
                 logger.info(ret)
                 thread_name = message.channel.name
