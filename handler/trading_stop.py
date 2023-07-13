@@ -9,13 +9,14 @@ def h_trading_stop(dbcon, player_id, order_dto):
     if api_pair_list == None or len(api_pair_list) == 0:
         return "StopLoss Shifted (NR)"
     
+    origin_side = order_dto.side
     # Shift all stop loss
     for player in api_pair_list:
         session = create_session(player["api_key"], player["api_secret"])
         pos = session.my_position(symbol=order_dto.symbol)["result"]
         stop_px = 0
         for item in pos:
-            if item["side"] == order_dto.side:
+            if item["side"] == origin_side:
                 if is_main:
                     stop_px = item["entry_price"]
                     price_decimal = str(stop_px)[::-1].find('.')
