@@ -56,7 +56,7 @@ def is_tapbit_order(message):
         amount = matches.group(8)
         stop_lost = matches.group(12)
         if matches.group(12):
-            multiplier = (1 + float(matches.group(7))/100) if action.upper() == "SELL" else (1 - float(matches.group(7))/100)
+            multiplier = (1 + float(matches.group(12))/100) if action.upper() == "SELL" else (1 - float(matches.group(7))/100)
             stop_lost = float(amount) * multiplier
         return {"stratergy": strategy,
                 "margin": margin, 
