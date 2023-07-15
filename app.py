@@ -2,6 +2,7 @@
 import asyncio
 import discord
 import re
+import time
 
 from config import Config
 from datetime import datetime
@@ -68,14 +69,17 @@ def is_tapbit_order(message):
     return False
 
 def is_tapbit_exit(message):
-    message_list = message.upper().split(" ")
-    if "EXIT" in message_list:
-        regex_pattern = r"\!([^\s]+)"
-        matches = re.match(regex_pattern, message[0], re.IGNORECASE)
-        stratergy = matches.group(1) if matches else config.ALPHA
-        return stratergy
-    else:
-        False
+    regex_pattern = r"\!([^\s]+) ([^\s]+)USD (EXIT) (SHORT|LONG)$"
+    matches = re.match(regex_pattern, message, re.IGNORECASE)
+    if matches:
+        stratergy = matches.group(1).lower()
+        symbol = matches.group(2).upper()
+        action = matches.group(4).upper()
+        return {"stratergy": stratergy,
+                "symbol": symbol,
+                "action": action}
+    
+    return False
 
 def is_order(message):
     word_list = ['entry', 'tp', 'stop']
@@ -175,31 +179,17 @@ async def on_message(message):
         if not (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
             return
         if is_tapbit_exit(message.content):
-            stratergy = is_tapbit_exit(message.content)
+            start = time.time()
+            order = is_tapbit_exit(message.content)
             thread_message = f'🔴 {message.content.upper()}'
             thread = await message.create_thread(name=thread_message)
             message_list = message.content.upper().split(" ")
-            side = None
-            if "LONG" in message_list:
-                side = "LONG"
-            elif "SHORT" in message_list:
-                side = "SHORT"
-            if side == None:
-                return
-            
-            for word in message_list:
-                if "ETH" in word:
-                    coin_pair = "ETH"
-                    break
-                elif "BTC" in word:
-                    coin_pair = "BTC"
-                    break
-                elif "LINK" in word:
-                    coin_pair = "LINK"
-                    break
-                else:
-                    return
+            stratergy = order["stratergy"]
+            side = order["action"]
+            coin_pair = order["symbol"]
+            logger.info(f"Outside Exit 1 {time.time()-start}")
             ret = h_tapbit_cancel_order(stratergy, dbcon, coin_pair, side)
+            logger.info(f"Outside Exit 2 {time.time()-start}")
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Canceled":
