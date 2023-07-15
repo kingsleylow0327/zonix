@@ -96,9 +96,9 @@ def h_place_order(dbcon, message_id):
 
     return "Order Placed"
 
-def h_tapbit_place_order(order, dbcon, alpha):
+def h_tapbit_place_order(order, dbcon):
     ret_json = {"message": "Order Placed"}
-    api_pair_list = dbcon.get_followers_api(alpha)
+    api_pair_list = dbcon.get_followers_api(order.get("stratergy"))
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Alpha/Follower Error"
 
@@ -142,7 +142,7 @@ def h_tapbit_place_order(order, dbcon, alpha):
             wallet = item["session"].get_accounts()
             wallet = float(wallet["data"]["available_balance"])
             min_order = 2
-            if wallet * (order_percent/100) > 2:
+            if wallet * (float(order.get("margin"))/100) > 2:
                 min_order = wallet * (order_percent/100)
 
             qty = min_order * coin_qty_step

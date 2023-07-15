@@ -41,18 +41,29 @@ ws_list = {}
 # logger.info("Done Creating websocket!")
 
 def is_tapbit_order(message):
-    regex_pattern = r"^(.*?) \[(.*?)\] \$(\d+(?:\.\d{1,4})?)( \-(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?$"
+    regex_pattern = r"(\@([^\s]+) )?(\#(\d{1,2})\% )?(([^\s]+) )\[(.*?)\] \$(\d+(?:\.\d{1,4})?)( \-(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?$"
 
     matches = re.match(regex_pattern, message, re.IGNORECASE)
     if matches:
-        symbol = matches.group(1)
-        action = matches.group(2)
-        amount = matches.group(3)
-        stop_lost = matches.group(6)
-        if matches.group(7) :
+        strategy = matches.group(2)
+        if strategy:
+            strategy = strategy.lower()
+        else:
+            strategy = config.ALPHA
+        margin = matches.group(4)
+        symbol = matches.group(6)
+        action = matches.group(7)
+        amount = matches.group(8)
+        stop_lost = matches.group(12)
+        if matches.group(12):
             multiplier = (1 + float(matches.group(7))/100) if action.upper() == "SELL" else (1 - float(matches.group(7))/100)
             stop_lost = float(amount) * multiplier
-        return {"coinpair": symbol, "long_short": action.upper(), "entry1": amount, "stop_lost": stop_lost}
+        return {"stratergy": strategy,
+                "margin": margin, 
+                "coinpair": symbol,
+                "long_short": action.upper(),
+                "entry1": amount,
+                "stop_lost": stop_lost}
     
     return False
 
@@ -155,7 +166,9 @@ async def on_message(message):
         alpha=config.ALPHA
         sub_alpha = config.SUB_ALPHA.split(',')
         coin_pair = None
-        if is_tapbit_exit(message.content) and (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
+        if not (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
+            return
+        if is_tapbit_exit(message.content):
             thread_message = f'🔴 {message.content.upper()}'
             thread = await message.create_thread(name=thread_message)
             message_list = message.content.upper().split(" ")
@@ -201,7 +214,7 @@ async def on_message(message):
             cur_date = datetime.now().strftime('%h %d')
             thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
-            ret = h_tapbit_place_order(order, dbcon, config.ALPHA)
+            ret = h_tapbit_place_order(order, dbcon)
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Placed":
