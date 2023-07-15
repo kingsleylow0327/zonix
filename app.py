@@ -2,7 +2,6 @@
 import asyncio
 import discord
 import re
-import time
 
 from config import Config
 from datetime import datetime
@@ -179,7 +178,6 @@ async def on_message(message):
         if not (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
             return
         if is_tapbit_exit(message.content):
-            start = time.time()
             order = is_tapbit_exit(message.content)
             thread_message = f'🔴 {message.content.upper()}'
             thread = await message.create_thread(name=thread_message)
@@ -187,9 +185,7 @@ async def on_message(message):
             stratergy = order["stratergy"]
             side = order["action"]
             coin_pair = order["symbol"]
-            logger.info(f"Outside Exit 1 {time.time()-start}")
             ret = h_tapbit_cancel_order(stratergy, dbcon, coin_pair, side)
-            logger.info(f"Outside Exit 2 {time.time()-start}")
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Canceled":
