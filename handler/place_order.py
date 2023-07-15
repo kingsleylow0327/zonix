@@ -1,3 +1,4 @@
+import time
 import decimal
 import os
 import sys
@@ -176,6 +177,7 @@ Failing Number: {len(session_list) - sucess_number} \n
     return ret_json
 
 def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
+    start = time.time()
     ret_json = {"message": "Order Canceled"}
     sucess_order = 0
     sucess_position = 0
@@ -183,17 +185,23 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     failed_position = ""
     side=side.upper()
     coin_pair = coin_pair.upper()
+    logger.info(f"Exit 1 {time.time()-start}")
     api_pair_list = dbcon.get_followers_api(author)
     order_json = {"coin" : coin_pair, "side" : side}
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
-
+    
+    logger.info(f"Exit 2 {time.time()-start}")
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
     
+    logger.info(f"Exit 3 {time.time()-start}")
+    logger.info(f"Number of item{len(session_list)}")
     for item in session_list:
         try:
+            logger.info(f"Exit 4 {time.time()-start}")
             order_list = item["session"].get_order_list(coin_pair)["data"]
+            logger.info(f"Number of order{len(order_list)}")
             if len(order_list) != 0:
                 for order in order_list:
                     if coin_pair in order["contract_code"] and side in order["direction"].upper():
@@ -213,9 +221,11 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             failed_order += f"{item['player_id']}: {e} {exception_type} \n" 
         
         try:
+            logger.info(f"Exit 5 {time.time()-start}")
             position = item["session"].get_position(coin_pair)["data"]
             quantity = '0'
             if len(position) != 0:
+                logger.info(f"Number of order{len(position)}")
                 for pos in position:
                     if "market_price" not in order_json:
                         order_json["mark_price"] = pos["mark_price"]
