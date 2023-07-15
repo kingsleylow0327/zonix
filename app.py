@@ -69,7 +69,13 @@ def is_tapbit_order(message):
 
 def is_tapbit_exit(message):
     message_list = message.upper().split(" ")
-    return "EXIT" in message_list
+    if "EXIT" in message_list:
+        regex_pattern = r"\!([^\s]+)"
+        matches = re.match(regex_pattern, message[0], re.IGNORECASE)
+        stratergy = matches.group(1) if matches.group(1) else config.ALPHA
+        return stratergy
+    else:
+        False
 
 def is_order(message):
     word_list = ['entry', 'tp', 'stop']
@@ -169,6 +175,7 @@ async def on_message(message):
         if not (str(message.author.id) == alpha or str(message.author.id) in sub_alpha):
             return
         if is_tapbit_exit(message.content):
+            stratergy = is_tapbit_exit(message.content)
             thread_message = f'🔴 {message.content.upper()}'
             thread = await message.create_thread(name=thread_message)
             message_list = message.content.upper().split(" ")
@@ -192,7 +199,7 @@ async def on_message(message):
                     break
                 else:
                     return
-            ret = h_tapbit_cancel_order(alpha, dbcon, coin_pair, side)
+            ret = h_tapbit_cancel_order(stratergy, dbcon, coin_pair, side)
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Canceled":
