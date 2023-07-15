@@ -72,7 +72,7 @@ def is_tapbit_exit(message):
     if "EXIT" in message_list:
         regex_pattern = r"\!([^\s]+)"
         matches = re.match(regex_pattern, message[0], re.IGNORECASE)
-        stratergy = matches if matches.group(1) else config.ALPHA
+        stratergy = matches.group(1) if matches else config.ALPHA
         return stratergy
     else:
         False
