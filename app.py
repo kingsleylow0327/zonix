@@ -50,7 +50,7 @@ def is_tapbit_order(message):
             strategy = strategy.lower()
         else:
             strategy = config.ALPHA
-        margin = matches.group(4)
+        margin = matches.group(4) if matches.group(4) else 5
         symbol = matches.group(6)
         action = matches.group(7)
         amount = matches.group(8)
