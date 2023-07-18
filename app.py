@@ -68,12 +68,12 @@ def is_tapbit_order(message):
     return False
 
 def is_tapbit_exit(message):
-    regex_pattern = r"\!([^\s]+) ([^\s]+)USD (EXIT) (SHORT|LONG)$"
+    regex_pattern = r"(\!([^\s]+) )?([^\s]+)USD (EXIT) (SHORT|LONG)$"
     matches = re.match(regex_pattern, message, re.IGNORECASE)
     if matches:
-        stratergy = matches.group(1) if matches.group(1) else config.ALPHA
-        symbol = matches.group(2).upper()
-        action = matches.group(4).upper()
+        stratergy = matches.group(3) if matches.grou(3) else config.ALPHA
+        symbol = matches.group(4).upper()
+        action = matches.group(5).upper()
         return {"stratergy": stratergy,
                 "symbol": symbol,
                 "action": action}
