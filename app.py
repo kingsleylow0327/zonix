@@ -71,8 +71,8 @@ def is_tapbit_exit(message):
     regex_pattern = r"(\!([^\s]+) )?([^\s]+)USD (EXIT) (SHORT|LONG)$"
     matches = re.match(regex_pattern, message, re.IGNORECASE)
     if matches:
-        stratergy = matches.group(3) if matches.group(3) else config.ALPHA
-        symbol = matches.group(4).upper()
+        stratergy = matches.group(2) if matches.group(2) else config.ALPHA
+        symbol = matches.group(3).upper()
         action = matches.group(5).upper()
         return {"stratergy": stratergy,
                 "symbol": symbol,
