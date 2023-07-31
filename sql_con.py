@@ -89,6 +89,48 @@ class ZonixDB():
         order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id)
         return self.dbcon_manager(sql, get_all=True)
     
+    def get_bot_list(self):
+        sql = """SELECT bot_name
+        FROM {};""".format(self.config.BOT_TABLE)
+        return self.dbcon_manager(sql, get_all=True)
+    
+    def get_player_follower_and_api(self, follower_id):
+        sql = """SELECT f.player_id, f.follower_id, a.api_key, a.api_secret
+        FROM {} as f
+        LEFT JOIN {} as a
+        ON f.follower_id = a.player_id
+        WHERE f.follower_id = '{}';""".format(self.config.FOLLOWER_TABLE, self.config.API_TABLE, follower_id)
+        return self.dbcon_manager(sql)
+    
+    def add_player_follower(self, player_id, follower_id):
+        sql = """INSERT INTO {} 
+        (player_id, follower_id) 
+        VALUES ('{}', '{}');
+        """.format(self.config.FOLLOWER_TABLE, player_id, follower_id)
+        return self.dbcon_manager(sql)
+    
+    def update_player_follower(self, player_id, follower_id):
+        sql = """UPDATE {}
+        SET player_id = '{}' 
+        WHERE follower_id = '{}';
+        """.format(self.config.FOLLOWER_TABLE, player_id, follower_id)
+        return self.dbcon_manager(sql)
+    
+    def add_player_api(self, player_id, api_key, api_secret):
+        sql = """INSERT INTO {} 
+        (player_id, api_key, api_secret) 
+        VALUES ('{}', '{}', '{}');
+        """.format(self.config.API_TABLE, player_id, api_key, api_secret)
+        return self.dbcon_manager(sql)
+    
+    def update_player_api(self, player_id, api_key, api_secret):
+        sql = """UPDATE {}
+        SET api_key = '{}',
+        api_secret = '{}'
+        WHERE player_id = '{}';
+        """.format(self.config.API_TABLE, api_key, api_secret, player_id)
+        return self.dbcon_manager(sql)
+    
     def set_message_player_order(self, message_id, order_id_list):
         giant_string = ", \n".join(["('{}', '{}')".format(message_id, id) for id in order_id_list])
         sql = """INSERT INTO {}(message_id, player_order)
