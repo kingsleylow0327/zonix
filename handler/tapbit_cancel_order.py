@@ -38,7 +38,9 @@ class TapbitCancel():
 Order Json: {json.dumps(self.order_json)}
 
 Total Player: {len(session_list)}
+{len(session_list)} , {self.sucess_order}
 Failing Order: {len(session_list) - self.sucess_order}
+{len(session_list)} , {self.sucess_position}
 Failing Position: {len(session_list) - self.sucess_position} \n
 """
         ret_json["data"] = header_message
