@@ -72,7 +72,8 @@ def h_tapbit_place_order(order, dbcon):
             tasks.append(task)
         await asyncio.gather(*tasks)
 
-    asyncio.run(asyn_place_tasks())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyn_place_tasks())
     logger.info(f"Failing Number: {len(session_list) - sucess_number}")
     logger.info("-------------")
 

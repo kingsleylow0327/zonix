@@ -92,7 +92,8 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
             tasks.append(task)
         await asyncio.gather(*tasks)
 
-    asyncio.run(asyn_cancel_tasks())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyn_cancel_tasks())
     header_message = f"""
 Order Json: {json.dumps(order_json)}
 
