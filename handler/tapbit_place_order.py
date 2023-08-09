@@ -52,7 +52,7 @@ class TapbitOrder():
         # Asyncio Start here
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.asyn_place_tasks(session_list))
-        logger.info(f"Failing Number: {len(session_list) - self.sucess_number}")
+        logger.info(f"Order Failing Number: {len(session_list) - self.sucess_number}")
         logger.info("-------------")
 
         header_message = f"""

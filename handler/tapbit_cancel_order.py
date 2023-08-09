@@ -6,7 +6,7 @@ import tapbit.swap_api as tapbit
 import tapbit.utils as tutils
 from logger import Logger
 
-logger_mod = Logger("Place Order")
+logger_mod = Logger("Cancel Order")
 logger = logger_mod.get_logger()
 order_percent = 5
 
@@ -34,6 +34,9 @@ class TapbitCancel():
         # Asyncio Start here
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.asyn_cancel_tasks(session_list))
+        logger.info(f"Cancel Order Failing Number: {len(session_list) - self.sucess_order}")
+        logger.info(f"Cancel Position Failing Number: {len(session_list) - self.sucess_position}")
+        logger.info("-------------")
         header_message = f"""
 Order Json: {json.dumps(self.order_json)}
 
