@@ -10,8 +10,8 @@ import nest_asyncio
 
 from config import Config
 from datetime import datetime
-from handler.tapbit_place_order import h_tapbit_place_order
-from handler.tapbit_cancel_order import h_tapbit_cancel_order
+from handler.tapbit_place_order import TapbitOrder
+from handler.tapbit_cancel_order import TapbitCancel
 from logger import Logger
 from sql_con import ZonixDB
 
@@ -103,7 +103,9 @@ async def on_message(message):
             stratergy = order["stratergy"]
             side = order["action"]
             coin_pair = order["symbol"]
-            ret = h_tapbit_cancel_order(stratergy, dbcon, coin_pair, side)
+            api_pair_list = dbcon.get_followers_api(stratergy)
+            cancel_obj = TapbitCancel(api_pair_list, coin_pair, side)
+            ret = cancel_obj.h_tapbit_cancel_order()
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Canceled":
@@ -125,7 +127,9 @@ async def on_message(message):
             cur_date = datetime.now().strftime('%h %d')
             thread_message = f'🔴 {cur_date} -- {order["coinpair"]} {order["long_short"]}'
             thread = await message.create_thread(name=thread_message)
-            ret = h_tapbit_place_order(order, dbcon)
+            api_pair_list = dbcon.get_followers_api(order.get("stratergy"))
+            order_obj = TapbitOrder(order, api_pair_list)
+            ret = order_obj.h_tapbit_place_order()
             toArchive = True
             await thread.send(ret["data"])
             if ret["message"] == "Order Placed":
