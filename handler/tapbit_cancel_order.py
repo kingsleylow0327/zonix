@@ -26,66 +26,67 @@ def h_tapbit_cancel_order(author, dbcon, coin_pair, side=None):
     session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
     
+    async def asyn_cancel_order(item):
+        try:
+            order_list = item["session"].get_order_list(coin_pair)["data"]
+            if len(order_list) != 0:
+                for order in order_list:
+                    if coin_pair in order["contract_code"] and side in order["direction"].upper():
+                        response = item["session"].cancel(order["order_id"])
+                        if (response["message"] == None):
+                            sucess_order += 1
+                        else:
+                            failed_order += f"{item['player_id']} {response} \n"
+            else:
+                sucess_order += 1
+
+        except Exception as e:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
+            logger.error(f"{item['player_id']} attempt to close order but failed")
+            logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
+            failed_order += f"{item['player_id']}: {e} {exception_type} \n" 
+        
+        try:
+            position = item["session"].get_position(coin_pair)["data"]
+            quantity = '0'
+            if len(position) != 0:
+                for pos in position:
+                    if "market_price" not in order_json:
+                        order_json["mark_price"] = pos["mark_price"]
+                    if pos["side"].upper() == side and pos["quantity"] != "0":
+                        quantity = pos["quantity"]
+                        break
+                if quantity == '0':
+                    sucess_position += 1
+                    logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
+                    return
+
+                direction = 'closeShort' if side == 'SHORT' else 'closeLong'
+                response = item["session"].order(coin_pair, 
+                                'crossed', 
+                                direction, 
+                                str(quantity), 
+                                str(pos["mark_price"]), 
+                                str(pos['leverage']), 
+                                'market')
+                if (response["message"] == None):
+                    sucess_position += 1
+                else:
+                    failed_position += f"{item['player_id']} {response} \n"
+
+            else:
+                sucess_position += 1
+
+        except Exception as e:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
+            logger.error(f"{item['player_id']} attempt to close order but failed")
+            logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
+            failed_position += f"{item['player_id']}: {e} {exception_type} \n"        
+    
     async def asyn_cancel_tasks():
         tasks = []
-        async def asyn_cancel_order(item):
-            try:
-                order_list = item["session"].get_order_list(coin_pair)["data"]
-                if len(order_list) != 0:
-                    for order in order_list:
-                        if coin_pair in order["contract_code"] and side in order["direction"].upper():
-                            response = item["session"].cancel(order["order_id"])
-                            if (response["message"] == None):
-                                sucess_order += 1
-                            else:
-                                failed_order += f"{item['player_id']} {response} \n"
-                else:
-                    sucess_order += 1
-
-            except Exception as e:
-                exception_type, exception_object, exception_traceback = sys.exc_info()
-                filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
-                logger.error(f"{item['player_id']} attempt to close order but failed")
-                logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
-                failed_order += f"{item['player_id']}: {e} {exception_type} \n" 
-            
-            try:
-                position = item["session"].get_position(coin_pair)["data"]
-                quantity = '0'
-                if len(position) != 0:
-                    for pos in position:
-                        if "market_price" not in order_json:
-                            order_json["mark_price"] = pos["mark_price"]
-                        if pos["side"].upper() == side and pos["quantity"] != "0":
-                            quantity = pos["quantity"]
-                            break
-                    if quantity == '0':
-                        sucess_position += 1
-                        logger.warning(f'{item["player_id"]} TPSL not placed due to no position')
-                        return
-
-                    direction = 'closeShort' if side == 'SHORT' else 'closeLong'
-                    response = item["session"].order(coin_pair, 
-                                    'crossed', 
-                                    direction, 
-                                    str(quantity), 
-                                    str(pos["mark_price"]), 
-                                    str(pos['leverage']), 
-                                    'market')
-                    if (response["message"] == None):
-                        sucess_position += 1
-                    else:
-                        failed_position += f"{item['player_id']} {response} \n"
-
-                else:
-                    sucess_position += 1
-
-            except Exception as e:
-                exception_type, exception_object, exception_traceback = sys.exc_info()
-                filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
-                logger.error(f"{item['player_id']} attempt to close order but failed")
-                logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
-                failed_position += f"{item['player_id']}: {e} {exception_type} \n"        
         for item in session_list:
             task = asyncio.create_task(asyn_cancel_order(item))
             tasks.append(task)

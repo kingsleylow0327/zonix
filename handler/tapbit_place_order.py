@@ -40,31 +40,32 @@ def h_tapbit_place_order(order, dbcon):
     sucess_number = 0
     failed_message = ""
 
-    async def asyn_place_tasks():
-        async def asyn_place_order(item):
-                try:
-                    wallet = item["session"].get_accounts()
-                    wallet = float(wallet["data"]["available_balance"])
-                    min_order = 2
-                    if wallet * (float(order.get("margin"))/100) > 2:
-                        min_order = wallet * (order_percent/100)
+    async def asyn_place_order(item):
+        try:
+            wallet = item["session"].get_accounts()
+            wallet = float(wallet["data"]["available_balance"])
+            min_order = 2
+            if wallet * (float(order.get("margin"))/100) > 2:
+                min_order = wallet * (order_percent/100)
 
-                    qty = min_order * coin_qty_step
-                    tri = "latest" if stop_lost == "" else "mark"
-                    response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), order["entry1"], str(int(max_lev)), 'limit', sl=stop_lost, tri=tri)
-                    if (response["message"] == None):
-                        sucess_number += 1
-                        logger.info(f"{item['player_id']} order Sucess!")
-                    else:
-                        failed_message += f"{item['player_id']} {response} \n"
-                        logger.error(f"{item['player_id']}: {response}")
-                except Exception as e:
-                    exception_type, exception_object, exception_traceback = sys.exc_info()
-                    filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
-                    logger.error(f"{item['player_id']} attempt to place order but failed")
-                    logger.error(json.dumps(order))
-                    logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
-                    failed_message += f"{item['player_id']}: {e} {exception_type} \n" 
+            qty = min_order * coin_qty_step
+            tri = "latest" if stop_lost == "" else "mark"
+            response = item["session"].order(coin_pair, 'crossed', direction, str(int(qty)), order["entry1"], str(int(max_lev)), 'limit', sl=stop_lost, tri=tri)
+            if (response["message"] == None):
+                sucess_number += 1
+                logger.info(f"{item['player_id']} order Sucess!")
+            else:
+                failed_message += f"{item['player_id']} {response} \n"
+                logger.error(f"{item['player_id']}: {response}")
+        except Exception as e:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            filename = os.path.split(exception_traceback.tb_frame.f_code.co_filename)[1]
+            logger.error(f"{item['player_id']} attempt to place order but failed")
+            logger.error(json.dumps(order))
+            logger.error(f"{e} {exception_type} {filename}, Line {exception_traceback.tb_lineno}")
+            failed_message += f"{item['player_id']}: {e} {exception_type} \n" 
+        
+    async def asyn_place_tasks():
         tasks = []
         for item in session_list:
             task = asyncio.create_task(asyn_place_order(item))
