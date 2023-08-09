@@ -6,6 +6,7 @@ from interaction.register_box import RegisterBox
 from interaction.follower_box import FollowerBox
 from discord.ui import View
 import re
+import nest_asyncio
 
 from config import Config
 from datetime import datetime
@@ -29,6 +30,7 @@ CHANNEL = None
 GUILD_ID = int(config.GUILD_ID)
 MAX_TRIES = 2
 ws_list = {}
+nest_asyncio.apply()
 
 def is_tapbit_order(message):
     regex_pattern = r"(\!([^\s]+) )?(\#(\d{1,2})\% )?(([^\s]+) )\[(.*?)\] \$(\d+(?:\.\d{1,4})?)( \-(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?$"
