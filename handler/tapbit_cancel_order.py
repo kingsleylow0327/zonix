@@ -29,7 +29,6 @@ class TapbitCancel():
         
         session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
             "role": x["role"], "player_id": x["follower_id"]} for x in self.api_pair_list]
-        logger.info("----- Cancel Order ------")
         # Asyncio Start here
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.asyn_cancel_tasks(session_list))
@@ -40,9 +39,7 @@ class TapbitCancel():
 Order Json: {json.dumps(self.order_json)}
 
 Total Player: {len(session_list)}
-{len(session_list)} , {self.sucess_order}
 Failing Order: {len(session_list) - self.sucess_order}
-{len(session_list)} , {self.sucess_position}
 Failing Position: {len(session_list) - self.sucess_position} \n
 """
         ret_json["data"] = header_message
@@ -55,18 +52,15 @@ Failing Position: {len(session_list) - self.sucess_position} \n
     async def asyn_cancel_order(self, item):
         try:
             order_list = item["session"].get_order_list(self.coin_pair)["data"]
-            logger.info(f"orderlist = {len(order_list)}")
             if len(order_list) != 0:
                 for order in order_list:
                     if self.coin_pair in order["contract_code"] and self.side in order["direction"].upper():
                         response = item["session"].cancel(order["order_id"])
                         if (response["message"] == None):
-                            logger.info("first")
                             self.sucess_order += 1
                         else:
                             self.failed_order += f"{item['player_id']} {response} \n"
             else:
-                logger.info("second")
                 self.sucess_order += 1
 
         except Exception as e:
