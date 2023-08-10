@@ -56,15 +56,18 @@ Failing Position: {len(session_list) - self.sucess_position} \n
     async def asyn_cancel_order(self, item):
         try:
             order_list = item["session"].get_order_list(self.coin_pair)["data"]
+            logger.info(f"orderlist = {len(order_list)}")
             if len(order_list) != 0:
                 for order in order_list:
                     if self.coin_pair in order["contract_code"] and self.side in order["direction"].upper():
                         response = item["session"].cancel(order["order_id"])
                         if (response["message"] == None):
+                            logger.info("first")
                             self.sucess_order += 1
                         else:
                             self.failed_order += f"{item['player_id']} {response} \n"
             else:
+                logger.info("second")
                 self.sucess_order += 1
 
         except Exception as e:
