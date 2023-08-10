@@ -30,7 +30,7 @@ class TapbitCancel():
         
         session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
             "role": x["role"], "player_id": x["follower_id"]} for x in self.api_pair_list]
-        
+        logger.info("----- Cancel Order ------")
         # Asyncio Start here
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.asyn_cancel_tasks(session_list))
