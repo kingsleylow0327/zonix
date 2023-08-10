@@ -29,6 +29,7 @@ class TapbitCancel():
         
         session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
             "role": x["role"], "player_id": x["follower_id"]} for x in self.api_pair_list]
+        logger.info("----- Cancel Order ------")
         # Asyncio Start here
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.asyn_cancel_tasks(session_list))
@@ -57,10 +58,12 @@ Failing Position: {len(session_list) - self.sucess_position} \n
                     if self.coin_pair in order["contract_code"] and self.side in order["direction"].upper():
                         response = item["session"].cancel(order["order_id"])
                         if (response["message"] == None):
+                            logger.info("Canceled Order")
                             self.sucess_order += 1
                         else:
                             self.failed_order += f"{item['player_id']} {response} \n"
             else:
+                logger.info("No Order")
                 self.sucess_order += 1
 
         except Exception as e:
