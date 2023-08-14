@@ -12,17 +12,28 @@ order_percent = 5
 
 class TapbitOrder():
     def __init__(self, order, api_pair_list) -> None:
-        self.take_profit = ""
-        self.stop_lost = ""
-        self.entry = 0
+        self.api_pair_list = api_pair_list
+        self.coin_pair = order["coinpair"].split("USD")[0].strip()
+
+        self.coin_info = tutils.check_coin(self.coin_pair)
+        if self.coin_info == None:
+            logger.warning(f"{self.coin_pair} not found")
+            raise Exception(f"{self.coin_pair} not found")
+        
+        self.max_lev = float(self.coin_info["max_leverage"])
+        deci_place = '{0:.' + self.coin_info['price_precision'] + 'f}'
+        
+        self.multiplier = float(self.coin_info["multiplier"])
+        
+        self.order = order
+        self.entry = deci_place.format(float(self.order["entry1"]))
+        self.take_profit = deci_place.format(float(self.order["take_profit"])) if self.order["take_profit"] != None else ""
+        self.stop_lost = deci_place.format(float(self.order["stop_lost"])) if self.order["stop_lost"] != None else ""
+        
+        self.direction = 'openShort' if self.order['long_short'] == 'SELL' else 'openLong'
+        self.coin_qty_step = (self.max_lev/float(self.entry)) / self.multiplier
         self.sucess_number = 0
         self.failed_message = ""
-        self.coin_qty_step = 0
-        self.direction = 'openShort' if self.order['long_short'] == 'SELL' else 'openLong'
-        self.max_lev = 0
-        self.coin_pair = order["coinpair"].split("USD")[0].strip()
-        self.order = order
-        self.api_pair_list = api_pair_list
 
     def h_tapbit_place_order(self):
         ret_json = {"message": "Order Placed"}
@@ -31,24 +42,7 @@ class TapbitOrder():
 
         session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
             "role": x["role"], "player_id": x["follower_id"]} for x in self.api_pair_list]
-
-        coin_info = tutils.check_coin(self.coin_pair)
-        if coin_info == None:
-            logger.warning(f"{self.coin_pair} not found")
-            return "Coin Error"
-        self.max_lev = float(coin_info["max_leverage"])
-        multiplier = float(coin_info["multiplier"])
-
-        price_pre = coin_info['price_precision']
-        deci_place = '{0:.' + price_pre + 'f}'
-        self.entry = deci_place.format(float(self.order["entry1"]))
-
-        self.coin_qty_step = (self.max_lev/float(self.entry)) / multiplier
         
-        if (self.order["take_profit"] != None):
-            self.take_profit = deci_place.format(float(self.order["take_profit"]))
-        if (self.order["stop_lost"] != None):
-            self.stop_lost = deci_place.format(float(self.order["stop_lost"]))
         logger.info(f"Order Param: {json.dumps(self.order)}")
 
         # Asyncio Start here
