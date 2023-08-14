@@ -12,13 +12,15 @@ order_percent = 5
 
 class TapbitOrder():
     def __init__(self, order, api_pair_list) -> None:
+        self.take_profit = ""
         self.stop_lost = ""
+        self.entry = 0
         self.sucess_number = 0
         self.failed_message = ""
         self.coin_qty_step = 0
-        self.direction = ""
+        self.direction = 'openShort' if self.order['long_short'] == 'SELL' else 'openLong'
         self.max_lev = 0
-        self.coin_pair = ""
+        self.coin_pair = order["coinpair"].split("USD")[0].strip()
         self.order = order
         self.api_pair_list = api_pair_list
 
@@ -30,7 +32,6 @@ class TapbitOrder():
         session_list = [{"session":tapbit.SwapAPI(x["api_key"], x["api_secret"]),
             "role": x["role"], "player_id": x["follower_id"]} for x in self.api_pair_list]
 
-        self.coin_pair = self.order["coinpair"].split("USD")[0].strip()
         coin_info = tutils.check_coin(self.coin_pair)
         if coin_info == None:
             logger.warning(f"{self.coin_pair} not found")
@@ -38,15 +39,16 @@ class TapbitOrder():
         self.max_lev = float(coin_info["max_leverage"])
         multiplier = float(coin_info["multiplier"])
 
-        self.coin_qty_step = (self.max_lev/float(self.order["entry1"])) / multiplier
-        self.direction = 'openShort' if self.order['long_short'] == 'SELL' else 'openLong'
         price_pre = coin_info['price_precision']
         deci_place = '{0:.' + price_pre + 'f}'
-        self.order["entry1"] = deci_place.format(float(self.order["entry1"]))
-        stop_lost = ""
+        self.entry = deci_place.format(float(self.order["entry1"]))
+
+        self.coin_qty_step = (self.max_lev/float(self.entry)) / multiplier
+        
+        if (self.order["take_profit"] != None):
+            self.take_profit = deci_place.format(float(self.order["take_profit"]))
         if (self.order["stop_lost"] != None):
-            stop_lost = deci_place.format(float(self.order["stop_lost"]))
-            self.order["stop_lost"] = stop_lost
+            self.stop_lost = deci_place.format(float(self.order["stop_lost"]))
         logger.info(f"Order Param: {json.dumps(self.order)}")
 
         # Asyncio Start here
@@ -76,7 +78,7 @@ Failing Number: {len(session_list) - self.sucess_number} \n
 
             qty = min_order * self.coin_qty_step
             tri = "latest" if self.stop_lost == "" else "mark"
-            response = item["session"].order(self.coin_pair, 'crossed', self.direction, str(int(qty)), self.order["entry1"], str(int(self.max_lev)), 'limit', sl=self.stop_lost, tri=tri)
+            response = item["session"].order(self.coin_pair, 'crossed', self.direction, str(int(qty)), self.entry, str(int(self.max_lev)), 'limit', tp=self.take_profit, sl=self.stop_lost, tri=tri)
             if (response["message"] == None):
                 self.sucess_number += 1
                 logger.info(f"{item['player_id']} order Sucess!")

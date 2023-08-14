@@ -33,7 +33,7 @@ ws_list = {}
 nest_asyncio.apply()
 
 def is_tapbit_order(message):
-    regex_pattern = r"(\!([^\s]+) )?(\#(\d{1,2})\% )?(([^\s]+) )\[(.*?)\] \$(\d+(?:\.\d{1,4})?)( \-(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?$"
+    regex_pattern = r"(\!([^\s]+) )?(\#(\d{1,2})\% )?(([^\s]+) )\[(.*?)\] \$(\d+(?:\.\d{1,4})?)( \+(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?( \-(\$(\d+(?:\.\d{1,4})?)|(\d+(?:\.\d{1,2})?)%))?$"
 
     matches = re.match(regex_pattern, message, re.IGNORECASE)
     if matches:
@@ -46,7 +46,11 @@ def is_tapbit_order(message):
         symbol = matches.group(6)
         action = matches.group(7)
         amount = matches.group(8)
-        stop_lost = matches.group(12)
+        take_profit = matches.group(12)
+        stop_lost = matches.group(16)
+        if take_profit:
+            multiplier = (1 - float(take_profit)/100) if action.upper() == "SELL" else (1 + float(take_profit)/100)
+            take_profit = float(amount) * multiplier
         if stop_lost:
             multiplier = (1 + float(stop_lost)/100) if action.upper() == "SELL" else (1 - float(stop_lost)/100)
             stop_lost = float(amount) * multiplier
@@ -55,6 +59,7 @@ def is_tapbit_order(message):
                 "coinpair": symbol,
                 "long_short": action.upper(),
                 "entry1": amount,
+                "take_profit": take_profit,
                 "stop_lost": stop_lost}
     
     return False
