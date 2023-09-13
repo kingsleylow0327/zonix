@@ -173,6 +173,13 @@ class ZonixDB():
         WHERE message_id = '{}'
         """.format(self.config.ORDER_TABLE, price, message_id)
         self.dbcon_manager(sql, get_all=True)
+    
+    def get_order_by_ref_id(self, last_month, this_month):
+        sql="""SELECT * FROM {} as od
+        LEFT JOIN {} as po
+        ON od.message_id = po.message_id
+        WHERE od.trigger_time between '{}' and '{}'""".format(self.config.ORDER_TABLE, self.config.PLAYER_ORDER, last_month, this_month)
+        return self.dbcon_manager(sql, get_all=True)
 
     def close_cursor(self):
         self.cursor.close()

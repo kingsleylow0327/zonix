@@ -1,5 +1,6 @@
 # bot.py
 import asyncio
+import datetime as dt
 import discord
 import re
 
@@ -12,6 +13,7 @@ from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
 from handler.check_price import h_check_price
 from handler.trading_stop import h_trading_stop
+from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
 from sql_con import ZonixDB
@@ -49,7 +51,7 @@ def is_order(message):
 
 def is_cancel(message):
     message_list = message.upper().split(" ")
-    return message_list[0] == "CANCEL"
+    return message_list[0] == "CANCEL" and len(message_list) == 1
 
 def is_achieved_before(message):
     message_list = message.upper()
@@ -62,6 +64,10 @@ def is_market_out(message):
 def is_admin_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL" and len(message_list) > 1
+
+def is_monthly_close(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "-CLOSE"
 
 def is_test(message):
     message_list = message.upper().split(" ")
@@ -86,7 +92,7 @@ async def on_message(message):
     if isinstance(message.channel, discord.Thread):
 
         # Zonix ID block
-        if message.author.id == int(config.ZONIX_ID):
+        if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content):
             # Change Title
             if "all take-profit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
@@ -141,7 +147,7 @@ async def on_message(message):
             order_status = order_detail["p_status"]
             reply_to = await CHANNEL.fetch_message(int(refer_id))
             # Check is admin and author
-            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+            if message.author.id != int(config.ZONIX_ID) and not dbcon.is_admin_and_order_author(refer_id, message.author.id):
                 # Send message
                 await message.channel.send("""🚨CANCEL UNSUCCESSFUL
 No record found / wrong reply message\n""")
@@ -272,6 +278,35 @@ This TradeCall was cancelled earlier or closed\n""")
 
             ret = h_cancel_all(dbcon, coin, is_active)
             logger.info(ret)
+            return
+            
+        # Monthly cancel
+        if is_monthly_close(message.content):
+            message_list = message.content.upper().split(" ")
+            today = datetime.today()
+            last_month = str(datetime(today.year, today.month-1, 1))
+            this_month = str(datetime(today.year, today.month, 1) - dt.timedelta(0,1))
+            
+            # pass in order link id
+            order_detail = h_monthly_close_by_order_id(dbcon, last_month, this_month)
+            if order_detail == None:
+                return
+        
+            for order in order_detail:
+                message_id = order.get("order_msg_id")
+                if message_id == None or message_id == "":
+                    continue
+
+                messagge = "MARKETOUT"
+                if order.get("status") == "created":
+                    messagge = "CANCEL"
+                elif order.get("status") in ["completed", "cancelled", "Bot cancel", "Player Cancel", "stoploss", "trailing stoploss", "tp before entry"]:
+                    continue
+                
+                # Get Thread by channel id
+                thread = client.get_channel(int(message_id))
+                if thread:
+                    await thread.send(messagge)
             return
 
     # Receiver Channel Part
