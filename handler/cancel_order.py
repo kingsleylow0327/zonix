@@ -5,6 +5,7 @@ from logger import Logger
 # Logger setup
 logger_mod = Logger("Cancel Order")
 logger = logger_mod.get_logger()
+platform = "bybit"
 
 def h_cancel_all(dbcon, coin, is_active):
     player_api_list = dbcon.get_all_player()
@@ -19,7 +20,7 @@ def h_cancel_order(dbcon, order_detail, is_not_tp=True):
         return "Empty Row"
     
     # get api list
-    api_pair_list = dbcon.get_followers_api(result["player_id"])
+    api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
 

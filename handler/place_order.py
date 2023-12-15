@@ -8,6 +8,7 @@ logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
 order_percent = 3
 maximum_wallet = 3000
+platform = "bybit"
 
 def calculate_qty(session, entry_price, coin_info, percentage = 2):
     wallet = session.get_wallet_balance(coin="USDT")["result"]["USDT"]["equity"]
@@ -25,7 +26,7 @@ def h_place_order(dbcon, message_id):
         return "Empty Row"
     
     # get api list
-    api_pair_list = dbcon.get_followers_api(result["player_id"])
+    api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
     if api_pair_list == None or len(api_pair_list) == 0:
         return "Order Placed (NR)"
 

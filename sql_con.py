@@ -80,13 +80,14 @@ class ZonixDB():
         """.format(self.config.API_TABLE, player_id)
         return self.dbcon_manager(sql, get_all=True)
 
-    def get_followers_api(self, player_id):
+    def get_followers_api(self, player_id, platform):
         sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, IF(f.player_id=follower_id,'player','') as role
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id
         where f.player_id = '{}'
-        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id)
+        and a.platform = '{}'
+        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id, platform)
         return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):

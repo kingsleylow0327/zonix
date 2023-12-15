@@ -1,7 +1,7 @@
 from bybit_session import *
 from dto.dto_order import dtoOrder
 from logger import Logger
-from pybit import usdt_perpetual
+# from pybit import usdt_perpetual
 from config import Config
 import json
 

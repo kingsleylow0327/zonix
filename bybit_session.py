@@ -1,6 +1,6 @@
 from dto.dto_order import dtoOrder
 from logger import Logger
-from pybit import usdt_perpetual
+# from pybit import usdt_perpetual
 import json
 import requests
 from config import Config
@@ -23,8 +23,8 @@ def get_coin_info(coin):
 # Initialize http connection instance
 def create_session(api_key, api_secret):
     end_point = "https://api.bybit.com"
-    if eval(CONFIG.IS_TEST):
-        end_point="https://api-testnet.bybit.com"
+    # if eval(CONFIG.IS_TEST):
+    #     end_point="https://api-testnet.bybit.com"
     
     session = usdt_perpetual.HTTP(
         endpoint=end_point,
