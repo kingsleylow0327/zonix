@@ -1,6 +1,7 @@
 from bingx.bingx import BINGX
 from logger import Logger
 from dto.dto_bingx_order import dtoBingXOrder
+from dto.dto_bingx_order_tpsl import dtoBingXOrderTPSL
 
 # Logger setup
 logger_mod = Logger("Cancel Order")
@@ -14,6 +15,7 @@ def h_bingx_cancel_all(dbcon, coin):
         session.close_all_order(coin)
     return "Cancel All Done"
 
+# if is_not_tp is false, it's hit tp and shifting stoploss
 def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
     result = order_detail
     if result is None:
@@ -36,24 +38,38 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
     for item in session_list:
         player = item["session"]
         # Market Out
+        buy_sell = "BUY"
+        if result["long_short"] == "LONG":
+            buy_sell = "SELL"
+        order_list = []
         if is_not_tp:
+            order = player.close_all_pos(coin_pair)
+            print(order)
+
+            # Cancel Active order
+            order = player.close_all_order(coin_pair)
+            print(order)
+        else:
+            # Cancel SL order
+            sl_id_list = []
+            pending_order = player.get_all_pending(coin_pair)
+            for order in pending_order.get("data").get("orders"):
+                if order.get("type") == "STOP":
+                    sl_id_list.append(order.get("orderId"))
+            cancel_order = player.close_order(sl_id_list)
+            print(order)
+
+            # Place new SL
             position = player.get_position(coin_pair)
-            buy_sell = "BUY"
-            if result["long_short"] == "LONG":
-                buy_sell = "SELL"
             if len(position.get("data")) != 0:
                 qty = float(position.get("data")[0].get("positionAmt"))
-                bingx_dto = dtoBingXOrder(coin_pair, "MARKET", buy_sell, result.get("long_short"), None , qty, None, None, None, None, None)
-                order_list = []
-                order_list.append(bingx_dto.to_json())
-                order = player.place_order(order_list)
-                current_price = player.get_price(coin_pair)
-                if ret_json.get("price") == None: 
-                    ret_json["price"] = current_price
-            # Cancel Condition
-            # session.cancel_all_conditional_orders(symbol=coin_pair)
-
-        # Cancel Active order
-        player.close_all_order(coin_pair)
+                entry = float(position.get("data")[0].get("avgPrice"))
+            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, qty)
+            order_list.append(bingx_dto.to_json())
+            player.place_order(coin_pair, order_list)
+            
+            current_price = player.get_price(coin_pair)
+            if ret_json.get("price") == None: 
+                ret_json["price"] = current_price
 
     return ret_json
