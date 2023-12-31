@@ -1,6 +1,8 @@
 from bingx.bingx import BINGX
 from dto.dto_bingx_order import dtoBingXOrder
 from logger import Logger
+import math
+import json
 
 # Logger setup
 logger_mod = Logger("Place Order")
@@ -9,7 +11,7 @@ order_percent = 3
 maximum_wallet = 1000
 platform = "bingx"
 
-def calculate_qty(wallet, entry_price, sl, ratio, percentage = 2):
+def calculate_qty(wallet, entry_price, sl, percentage = 2):
     if float(wallet) > maximum_wallet:
         wallet = maximum_wallet
     
@@ -17,9 +19,9 @@ def calculate_qty(wallet, entry_price, sl, ratio, percentage = 2):
     if price_diff < 0:
         price_diff *= -1
     
-    order_margin = wallet * ratio * percentage/100
+    order_margin = wallet * percentage/100
     qty = order_margin/price_diff 
-    return round(qty, 3)
+    return qty
 
 
 def h_bingx_order(dbcon, message_id):
@@ -36,7 +38,7 @@ def h_bingx_order(dbcon, message_id):
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
 
     # Count number of Entry Point
-    entry_list = [x for x in [result["entry1"], result["entry2"]] if x != -1.0]
+    entry_list = [float(x) for x in [result["entry1"], result["entry2"]] if x != -1.0]
     entry_count = len(entry_list)
 
     # Count number of take profit
@@ -53,24 +55,25 @@ def h_bingx_order(dbcon, message_id):
     # get refer id
     order_refer_id = result["order_link_id"]
     
-    p_order_id_list = []
-    order_id_map = {}
+    order_id_map = []
+
+    error_ret = {}
 
     for player in session_list:
-        is_player = player["role"] == "player"
         order_list = []
-        sub_order_id_list = []
         player["session"].order_preset(coin_pair)
         counter = 1
         wallet = player["session"].get_wallet()
-        ratio = 100 / (tp_num * entry_count) / 100
         buy_sell = "BUY"
         if result["long_short"] == "SHORT":
             buy_sell = "SELL"
+        average_entry = sum(entry_list)/entry_count
         for entry in entry_list:
             for tp in tp_list:
+                # 3 decimal place
+                qty = calculate_qty(wallet, average_entry, stop_loss) / entry_count / tp_num
+                qty = math.ceil((qty) * 1000) / 1000
                 order_link_id = f'{order_refer_id}-{str(counter)}'
-                qty = calculate_qty(wallet, entry, tp, ratio)
                 bingx_dto = dtoBingXOrder(coin_pair,
                                              "LIMIT",
                                              buy_sell,
@@ -85,15 +88,16 @@ def h_bingx_order(dbcon, message_id):
                                              )
                 counter += 1
                 order_list.append(bingx_dto.to_json())
-                if is_player:
-                    p_order_id_list.append(order_link_id)
-                # sub_order_id_list.append(
-                #     {"id":order_link_id,
-                #     "qty":qty})
         order = player["session"].place_order(order_list)
         if order.get("code") != 0 and order.get("code") != 200:
-            return order.get("msg")
-        order_id_map[player["player_id"]]=sub_order_id_list
-    dbcon.set_message_player_order(message_id, p_order_id_list)
-    # dbcon.set_player_follower_order(order_id_map, result["player_id"])
+            error_ret[player.get("player_id")] = order.get("msg")
+            # log error
+            continue
+
+        for item in order["data"]["orders"]:
+            order_detail_pair = {"player_id" : player.get("player_id"),
+                                "client_order_id" : item.get("clientOrderID"),
+                                "order_id" : item.get("orderId")}
+            order_id_map.append(order_detail_pair)
+    dbcon.set_client_order_id(order_id_map, message_id)
     return "Order Placed" 
