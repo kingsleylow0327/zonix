@@ -98,6 +98,17 @@ class ZonixDB():
         """.format(self.config.MESSAGE_PLAYER_TABLE, giant_string)
         return self.dbcon_manager(sql, get_all=True)
     
+    def set_client_order_id(self, client_order_id_list, message_id):
+        giant_string = ", \n".join(["('{}', '{}', '{}', {})".format(item["player_id"], 
+                                                                    item["client_order_id"], 
+                                                                    item["order_id"], 
+                                                                    message_id) for item in client_order_id_list])
+        sql = """INSERT INTO {}(player_id, client_order_id, order_id, message_id)
+        VALUES
+        {}
+        """.format(self.config.CLEINT_ORDER_ID_TABLE, giant_string)
+        return self.dbcon_manager(sql, get_all=True)
+    
     def set_player_follower_order(self, order_id_map, main_player):
         giant_list = []
         plyer_order_list = order_id_map[main_player]
