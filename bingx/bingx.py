@@ -1,23 +1,24 @@
 from hashlib import sha256
 import hmac
 import requests
-import time
-import asyncio
 import json
 from dto.dto_bingx_order import dtoBingXOrder
+from dto.dto_bingx_order_tpsl import dtoBingXOrderTPSL
 
 APIDOMAIN = "https://open-api.bingx.com"
 DEMO_API = "https://open-api-vst.bingx.com"
 SERVER_TIME = "/openApi/swap/v2/server/time"
 WALLET_API = "/openApi/swap/v2/user/balance"
-ORDER_API = "/openApi/swap/v2/trade/batchOrders"
+BATCH_ORDER_API = "/openApi/swap/v2/trade/batchOrders"
 MARGIN_API = "/openApi/swap/v2/trade/marginType"
 LEVERAGE_API = "/openApi/swap/v2/trade/leverage"
 CLOSE_ALL_ORDER_API = "/openApi/swap/v2/trade/allOpenOrders"
 CLOSE_ALL_POS = "/openApi/swap/v2/trade/closeAllPositions"
-OPEN_ORDER = "/openApi/swap/v2/trade/openOrders"
+ORDER = "/openApi/swap/v2/trade/order"
+PENDING_ORDER = "/openApi/swap/v2/trade/openOrders"
 POSITION = "/openApi/swap/v2/user/positions"
 PRICE = "/openApi/swap/v2/quote/price"
+ALL_ORDER = "/openApi/swap/v2/trade/allOrders"
 
 OK_STATUS = {"code": 200, "status": "ok"}
 HTTP_OK_LIST = [0, 200]
@@ -80,13 +81,14 @@ class BINGX:
         }
         return self.__send_request(method, WALLET_API, param_map).get("data").get("balance").get("availableMargin")
     
-    def get_order(self, symbol):
+    def get_order(self, symbol, clientOrderId):
         method = "GET"
         param_map = {
             "symbol": symbol,
+            "clientOrderID": clientOrderId,
             "recvWindow": 0
         }
-        return self.__send_request(method, OPEN_ORDER, param_map)
+        return self.__send_request(method, ORDER, param_map)
     
     def get_position(self, symbol):
         method = "GET"
@@ -96,13 +98,30 @@ class BINGX:
         }
         return self.__send_request(method, POSITION, param_map)
     
+    def get_all(self, symbol):
+        method = "GET"
+        param_map = {
+            "symbol": symbol,
+            "limit": "500",
+            "recvWindow": 0
+        }
+        return self.__send_request(method, ALL_ORDER, param_map)
+    
+    def get_all_pending(self, symbol):
+        method = "GET"
+        param_map = {
+            "symbol": symbol,
+            "recvWindow": 0
+        }
+        return self.__send_request(method, PENDING_ORDER, param_map)
+    
     def place_order(self, player_order_list):
         method = "POST"
         stringify = self.__stringify_json(player_order_list)
         param_map = {
             "batchOrders": stringify
         }
-        return self.__send_request(method, ORDER_API, param_map)
+        return self.__send_request(method, BATCH_ORDER_API, param_map)
     
     def close_order(self, symbol, player_order_list):
         method = "DELETE"
@@ -112,7 +131,7 @@ class BINGX:
             "clientOrderIDList": stringify,
             "recvWindow": 0
         }
-        return self.__send_request(method, ORDER_API, param_map)
+        return self.__send_request(method, BATCH_ORDER_API, param_map)
     
     def close_all_order(self, symbol):
         method = "DELETE"
@@ -122,9 +141,10 @@ class BINGX:
         }
         return self.__send_request(method, CLOSE_ALL_ORDER_API, param_map)
     
-    def close_all_pos(self):
+    def close_all_pos(self, symbol):
         method = "POST"
         param_map = {
+            "symbol": symbol,
             "recvWindow": 0
         }
         return self.__send_request(method, CLOSE_ALL_POS, param_map)
@@ -204,41 +224,4 @@ class BINGX:
     def __stringify_json(self, j):
         return json.dumps(j).replace(', \\"', ',\\"')
 
-if "__main__" == __name__:
-
-    # def calculate_qty(wallet, entry_price, sl, percentage = 10):
-    #     # wallet = session.get_wallet()
-    #     # if float(wallet) > maximum_wallet:
-    #     #     wallet = maximum_wallet
-        
-    #     price_diff = entry_price - sl
-    #     if price_diff < 0:
-    #         price_diff *= -1
-        
-    #     order_margin = wallet * percentage/100
-    #     print(order_margin)
-    #     qty = order_margin/price_diff 
-    #     return round(qty, 3)
-    
-    # print(calculate_qty(100, 2000, 2099))
-    api_key="F6eW8CKNcfKtTzuBpda172yEk46tYd6DmJUJHcg2FriZdih08anP7YaBs3vY3RFdrzxIUUPfav02wujnKyVA"
-    api_secret="IKqRAAhIS5QsPj9k5BTjH7J5x1KqtAAGIDsGS7pr7K3jKK0eUJQC7HMT7MnxhLV6hKcTKmS5uUNx2jnxGiQw"
-
-
-    # player = bingx(api_key, api_secret)
-    coin = "ETH-USDT"
-    order_id = "walaka1"
-
-    bingx_dto = dtoBingXOrder(coin, "MARKET", "BUY", "SHORT", None, 1, None, 1, None, 1, None)
-    # bingx_dto_mo = dtoBingXOrder("ETH-USDT", "MARKET", "SELL", "LONG", 2357, 4, None, 1, 2000, 1, None)
-    player = BINGX(api_key, api_secret)
-    order_list = []
-    order_list.append(bingx_dto.to_json())
-    order = player.get_price(coin)
-    # order = player.place_order(order_list)
-    # print(order)
-    # order = player.get_position(coin)
-    print(order)
-    # exit = player.get_wallet()
-    # print(exit)
 
