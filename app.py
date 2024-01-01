@@ -8,7 +8,7 @@ from bybit_websock import bybit_ws
 from config import Config
 from datetime import datetime
 from handler.bingx_place_order import h_bingx_order
-from handler.bingx_cancel_order import h_bingx_cancel_all, h_bingx_cancel_order
+from handler.bingx_cancel_order import h_bingx_cancel_order
 from handler.place_order import h_place_order
 from handler.cancel_order import h_cancel_order, h_cancel_all
 from handler.test_api_key import h_test_api
@@ -98,38 +98,43 @@ async def on_message(message):
             # Change Title
             if "all take-profit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-                h_bingx_cancel_order(dbcon, order_detail)
+                ret = h_bingx_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "🤑")
+                if ret.get("error") != None:
+                    await thread.send(ret.get("error"))
+                    logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
+
             if "take-profit" and "target 1" in message.content.lower():
                 # Get Details
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 player_id = order_detail["player_id"]
-                # Cancel Active order
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
-                print(ret)
-
-                # Trading Stop
-                # ret = h_trading_stop(dbcon, player_id ,order_dto)
-                # print(ret)
-
                 new_name = change_thread_name(message.channel.name, "🟢")
+                if ret.get("error") != None:
+                    await thread.send(ret.get("error"))
+                    logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name)
                 return
+
             if "stoploss" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "💸")
+                if ret.get("error") != None:
+                    await thread.send(ret.get("error"))
+                    logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
     
             if is_achieved_before(message.content):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 ret = h_bingx_cancel_order(dbcon, order_detail)
-                logger.info(ret.get("status"))
-                thread_name = message.channel.name
-                new_name = change_thread_name(thread_name, "⛔")
+                new_name = change_thread_name(message.channel.name, "⛔")
+                if ret.get("error") != None:
+                    await thread.send(ret.get("error"))
+                    logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
             return
@@ -164,9 +169,11 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             await CHANNEL.send("Cancel", reference=reply_to)
             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             ret = h_bingx_cancel_order(dbcon, order_detail) # cannot use refer_id, this id is from cornix, must get id from order_detail
-            logger.info(ret)
-            thread_name = message.channel.name
-            new_name = change_thread_name(thread_name, "⛔")
+            logger.info(ret.get("msg"))
+            if ret.get("error") != None:
+                await thread.send(ret.get("error"))
+                logger.info(ret.get("error"))
+            new_name = change_thread_name(message.channel.name, "⛔")
             await message.channel.edit(name=new_name, archived=True)
             return
         
@@ -198,10 +205,12 @@ This TradeCall was cancelled earlier or closed\n""")
             
             await CHANNEL.send("Cancel", reference=reply_to)
             ret = h_bingx_cancel_order(dbcon, order_detail)
+            if ret.get("error") != None:
+                await thread.send(ret.get("error"))
+                logger.info(ret.get("error"))
             coin_price = ret.get("price")
             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
             dbcon.update_market_out_price(coin_price, refer_id)
-            logger.info(ret.get("status"))
             thread_name = message.channel.name
             new_name = change_thread_name(thread_name, "🆘")
             await message.channel.edit(name=new_name, archived=True)
@@ -224,7 +233,7 @@ This TradeCall was cancelled earlier or closed\n""")
                 await asyncio.sleep(2)
                 # ret = h_place_order(dbcon, message.id)
                 ret = h_bingx_order(dbcon, message.id)
-                if ret == "Order Placed" or ret == "Order Placed (NR)":
+                if ret.get("msg") == "Order Placed" or ret == "Order Placed (NR)":
                     break
 
             # Send feedback message on thread
@@ -235,7 +244,10 @@ This TradeCall was cancelled earlier or closed\n""")
                 thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
                 return
             await thread.edit(name=thread_message)
-            logger.info(ret)
+            await thread.send(confirm_message)
+            if ret.get("error") != None:
+                await thread.send(ret.get("error"))
+                logger.info(ret.get("error"))
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):

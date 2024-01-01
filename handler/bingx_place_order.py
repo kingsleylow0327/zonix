@@ -57,13 +57,19 @@ def h_bingx_order(dbcon, message_id):
     
     order_id_map = []
 
-    error_ret = {}
+    error_ret = ""
+
+    json_ret = {"msg": "Order Placed"}
 
     for player in session_list:
         order_list = []
+        try:
+            wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
+        except:
+            error_ret += f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret \n'
+            continue
         player["session"].order_preset(coin_pair)
         counter = 1
-        wallet = player["session"].get_wallet()
         buy_sell = "BUY"
         if result["long_short"] == "SHORT":
             buy_sell = "SELL"
@@ -90,8 +96,7 @@ def h_bingx_order(dbcon, message_id):
                 order_list.append(bingx_dto.to_json())
         order = player["session"].place_order(order_list)
         if order.get("code") != 0 and order.get("code") != 200:
-            error_ret[player.get("player_id")] = order.get("msg")
-            # log error
+            error_ret += f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")} \n'
             continue
 
         for item in order["data"]["orders"]:
@@ -100,4 +105,6 @@ def h_bingx_order(dbcon, message_id):
                                 "order_id" : item.get("orderId")}
             order_id_map.append(order_detail_pair)
     dbcon.set_client_order_id(order_id_map, message_id)
-    return "Order Placed" 
+    if error_ret != "":
+        json_ret["error"] = f"MsgId - {message_id} having following Error: \n" + error_ret
+    return json_ret

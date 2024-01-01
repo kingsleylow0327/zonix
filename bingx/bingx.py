@@ -72,14 +72,14 @@ class BINGX:
             "symbol": symbol,
             "recvWindow": 0
         }
-        return self.__send_request(method, PRICE, param_map).get("data").get("price")
+        return self.__send_request(method, PRICE, param_map)
     
     def get_wallet(self):
         method = "GET"
         param_map = {
             "recvWindow": 0
         }
-        return self.__send_request(method, WALLET_API, param_map).get("data").get("balance").get("availableMargin")
+        return self.__send_request(method, WALLET_API, param_map)
     
     def get_order(self, symbol, clientOrderId):
         method = "GET"
@@ -128,7 +128,7 @@ class BINGX:
         stringify = self.__stringify_json(player_order_list)
         param_map = {
             "symbol": symbol.upper(),
-            "clientOrderIDList": stringify,
+            "orderIdList": stringify,
             "recvWindow": 0
         }
         return self.__send_request(method, BATCH_ORDER_API, param_map)
