@@ -4,8 +4,11 @@ import requests
 import json
 from dto.dto_bingx_order import dtoBingXOrder
 from dto.dto_bingx_order_tpsl import dtoBingXOrderTPSL
+from config import Config
 
-APIDOMAIN = "https://open-api.bingx.com"
+CONFIG = Config()
+
+ACTUAL_API = "https://open-api.bingx.com"
 DEMO_API = "https://open-api-vst.bingx.com"
 SERVER_TIME = "/openApi/swap/v2/server/time"
 WALLET_API = "/openApi/swap/v2/user/balance"
@@ -19,6 +22,10 @@ PENDING_ORDER = "/openApi/swap/v2/trade/openOrders"
 POSITION = "/openApi/swap/v2/user/positions"
 PRICE = "/openApi/swap/v2/quote/price"
 ALL_ORDER = "/openApi/swap/v2/trade/allOrders"
+
+APIDOMAIN = ACTUAL_API
+if eval(CONFIG.IS_TEST):
+    APIDOMAIN = DEMO_API
 
 OK_STATUS = {"code": 200, "status": "ok"}
 HTTP_OK_LIST = [0, 200]
@@ -35,7 +42,7 @@ class BINGX:
         return json.get("code") != None and json.get("code") not in HTTP_OK_LIST
 
     def __get_server_time(self):
-        r = self.session.get("%s%s" % (DEMO_API, SERVER_TIME))
+        r = self.session.get("%s%s" % (APIDOMAIN, SERVER_TIME))
         if r.status_code == 200 and r.json().get("data") and r.json().get("data").get("serverTime"):
             return str(r.json().get("data").get("serverTime"))
         else:
@@ -56,15 +63,15 @@ class BINGX:
         if not server_time:
             return {"Timestamp error"}
         param_str = self.__prase_param(param_map, server_time)
-        url = "%s%s?%s&signature=%s" % (DEMO_API, api, param_str, self.__get_sign(param_str))
+        url = "%s%s?%s&signature=%s" % (APIDOMAIN, api, param_str, self.__get_sign(param_str))
         headers = {
             'X-BX-APIKEY': self.api_key,
         }
         r = self.session.request(method, url, headers=headers, data={})
-        if r.json().get("code") == 200 and r.json().get("data") != None:
-            return r.json().get("data")
-        else:
+        try:
             return r.json()
+        except:
+            return {"code": r.status_code, "msg": r.reason}
         
     def get_price(self, symbol):
         method = "GET"
