@@ -7,11 +7,12 @@ import json
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
-order_percent = 3
+order_percent = 2
 maximum_wallet = 1000
+minimum_wallet = 200
 platform = "bingx"
 
-def calculate_qty(wallet, entry_price, sl, percentage = 2):
+def calculate_qty(wallet, entry_price, sl, percentage = order_percent):
     if float(wallet) > maximum_wallet:
         wallet = maximum_wallet
     
@@ -67,6 +68,9 @@ def h_bingx_order(dbcon, message_id):
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
         except:
             error_ret += f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret \n'
+            continue
+        if float(wallet) < minimum_wallet:
+            error_ret += f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet} \n'
             continue
         player["session"].order_preset(coin_pair)
         counter = 1
