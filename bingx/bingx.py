@@ -196,6 +196,7 @@ class BINGX:
         set_leverage_return = {}
         if self.__is_error(leverage_detail):
             return leverage_detail
+        leverage_detail = leverage_detail.get("data")
         if leverage_detail.get("longLeverage") != leverage_detail.get("maxLongLeverage"):
             long_lev_return = self.set_leverage(symbol, "long", leverage_detail.get("maxLongLeverage"))
             if long_lev_return.get("code") != 0:
