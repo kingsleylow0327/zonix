@@ -46,7 +46,7 @@ ws_list = {}
 # logger.info("Done Creating websocket!")
 
 def is_order(message):
-    word_list = ['entry', 'tp', 'stop']
+    word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
     pattern = '|'.join(word_list)
     matches = re.findall(pattern, message, re.IGNORECASE)
     return len(matches) == len(word_list)
