@@ -330,10 +330,12 @@ This TradeCall was cancelled earlier or closed\n""")
 
     if is_cancel(message.content):
         return
-
-    msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
-    thread = client.get_channel(int(msg_id))
-    await thread.send(message.content + "\n")
+    
+    if message.reference:
+        msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
+        thread = client.get_channel(int(msg_id))
+        if thread:
+            await thread.send(message.content + "\n")
 
 
 client.run(config.TOKEN)
