@@ -101,7 +101,7 @@ async def on_message(message):
                 ret = h_bingx_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "🤑")
                 if ret.get("error") != None:
-                    await thread.send(ret.get("error"))
+                    await message.channel.send(ret.get("error"))
                     logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
@@ -113,7 +113,7 @@ async def on_message(message):
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "🟢")
                 if ret.get("error") != None:
-                    await thread.send(ret.get("error"))
+                    await message.channel.send(ret.get("error"))
                     logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name)
                 return
@@ -123,7 +123,7 @@ async def on_message(message):
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "💸")
                 if ret.get("error") != None:
-                    await thread.send(ret.get("error"))
+                    await message.channel.send(ret.get("error"))
                     logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
@@ -133,7 +133,7 @@ async def on_message(message):
                 ret = h_bingx_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "⛔")
                 if ret.get("error") != None:
-                    await thread.send(ret.get("error"))
+                    await message.channel.send(ret.get("error"))
                     logger.info(ret.get("error"))
                 await message.channel.edit(name=new_name, archived=True)
                 return
@@ -171,7 +171,7 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             ret = h_bingx_cancel_order(dbcon, order_detail) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret.get("msg"))
             if ret.get("error") != None:
-                await thread.send(ret.get("error"))
+                await message.channel.send(ret.get("error"))
                 logger.info(ret.get("error"))
             new_name = change_thread_name(message.channel.name, "⛔")
             await message.channel.edit(name=new_name, archived=True)
@@ -206,7 +206,7 @@ This TradeCall was cancelled earlier or closed\n""")
             await CHANNEL.send("Cancel", reference=reply_to)
             ret = h_bingx_cancel_order(dbcon, order_detail)
             if ret.get("error") != None:
-                await thread.send(ret.get("error"))
+                await message.channel.send(ret.get("error"))
                 logger.info(ret.get("error"))
             coin_price = ret.get("price")
             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
