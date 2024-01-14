@@ -64,7 +64,7 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
             sl_id_list = []
             pending_order = player.get_all_pending(coin_pair)
             for order in pending_order.get("data").get("orders"):
-                if order.get("type") == "STOP":
+                if order.get("type") == "STOP" or order.get("type") == "STOP_MARKET":
                     sl_id_list.append(order.get("orderId"))
             order = player.close_order(coin_pair, sl_id_list)
             if order.get("code") != 0 and order.get("code") != 200:
