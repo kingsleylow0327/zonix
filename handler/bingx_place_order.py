@@ -109,7 +109,8 @@ def h_bingx_order(dbcon, message_id):
                                     "client_order_id" : item.get("clientOrderID"),
                                     "order_id" : item.get("orderId")}
                 order_id_map.append(order_detail_pair)
-    dbcon.set_client_order_id(order_id_map, message_id)
+    if (order_id_map):
+        dbcon.set_client_order_id(order_id_map, message_id)
     if error_ret != "":
         json_ret["error"] = f"MsgId - {message_id} having following Error: \n" + error_ret
     return json_ret
