@@ -104,7 +104,12 @@ def h_bingx_order(dbcon, message_id):
             except Exception as e:
                 error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
                 continue
-            if order and order.get("code") != 0 and order.get("code") != 200:
+
+            if order == None:
+                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} server error')
+                continue
+
+            if order.get("code") != 0 and order.get("code") != 200:
                 error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")}')
                 continue
 
