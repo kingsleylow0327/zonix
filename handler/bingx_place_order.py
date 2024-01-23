@@ -8,7 +8,7 @@ import json
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
 order_percent = 2
-maximum_wallet = 1000
+maximum_wallet = 3000
 minimum_wallet = 200
 platform = "bingx"
 
