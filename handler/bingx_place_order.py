@@ -59,7 +59,7 @@ def h_bingx_order(dbcon, message_id):
     
     order_id_map = []
 
-    error_ret = ""
+    error_ret = []
 
     json_ret = {"msg": "Order Placed"}
 
@@ -67,10 +67,10 @@ def h_bingx_order(dbcon, message_id):
         try:
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
         except:
-            error_ret += f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret \n'
+            error_ret.append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
             continue
         if float(wallet) < minimum_wallet:
-            error_ret += f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet} \n'
+            error_ret.append('Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
             continue
         player["session"].order_preset(coin_pair)
         counter = 1
@@ -99,9 +99,13 @@ def h_bingx_order(dbcon, message_id):
                                              )
                 counter += 1
                 order_list.append(bingx_dto.to_json())
-            order = player["session"].place_order(order_list)
+            try:
+                order = player["session"].place_order(order_list)
+            except Exception as e:
+                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
+                continue
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret += f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")} \n'
+                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")}')
                 continue
 
             for item in order["data"]["orders"]:
@@ -112,5 +116,5 @@ def h_bingx_order(dbcon, message_id):
     if (order_id_map):
         dbcon.set_client_order_id(order_id_map, message_id)
     if error_ret != "":
-        json_ret["error"] = f"MsgId - {message_id} having following Error: \n" + error_ret
+        json_ret["error"] = error_ret
     return json_ret

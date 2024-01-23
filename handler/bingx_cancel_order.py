@@ -35,7 +35,7 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
     # order_refer_id = result["order_link_id"]
     ret_json = {}
     ret_json["msg"] = "Order Cancelled"
-    error_ret = ""
+    error_ret = []
     for item in session_list:
         player = item["session"]
         # Market Out
@@ -47,18 +47,18 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
             # Cancel Position
             order = player.close_all_pos(coin_pair)
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret += f'Error [Close Position]: {item.get("player_id")} with message: {order.get("msg")} \n'
+                error_ret.append(f'Error [Close Position]: {item.get("player_id")} with message: {order.get("msg")}')
             
-            if order.get("data").get("failed") != None:
-                error_ret += f'Error [Close Position]: {item.get("player_id")} closing position with id: {order.get("data").get("failed")} failed \n'
+            elif order.get("data") and order.get("data").get("failed") != None:
+                error_ret.append(f'Error [Close Position]: {item.get("player_id")} closing position with id: {order.get("data").get("failed")} failed')
 
             # Cancel Active order
             order = player.close_all_order(coin_pair)
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret += f'Error [Close Order]: {item.get("player_id")} with message: {order.get("msg")} \n'
+                error_ret.append(f'Error [Close Order]: {item.get("player_id")} with message: {order.get("msg")}')
             
-            if order.get("data").get("failed") != None:
-                error_ret += f'Error [Close order]: {item.get("player_id")} closing order with id: {order.get("data").get("failed")} failed \n'
+            elif order.get("data") and order.get("data").get("failed") != None:
+                error_ret.append(f'Error [Close order]: {item.get("player_id")} closing order with id: {order.get("data").get("failed")} failed ')
         else:
             # Cancel SL order
             sl_id_list = []
@@ -68,10 +68,10 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
                     sl_id_list.append(order.get("orderId"))
             order = player.close_order(coin_pair, sl_id_list)
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret += f'Error [Close Order]: {item.get("player_id")} with message: {order.get("msg")} \n'
+                error_ret.append(f'Error [Close Order]: {item.get("player_id")} with message: {order.get("msg")}')
 
             elif order.get("data") and order.get("data").get("failed") != None:
-                error_ret += f'Error [Close order]: {item.get("player_id")} closing order with id: {order.get("data").get("failed")} failed \n'
+                error_ret.append(f'Error [Close order]: {item.get("player_id")} closing order with id: {order.get("data").get("failed")} failed')
 
             # Place new SL
             position = player.get_position(coin_pair)
@@ -82,13 +82,13 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
             order_list.append(bingx_dto.to_json())
             order = player.place_order(order_list)
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret += f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")} \n'
+                error_ret.append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')
                 continue
             
         try:
             ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
         except:
             ret_json["price"] = "Error Getting Price"
-    if error_ret != "":
-        ret_json["error"] = f"MsgId - {result['message_id']} having following Error: \n" + error_ret
+    if error_ret != []:
+        ret_json["error"] = error_ret
     return ret_json

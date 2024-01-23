@@ -67,8 +67,8 @@ class BINGX:
         headers = {
             'X-BX-APIKEY': self.api_key,
         }
-        r = self.session.request(method, url, headers=headers, data={})
         try:
+            r = self.session.request(method, url, headers=headers, data={})
             return r.json()
         except:
             return {"code": r.status_code, "msg": r.reason}

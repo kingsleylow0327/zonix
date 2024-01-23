@@ -19,6 +19,7 @@ from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
 from sql_con import ZonixDB
+from util import spilt_discord_message
 
 # Logger setup
 logger_mod = Logger("Event")
@@ -167,12 +168,15 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             
             # Check status
             await CHANNEL.send("Cancel", reference=reply_to)
-            await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
+            await message.channel.send("CANCEL IN PROGRESS... \n")
             ret = h_bingx_cancel_order(dbcon, order_detail) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret.get("msg"))
-            if ret.get("error") != None:
-                await message.channel.send(ret.get("error"))
-                logger.info(ret.get("error"))
+            if ret.get("error") != []:
+                await message.channel.send(f"MsgId - {order_detail['message_id']} having following Error: \n")
+                for error in spilt_discord_message(ret.get("error")):
+                    await message.channel.send(error)
+                    logger.info(error)
+            await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             new_name = change_thread_name(message.channel.name, "⛔")
             await message.channel.edit(name=new_name, archived=True)
             return
@@ -229,6 +233,7 @@ This TradeCall was cancelled earlier or closed\n""")
             thread = await message.create_thread(name=thread_message)
 
             # Place Actual Order
+            await thread.send("Order In Progress... \n")
             for i in range(MAX_TRIES):
                 await asyncio.sleep(2)
                 # ret = h_place_order(dbcon, message.id)
@@ -243,9 +248,12 @@ This TradeCall was cancelled earlier or closed\n""")
                 thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
                 return
             await thread.send(confirm_message)
-            if ret.get("error") != None:
-                await thread.send(ret.get("error"))
-                logger.info(ret.get("error"))
+            if ret.get("error") != []:
+                await thread.send(f"MsgId - {message.id} having following Error: \n")
+                for error in spilt_discord_message(ret.get("error")):
+                    await thread.send(error)
+                    logger.info(error)
+            await thread.send("Order SUCCESSFUL ✅ \n")
             await thread.edit(name=thread_message)
             return
 
