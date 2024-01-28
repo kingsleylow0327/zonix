@@ -34,6 +34,7 @@ config = Config()
 
 dbcon = ZonixDB(config)  
 CHANNEL = None
+SENDER_CHANNEL_LIST = None
 MAX_TRIES = 2
 ws_list = {}
 # player_api_list = dbcon.get_all_player()
@@ -87,6 +88,8 @@ async def on_ready():
     logger.info('Zonix Is Booted Up!')
     global CHANNEL
     CHANNEL = client.get_channel(int(config.RECEIVER_CHANNEL_ID))
+    global SENDER_CHANNEL_LIST
+    SENDER_CHANNEL_LIST = [int(s) for s in config.SENDER_CHANNEL_ID.split(",")]
     #await channel.send('Cornix Is Booted Up!')
 
 @client.event
@@ -220,7 +223,7 @@ This TradeCall was cancelled earlier or closed\n""")
             await message.channel.edit(name=new_name, archived=True)
             return
 
-    if message.channel.id == int(config.SENDER_CHANNEL_ID):
+    if message.channel.id in SENDER_CHANNEL_LIST:
         if is_order(message.content): 
             ret = "Empty Row"
 
