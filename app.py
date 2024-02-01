@@ -174,7 +174,7 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             await message.channel.send("CANCEL IN PROGRESS... \n")
             ret = h_bingx_cancel_order(dbcon, order_detail) # cannot use refer_id, this id is from cornix, must get id from order_detail
             logger.info(ret.get("msg"))
-            if ret.get("error") != []:
+            if ret.get("error") and ret.get("error") != []:
                 await message.channel.send(f"MsgId - {order_detail['message_id']} having following Error: \n")
                 for error in spilt_discord_message(ret.get("error")):
                     await message.channel.send(error)
@@ -251,7 +251,7 @@ This TradeCall was cancelled earlier or closed\n""")
                 thread_message = f"🫥 {cur_date} -- {coin_pair} {long_short}"
                 return
             await thread.send(confirm_message)
-            if ret.get("error") != []:
+            if ret.get("error") and ret.get("error") != []:
                 await thread.send(f"MsgId - {message.id} having following Error: \n")
                 for error in spilt_discord_message(ret.get("error")):
                     await thread.send(error)
