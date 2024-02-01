@@ -104,9 +104,10 @@ async def on_message(message):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 ret = h_bingx_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "🤑")
-                if ret.get("error") != None:
-                    await message.channel.send(ret.get("error"))
-                    logger.info(ret.get("error"))
+                if ret.get("error") and ret.get("error") != []:
+                    for error in spilt_discord_message(ret.get("error")):
+                        await message.channel.send(error)
+                        logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
                 return
 
@@ -116,9 +117,10 @@ async def on_message(message):
                 player_id = order_detail["player_id"]
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "🟢")
-                if ret.get("error") != None:
-                    await message.channel.send(ret.get("error"))
-                    logger.info(ret.get("error"))
+                if ret.get("error") and ret.get("error") != []:
+                    for error in spilt_discord_message(ret.get("error")):
+                        await message.channel.send(error)
+                        logger.info(error)
                 await message.channel.edit(name=new_name)
                 return
 
@@ -126,9 +128,10 @@ async def on_message(message):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
                 new_name = change_thread_name(message.channel.name, "💸")
-                if ret.get("error") != None:
-                    await message.channel.send(ret.get("error"))
-                    logger.info(ret.get("error"))
+                if ret.get("error") and ret.get("error") != []:
+                    for error in spilt_discord_message(ret.get("error")):
+                        await message.channel.send(error)
+                        logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
                 return
     
@@ -136,9 +139,10 @@ async def on_message(message):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 ret = h_bingx_cancel_order(dbcon, order_detail)
                 new_name = change_thread_name(message.channel.name, "⛔")
-                if ret.get("error") != None:
-                    await message.channel.send(ret.get("error"))
-                    logger.info(ret.get("error"))
+                if ret.get("error") and ret.get("error") != []:
+                    for error in spilt_discord_message(ret.get("error")):
+                        await message.channel.send(error)
+                        logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
                 return
             return
@@ -212,9 +216,10 @@ This TradeCall was cancelled earlier or closed\n""")
             
             await CHANNEL.send("Cancel", reference=reply_to)
             ret = h_bingx_cancel_order(dbcon, order_detail)
-            if ret.get("error") != None:
-                await message.channel.send(ret.get("error"))
-                logger.info(ret.get("error"))
+            if ret.get("error") and ret.get("error") != []:
+                for error in spilt_discord_message(ret.get("error")):
+                    await message.channel.send(error)
+                    logger.info(error)
             coin_price = ret.get("price")
             await message.channel.send(f"Market Out {coin_pair} Successfull at price: {str(coin_price)} \n")
             dbcon.update_market_out_price(coin_price, refer_id)
