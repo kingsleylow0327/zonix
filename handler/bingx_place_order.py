@@ -27,14 +27,18 @@ def calculate_qty(wallet, entry_price, sl, percentage = order_percent):
 
 
 def h_bingx_order(dbcon, message_id):
+    json_ret = {"msg": "Order Placed"}
+    json_ret["error"] = []
     result = dbcon.get_order_detail_by_order(message_id)
     if result is None:
-        return {"msg": "Empty Row"}
+        json_ret["error"].append("Error [Placing Order]: Order Detail Not found")
+        return json_ret
     
     # get api list
     api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
     if api_pair_list == None or len(api_pair_list) == 0:
-        return {"msg": "Order Placed (NR)"}
+        json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
+        return json_ret
 
     session_list = [{"session":BINGX(x["api_key"], x["api_secret"]),
         "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
@@ -59,18 +63,14 @@ def h_bingx_order(dbcon, message_id):
     
     order_id_map = []
 
-    error_ret = []
-
-    json_ret = {"msg": "Order Placed"}
-
     for player in session_list:
         try:
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
         except:
-            error_ret.append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
+            json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
             continue
         if float(wallet) < minimum_wallet:
-            error_ret.append('Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
+            json_ret["error"].append('Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
             continue
         player["session"].order_preset(coin_pair)
         counter = 1
@@ -102,15 +102,15 @@ def h_bingx_order(dbcon, message_id):
             try:
                 order = player["session"].place_order(order_list)
             except Exception as e:
-                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
+                json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
                 continue
 
             if order == None:
-                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} server error')
+                json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} server error')
                 continue
 
             if order.get("code") != 0 and order.get("code") != 200:
-                error_ret.append(f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")}')
+                json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {order.get("msg")}')
                 continue
 
             for item in order["data"]["orders"]:
@@ -120,6 +120,4 @@ def h_bingx_order(dbcon, message_id):
                 order_id_map.append(order_detail_pair)
     if (order_id_map):
         dbcon.set_client_order_id(order_id_map, message_id)
-    if error_ret != "":
-        json_ret["error"] = error_ret
     return json_ret
