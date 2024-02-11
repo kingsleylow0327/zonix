@@ -18,7 +18,7 @@ def h_bingx_cancel_all(dbcon, coin):
 # if is_not_tp is false, it's hit tp and shifting stoploss
 def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
     result = order_detail
-    ret_json["msg"] = "Order Cancelled"
+    ret_json = {"msg": "Order Cancelled"}
     ret_json["error"] = []
     if result is None:
         ret_json["error"].append("Error [Closing Order]: Order Detail Not found")
