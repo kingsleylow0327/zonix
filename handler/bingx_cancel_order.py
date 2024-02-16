@@ -37,7 +37,6 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
     coin_pair = result["coinpair"].strip().replace("/","").replace("-","").upper()
     coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
     # order_refer_id = result["order_link_id"]
-    ret_json = {}
     for item in session_list:
         player = item["session"]
         # Market Out

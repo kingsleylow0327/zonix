@@ -134,6 +134,17 @@ async def on_message(message):
                         logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
                 return
+            
+            if "stop target hit" in message.content.lower():
+                order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+                ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
+                new_name = change_thread_name(message.channel.name, "❌")
+                if ret.get("error") and ret.get("error") != []:
+                    for error in spilt_discord_message(ret.get("error")):
+                        await message.channel.send(error)
+                        logger.info(error)
+                await message.channel.edit(name=new_name, archived=True)
+                return
     
             if is_achieved_before(message.content):
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
@@ -149,6 +160,8 @@ async def on_message(message):
 
         if is_cancel(message.content):
             order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            if not order_detail:
+                await message.channel.send("Error: Missing Order Detail, please contact admin \n")
             refer_id = order_detail["message_id"]
             order_msg_id = order_detail["order_msg_id"]
             order_status = order_detail["p_status"]
@@ -348,7 +361,10 @@ This TradeCall was cancelled earlier or closed\n""")
         return
     
     if message.reference:
-        msg_id = dbcon.get_order_msg_id(message.reference.message_id)["order_msg_id"]
+        msg_id_obj = dbcon.get_order_msg_id(message.reference.message_id)
+        if not msg_id:
+            await thread.send("Error: Missing message id, please contact admin \n")
+        msg_id = msg_id_obj.get("order_msg_id")
         thread = client.get_channel(int(msg_id))
         if thread:
             await thread.send(message.content + "\n")
