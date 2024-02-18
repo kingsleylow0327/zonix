@@ -88,6 +88,8 @@ async def on_ready():
     logger.info('Zonix Is Booted Up!')
     global CHANNEL
     CHANNEL = client.get_channel(int(config.RECEIVER_CHANNEL_ID))
+    global ERROR_CHANNEL
+    ERROR_CHANNEL = client.get_channel(int(config.ERROR_CHANNEL_ID))
     global SENDER_CHANNEL_LIST
     SENDER_CHANNEL_LIST = [int(s) for s in config.SENDER_CHANNEL_ID.split(",")]
     #await channel.send('Cornix Is Booted Up!')
@@ -362,9 +364,17 @@ This TradeCall was cancelled earlier or closed\n""")
     
     if message.reference:
         msg_id_obj = dbcon.get_order_msg_id(message.reference.message_id)
-        if not msg_id:
-            await thread.send("Error: Missing message id, please contact admin \n")
+        if not msg_id_obj:
+            error_msg = "Missing Reference Message"
+            error_msg_content = message.content
+            await ERROR_CHANNEL.send(f"Error: {error_msg} \n Error Message: {error_msg_content}")
+            return
         msg_id = msg_id_obj.get("order_msg_id")
+        if not msg_id_obj:
+            error_msg = "Missing message id"
+            error_msg_content = message.content
+            await ERROR_CHANNEL.send(f"Error: {error_msg} \n Error Message: {error_msg_content}")
+            return
         thread = client.get_channel(int(msg_id))
         if thread:
             await thread.send(message.content + "\n")
