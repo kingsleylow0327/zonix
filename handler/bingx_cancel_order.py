@@ -80,13 +80,13 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
                 if len(position.get("data")) != 0:
                     qty = float(position.get("data")[0].get("positionAmt"))
                     entry = float(position.get("data")[0].get("avgPrice"))
-                bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, qty)
-                order_list.append(bingx_dto.to_json())
-                order = player.place_order(order_list)
-                if order.get("code") != 0 and order.get("code") != 200:
-                    ret_json["error"].append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')
-                    continue
-                if not ret_json["price"]:
+                    bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, qty)
+                    order_list.append(bingx_dto.to_json())
+                    order = player.place_order(order_list)
+                    if order.get("code") != 0 and order.get("code") != 200:
+                        ret_json["error"].append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')
+                        continue
+                if not ret_json.get("price"):
                     ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
         except Exception as e:
             ret_json["error"].append(f'Error [Close order]: {item.get("player_id")} having issue: {e} ')
