@@ -139,7 +139,7 @@ async def on_message(message):
             
             if "stop target hit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
-                ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=False)
+                ret = h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True)
                 new_name = change_thread_name(message.channel.name, "❌")
                 if ret.get("error") and ret.get("error") != []:
                     for error in spilt_discord_message(ret.get("error")):
