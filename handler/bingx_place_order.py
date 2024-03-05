@@ -7,12 +7,11 @@ import json
 # Logger setup
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
-order_percent = 2
 maximum_wallet = 3000
 minimum_wallet = 200
 platform = "bingx"
 
-def calculate_qty(wallet, entry_price, sl, percentage = order_percent):
+def calculate_qty(wallet, entry_price, sl, percentage):
     wallet = float(wallet)
     if wallet > maximum_wallet:
         wallet = maximum_wallet
@@ -40,8 +39,10 @@ def h_bingx_order(dbcon, message_id):
         json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
         return json_ret
 
-    session_list = [{"session":BINGX(x["api_key"], x["api_secret"]),
-        "role": x["role"], "player_id": x["follower_id"]} for x in api_pair_list]
+    session_list = [{"session":BINGX(x.get("api_key"), x.get("api_secret")),
+                     "role": x.get("role"),
+                     "player_id": x.get("follower_id"),
+                     "damage_cost": int(x.get("damage_cost"))} for x in api_pair_list]
 
     # Count number of Entry Point
     entry_list = [float(x) for x in [result["entry1"], result["entry2"]] if x != -1.0]
@@ -82,7 +83,7 @@ def h_bingx_order(dbcon, message_id):
             order_list = []
             for tp in tp_list:
                 # 3 decimal place
-                qty = calculate_qty(wallet, average_entry, stop_loss) / entry_count / tp_num
+                qty = calculate_qty(wallet, average_entry, stop_loss, player.get("damage_cost")) / entry_count / tp_num
                 qty = math.ceil((qty) * 1000) / 1000
                 order_link_id = f'{order_refer_id}-{str(counter)}'
                 bingx_dto = dtoBingXOrder(coin_pair,

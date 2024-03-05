@@ -81,7 +81,7 @@ class ZonixDB():
         return self.dbcon_manager(sql, get_all=True)
 
     def get_followers_api(self, player_id, platform):
-        sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, IF(f.player_id=follower_id,'player','') as role
+        sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, IF(f.player_id=follower_id,'player','') as role, f.damage_cost
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id
