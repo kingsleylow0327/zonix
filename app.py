@@ -19,6 +19,7 @@ from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
 from sql_con import ZonixDB
+from telegram_forward.tele_bot import forward_to_telegram
 from util import spilt_discord_message
 
 # Logger setup
@@ -278,6 +279,7 @@ This TradeCall was cancelled earlier or closed\n""")
                     logger.info(error)
             await thread.send("Order SUCCESSFUL ✅ \n")
             await thread.edit(name=thread_message)
+            forward_to_telegram(config.TELEGRAM_API, config.TELEGRAM_CHANNEL, message.content, message.author.display_name)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):

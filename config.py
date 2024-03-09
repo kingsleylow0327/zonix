@@ -30,3 +30,5 @@ class Config():
         self.SERVER_IP=os.getenv('SERVER_IP')
         self.POOL_SIZE=os.getenv('POOL_SIZE')
         self.IS_TEST=os.getenv('IS_TEST')
+        self.TELEGRAM_API=os.getenv('TELEGRAM_API')
+        self.TELEGRAM_CHANNEL=os.getenv('TELEGRAM_CHANNEL')
