@@ -289,7 +289,7 @@ This TradeCall was cancelled earlier or closed\n""")
                     logger.info(error)
             await thread.send("Order SUCCESSFUL ✅ \n")
             await thread.edit(name=thread_message)
-            forward_order_to_telegram(config, message.content, message.author.display_name, message.channel.id)
+            forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
