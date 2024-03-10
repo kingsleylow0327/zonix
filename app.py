@@ -19,7 +19,7 @@ from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
 from sql_con import ZonixDB
-from telegram_forward.tele_bot import forward_to_telegram
+from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram
 from util import spilt_discord_message
 
 # Logger setup
@@ -101,7 +101,7 @@ async def on_message(message):
     if isinstance(message.channel, discord.Thread):
 
         # Zonix ID block
-        if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content):
+        if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content) and not is_market_out(message.content):
             # Change Title
             if "all take-profit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
@@ -112,6 +112,7 @@ async def on_message(message):
                         await message.channel.send(error)
                         logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
+                forward_update_to_telegram("🤑PROFIT🤑", dbcon, config, message.channel.id, message.content)
                 return
 
             if "take-profit" and "target 1" in message.content.lower():
@@ -125,6 +126,7 @@ async def on_message(message):
                         await message.channel.send(error)
                         logger.info(error)
                 await message.channel.edit(name=new_name)
+                forward_update_to_telegram("🤑PROFIT🤑", dbcon, config, message.channel.id, message.content)
                 return
 
             if "stoploss" in message.content.lower():
@@ -159,6 +161,9 @@ async def on_message(message):
                         logger.info(error)
                 await message.channel.edit(name=new_name, archived=True)
                 return
+            
+            #entry is here
+            forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
             return
 
         if is_cancel(message.content):
@@ -202,6 +207,7 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             new_name = change_thread_name(message.channel.name, "⛔")
             await message.channel.edit(name=new_name, archived=True)
+            forward_update_to_telegram("CANCEL", dbcon, config, message.channel.id)
             return
         
         if is_market_out(message.content):
@@ -242,6 +248,7 @@ This TradeCall was cancelled earlier or closed\n""")
             thread_name = message.channel.name
             new_name = change_thread_name(thread_name, "🆘")
             await message.channel.edit(name=new_name, archived=True)
+            forward_update_to_telegram("MARKET OUT", dbcon, config, message.channel.id)
             return
 
     if message.channel.id in SENDER_CHANNEL_LIST:
@@ -279,7 +286,7 @@ This TradeCall was cancelled earlier or closed\n""")
                     logger.info(error)
             await thread.send("Order SUCCESSFUL ✅ \n")
             await thread.edit(name=thread_message)
-            forward_to_telegram(config.TELEGRAM_API, config.TELEGRAM_CHANNEL, message.content, message.author.display_name)
+            forward_order_to_telegram(config, message.content, message.author.display_name, message.channel.id)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):

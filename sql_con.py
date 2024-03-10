@@ -71,6 +71,14 @@ class ZonixDB():
                     self.config.ORDER_TABLE,
                     order_msg_id)
         return self.dbcon_manager(sql)
+    
+    def get_order_message_by_order_msg_id(self, order_msg_id):
+        sql = """SELECT *
+        FROM {} 
+        WHERE order_msg_id = {}
+        """.format(self.config.PLAYER_ORDER,
+                    order_msg_id)
+        return self.dbcon_manager(sql)
 
     def get_player_api(self, player_id):
         sql = """SELECT api_key, api_secret
