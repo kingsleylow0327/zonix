@@ -54,6 +54,9 @@ def is_order(message):
     matches = re.findall(pattern, message, re.IGNORECASE)
     return len(matches) == len(word_list)
 
+def is_entry(message):
+    return "Average Entry Price" in message
+
 def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL" and len(message_list) == 1
@@ -162,8 +165,8 @@ async def on_message(message):
                 await message.channel.edit(name=new_name, archived=True)
                 return
             
-            #entry is here
-            forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
+            if is_entry(message.content):
+                forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
             return
 
         if is_cancel(message.content):
