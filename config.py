@@ -32,3 +32,4 @@ class Config():
         self.IS_TEST=os.getenv('IS_TEST')
         self.TELEGRAM_API=os.getenv('TELEGRAM_API')
         self.TELEGRAM_CHANNEL=os.getenv('TELEGRAM_CHANNEL')
+        self.TELEGRAM_TOPIC=os.getenv('TELEGRAM_TOPIC')
