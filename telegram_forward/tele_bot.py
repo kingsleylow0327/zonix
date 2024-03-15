@@ -37,18 +37,5 @@ ID : {id}
 {order_message}
 
 *Trade call forwarded From ✨UNITY CRYPTO✨
-
-Join our discord server to know more -> https://discord.gg/zrrnft
 """
     return message
-
-if __name__ == "__main__":
-    """curl -X POST -H 'Content-Type: application/json' \
- -d '{"message_thread_id": "1234", "chat_id": "-1001234567890_1234", "text": "This is a test message from the alert system. Do not pay attention on it"}' \
- https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"""
-    api = "7139621534:AAH7rXde3WOlR3LVzBEIb2n5z7KCPu-W08A"
-    url = f'https://api.telegram.org/bot{api}/sendMessage'
-    myobj = {"message_thread_id": "12", 'chat_id': '-1002061232388_12', "text":"test"}
-
-    x = requests.post(url, json = myobj)
-    print(x)
