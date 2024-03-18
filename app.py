@@ -166,7 +166,7 @@ async def on_message(message):
                 await message.channel.edit(name=new_name, archived=True)
                 return
             
-            if is_entry(message.content):
+            # if is_entry(message.content):
                 # forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
             return
 
