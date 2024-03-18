@@ -18,6 +18,7 @@ from handler.trading_stop import h_trading_stop
 from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
+from random import randint
 from sql_con import ZonixDB
 from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram
 from util import spilt_discord_message
@@ -166,7 +167,7 @@ async def on_message(message):
                 return
             
             if is_entry(message.content):
-                forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
+                # forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
             return
 
         if is_cancel(message.content):
@@ -210,7 +211,7 @@ Cancel Failed, this TradeCall has reached Entry Price, use `MARKETOUT` instead.\
             await message.channel.send("CANCEL SUCCESSFUL ❌ \n")
             new_name = change_thread_name(message.channel.name, "⛔")
             await message.channel.edit(name=new_name, archived=True)
-            forward_update_to_telegram("CANCEL", dbcon, config, message.channel.id)
+            # forward_update_to_telegram("CANCEL", dbcon, config, message.channel.id)
             return
         
         if is_market_out(message.content):
@@ -251,7 +252,7 @@ This TradeCall was cancelled earlier or closed\n""")
             thread_name = message.channel.name
             new_name = change_thread_name(thread_name, "🆘")
             await message.channel.edit(name=new_name, archived=True)
-            forward_update_to_telegram("MARKET OUT", dbcon, config, message.channel.id)
+            # forward_update_to_telegram("MARKET OUT", dbcon, config, message.channel.id)
             return
 
     if message.channel.id in SENDER_CHANNEL_LIST:
@@ -289,7 +290,9 @@ This TradeCall was cancelled earlier or closed\n""")
                     logger.info(error)
             await thread.send("Order SUCCESSFUL ✅ \n")
             await thread.edit(name=thread_message)
-            forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
+            tele_random = randint(1, 100)
+            if tele_random > 50:
+                forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
