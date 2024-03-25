@@ -71,7 +71,7 @@ def h_bingx_order(dbcon, message_id):
             json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
             continue
         if float(wallet) < minimum_wallet:
-            json_ret["error"].append('Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
+            json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
             continue
         player["session"].order_preset(coin_pair)
         counter = 1
