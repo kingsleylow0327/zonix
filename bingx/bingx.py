@@ -2,8 +2,7 @@ from hashlib import sha256
 import hmac
 import requests
 import json
-from dto.dto_bingx_order import dtoBingXOrder
-from dto.dto_bingx_order_tpsl import dtoBingXOrderTPSL
+from logger import Logger
 from config import Config
 
 CONFIG = Config()
@@ -29,6 +28,8 @@ if eval(CONFIG.IS_TEST):
 
 OK_STATUS = {"code": 200, "status": "ok"}
 HTTP_OK_LIST = [0, 200]
+logger_mod = Logger("BingX API")
+logger = logger_mod.get_logger()
 
 class BINGX:
 
@@ -69,9 +70,12 @@ class BINGX:
         }
         try:
             r = self.session.request(method, url, headers=headers, data={})
+            if r.status_code != 200:
+                logger.warning({"code": r.status_code, "msg": r.json()})
             return r.json()
-        except:
-            return {"code": r.status_code, "msg": r.reason}
+        except Exception as e:
+            logger.warning(f"Error [API]:  {str(e)}")
+            return {"code": 99999, "msg": "BingX server unreachable"}
         
     def get_price(self, symbol):
         method = "GET"
