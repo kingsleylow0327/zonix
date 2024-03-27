@@ -38,7 +38,7 @@ class BINGX:
     def __init__(self, api_key, api_secret) -> None:
         self.api_key = api_key
         self.api_secret = api_secret
-        self.timestamp = 0
+        self.timestamp = int(time.time()*1000)
         self.session = requests.Session()
         pass
 
