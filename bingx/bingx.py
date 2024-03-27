@@ -2,6 +2,7 @@ from hashlib import sha256
 import hmac
 import requests
 import json
+import time
 from logger import Logger
 from config import Config
 
@@ -28,6 +29,7 @@ if eval(CONFIG.IS_TEST):
 
 OK_STATUS = {"code": 200, "status": "ok"}
 HTTP_OK_LIST = [0, 200]
+SERVER_REQUEST_BUFFER = 4700 # 5 second max for api service, 300 ms buffer
 logger_mod = Logger("BingX API")
 logger = logger_mod.get_logger()
 
@@ -36,6 +38,7 @@ class BINGX:
     def __init__(self, api_key, api_secret) -> None:
         self.api_key = api_key
         self.api_secret = api_secret
+        self.timestamp = 0
         self.session = requests.Session()
         pass
 
@@ -43,9 +46,14 @@ class BINGX:
         return json.get("code") != None and json.get("code") not in HTTP_OK_LIST
 
     def __get_server_time(self):
+        now  = int(time.time()*1000)
+        if now - self.timestamp < SERVER_REQUEST_BUFFER:
+            return str(self.timestamp)
         r = self.session.get("%s%s" % (APIDOMAIN, SERVER_TIME))
         if r.status_code == 200 and r.json().get("data") and r.json().get("data").get("serverTime"):
-            return str(r.json().get("data").get("serverTime"))
+            current_time = r.json().get("data").get("serverTime")
+            self.timestamp = current_time
+            return str(current_time)
         else:
             return None
 
