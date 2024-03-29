@@ -4,7 +4,7 @@ import requests
 def forward_order_to_telegram(config, order_message: str, author: str, id: str):
     api = config.TELEGRAM_API
     channel = config.TELEGRAM_CHANNEL
-    topic = config.TELEGRAM_TOPIC
+    topic = config.TELEGRAM_TRADECALL_TOPIC
     final_message = message_order_wrapper(order_message, id)
     webhook = f'https://api.telegram.org/bot{api}/sendMessage'
     body = {"message_thread_id": topic,
@@ -19,7 +19,7 @@ def forward_update_to_telegram(type: str, dbcon, config, order_id: str, update_m
     player_order = dbcon.get_order_message_by_order_msg_id(order_id)
     api = config.TELEGRAM_API
     channel = config.TELEGRAM_CHANNEL
-    topic = config.TELEGRAM_TOPIC
+    topic = config.TELEGRAM_TRADECALL_TOPIC
     if not player_order:
         return
     order_message = player_order.get("message")
@@ -65,3 +65,15 @@ ID : {id}
 Signal By <b><i><a href="https://discord.gg/unitycrypto">Unity Crypto</a></i></b>
 """
     return message
+
+def forward_picture(config, image_url: str):
+    api = config.TELEGRAM_API
+    channel = config.TELEGRAM_CHANNEL
+    topic = config.TELEGRAM_PNL_TOPIC
+    webhook = f'https://api.telegram.org/bot{api}/sendPhoto'
+    body = {"message_thread_id": topic,
+            'chat_id': f'{channel}_{topic}',
+            "parse_mode":"html",
+            "photo":image_url,
+            "caption":""}
+    r = requests.get(webhook, json = body)

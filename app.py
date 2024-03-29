@@ -20,7 +20,7 @@ from dto.dto_order import dtoOrder
 from logger import Logger
 from random import randint
 from sql_con import ZonixDB
-from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram
+from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram, forward_picture
 from util import spilt_discord_message
 
 # Logger setup
@@ -362,6 +362,14 @@ This TradeCall was cancelled earlier or closed\n""")
                     await thread.send(messagge)
             return
 
+    if message.channel.id == int(config.PNL_CHANNEL_ID):
+        attachments = message.attachments
+        for attachment in attachments:
+            if attachment.content_type != 'image/jpeg' :
+                continue
+            attachment_url = attachment.url
+            forward_picture(config,attachment_url)
+    
     # Receiver Channel Part
     # Channel Block
     if message.channel.id != int(config.RECEIVER_CHANNEL_ID):
