@@ -95,6 +95,10 @@ class ZonixDB():
         ON f.follower_id = a.player_id
         where f.player_id = '{}'
         and a.platform = '{}'
+        and
+        (a.expiry_date is null
+        or
+        a.expiry_date > now())
         order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id, platform)
         return self.dbcon_manager(sql, get_all=True)
     
