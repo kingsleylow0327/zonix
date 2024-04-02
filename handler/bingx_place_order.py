@@ -84,7 +84,7 @@ def h_bingx_order(dbcon, message_id):
             for tp in tp_list:
                 # 3 decimal place
                 qty = calculate_qty(wallet, average_entry, stop_loss, player.get("damage_cost")) / entry_count / tp_num
-                qty = math.ceil((qty) * 1000) / 1000
+                qty = math.ceil((qty) * 10000) / 10000
                 order_link_id = f'{order_refer_id}-{str(counter)}'
                 bingx_dto = dtoBingXOrder(coin_pair,
                                              "LIMIT",
