@@ -365,7 +365,7 @@ This TradeCall was cancelled earlier or closed\n""")
     if message.channel.id == int(config.PNL_CHANNEL_ID):
         attachments = message.attachments
         for attachment in attachments:
-            if attachment.content_type != 'image/jpeg' :
+            if attachment.content_type not in ['image/avif', 'image/jpeg', 'image/png', 'image/svg+xml', 'image/tiff']:
                 continue
             attachment_url = attachment.url
             forward_picture(config,attachment_url)
