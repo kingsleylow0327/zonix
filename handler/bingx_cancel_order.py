@@ -86,8 +86,8 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
                     if order.get("code") != 0 and order.get("code") != 200:
                         ret_json["error"].append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')
                         continue
-                if not ret_json.get("price"):
-                    ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
+            if not ret_json.get("price"):
+                ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
         except Exception as e:
             ret_json["error"].append(f'Error [Close order]: {item.get("player_id")} having issue: {e} ')
     return ret_json
