@@ -8,13 +8,10 @@ from bybit_websock import bybit_ws
 from config import Config
 from datetime import datetime
 from handler.bingx_place_order import h_bingx_order
-from handler.bingx_cancel_order import h_bingx_cancel_order
-from handler.place_order import h_place_order
-from handler.cancel_order import h_cancel_order, h_cancel_all
+from handler.bingx_cancel_order import h_bingx_cancel_order, h_bingx_cancel_all
+from handler.bingx_safety_pin import h_bingx_safety_pin
 from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
-from handler.check_price import h_check_price
-from handler.trading_stop import h_trading_stop
 from handler.monthly_close import h_monthly_close_by_order_id
 from dto.dto_order import dtoOrder
 from logger import Logger
@@ -62,6 +59,10 @@ def is_cancel(message):
     message_list = message.upper().split(" ")
     return message_list[0] == "CANCEL" and len(message_list) == 1
 
+def is_sp(message):
+    message_list = message.upper().split(" ")
+    return message_list[0] == "SP" and len(message_list) == 1
+
 def is_achieved_before(message):
     message_list = message.upper()
     return "ACHIEVED BEFORE" in message_list
@@ -105,7 +106,7 @@ async def on_message(message):
     if isinstance(message.channel, discord.Thread):
 
         # Zonix ID block
-        if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content) and not is_market_out(message.content):
+        if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content) and not is_market_out(message.content) and not is_sp(message.content):
             # Change Title
             if "all take-profit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
@@ -168,6 +169,39 @@ async def on_message(message):
             
             # if is_entry(message.content):
                 # forward_update_to_telegram("✅ENTRY✅", dbcon, config, message.channel.id, message.content)
+            return
+        
+        if is_sp(message.content):
+            order_detail = dbcon.get_order_detail_by_order(message.channel.id)
+            refer_id = order_detail["message_id"]
+            if not dbcon.is_admin_and_order_author(refer_id, message.author.id):
+                # Send message
+                await message.channel.send("Permission Denied")
+                return
+            coin_pair = order_detail["coinpair"].strip().replace("/","").replace("-","").upper()
+            coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
+            order_status = order_detail["p_status"]
+
+            # Yet to enter
+            if order_status in ["created"]:
+                await message.channel.send("""Safety Pin UNSUCCESSFUL
+This TradeCall has not reached Entry\n""")
+                return
+
+            # Done Order Block
+            if order_status in ["cancelled", "completed", "break even", "stoploss"]:
+                await message.channel.send("""Safety Pin UNSUCCESSFUL
+This TradeCall was cancelled earlier or closed\n""")
+                return
+            
+            await message.channel.send("Setting Safety Pin")
+            ret = h_bingx_safety_pin(dbcon, order_detail)
+            if ret.get("error") and ret.get("error") != []:
+                for error in spilt_discord_message(ret.get("error")):
+                    await message.channel.send(error)
+                    logger.info(error)
+            
+            await message.channel.send(f"Set SP Successfull \n")
             return
 
         if is_cancel(message.content):
@@ -329,7 +363,7 @@ This TradeCall was cancelled earlier or closed\n""")
             elif option == "-P":
                 is_active = False
 
-            ret = h_cancel_all(dbcon, coin, is_active)
+            ret = h_bingx_cancel_all(dbcon, coin, is_active)
             logger.info(ret)
             return
             
