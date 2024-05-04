@@ -8,7 +8,7 @@ import json
 logger_mod = Logger("Place Order")
 logger = logger_mod.get_logger()
 maximum_wallet = 3000
-minimum_wallet = 200
+minimum_wallet = 300
 platform = "bingx"
 
 def calculate_qty(wallet, entry_price, sl, percentage):
