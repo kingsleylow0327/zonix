@@ -1,3 +1,4 @@
+import traceback
 from bingx.bingx import BINGX
 from logger import Logger
 from dto.dto_bingx_order import dtoBingXOrder
@@ -62,5 +63,9 @@ def h_bingx_ptp(dbcon, order_detail):
             if order.get("code") != 0:
                 ret_json["error"].append(f'Error [PTP]: {item.get("player_id")} having issue: {order.get("msg")} ')
         except Exception as e:
+            try:
+                logger.error(traceback.format_exc())
+            except Exception as e:
+                pass
             ret_json["error"].append(f'Error [PTP]: {item.get("player_id")} having issue: {e} ')
     return ret_json

@@ -1,3 +1,4 @@
+import traceback
 from bingx.bingx import BINGX
 from logger import Logger
 from dto.dto_bingx_order import dtoBingXOrder
@@ -62,5 +63,9 @@ def h_bingx_safety_pin(dbcon, order_detail):
             if not ret_json.get("price"):
                 ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
         except Exception as e:
+            try:
+                logger.error(traceback.format_exc())
+            except Exception as e:
+                pass
             ret_json["error"].append(f'Error [Safety Pin]: {item.get("player_id")} having issue: {e} ')
     return ret_json

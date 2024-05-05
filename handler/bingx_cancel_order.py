@@ -1,3 +1,4 @@
+import traceback
 from bingx.bingx import BINGX
 from logger import Logger
 from dto.dto_bingx_order import dtoBingXOrder
@@ -89,5 +90,9 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
             if not ret_json.get("price"):
                 ret_json["price"] = player.get_price(coin_pair).get("data").get("price")
         except Exception as e:
+            try:
+                logger.error(traceback.format_exc())
+            except Exception as e:
+                pass
             ret_json["error"].append(f'Error [Close order]: {item.get("player_id")} having issue: {e} ')
     return ret_json
