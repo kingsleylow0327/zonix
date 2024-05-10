@@ -44,7 +44,7 @@ def h_bingx_ptp(dbcon, order_detail):
                 continue
             position_list = pos_ret.get("data")
             for position in position_list:
-                if position.get("positionSide") == "SHORT":
+                if position.get("positionSide") == result["long_short"]:
                     amt = float(position.get("positionAmt"))
             if amt == 0:
                 continue
