@@ -1,4 +1,5 @@
 from hashlib import sha256
+import traceback
 import hmac
 import requests
 import json
@@ -83,6 +84,10 @@ class BINGX:
             return r.json()
         except Exception as e:
             logger.warning(f"Error [API]:  {str(e)}")
+            try:
+                logger.error(traceback.format_exc())
+            except Exception as e:
+                pass
             return {"code": 99999, "msg": "BingX server unreachable"}
         
     def get_price(self, symbol):
