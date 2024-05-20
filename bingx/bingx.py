@@ -79,8 +79,13 @@ class BINGX:
         }
         try:
             r = self.session.request(method, url, headers=headers, data={})
+            error_message = ""
             if r.status_code != 200:
-                logger.warning({"code": r.status_code, "msg": r.json()})
+                try:
+                    error_message = r.json()
+                except:
+                    pass
+            logger.warning({"code": r.status_code, "msg": error_message})
             return r.json()
         except Exception as e:
             logger.warning(f"Error [API]:  {str(e)}")
@@ -250,3 +255,10 @@ class BINGX:
         return json.dumps(j).replace(', \\"', ',\\"')
 
 
+if "__main__" == __name__:
+    api = "F6eW8CKNcfKtTzuBpda172yEk46tYd6DmJUJHcg2FriZdih08anP7YaBs3vY3RFdrzxIUUPfav02wujnKyVA"
+    secret = "IKqRAAhIS5QsPj9k5BTjH7J5x1KqtAAGIDsGS7pr7K3jKK0eUJQC7HMT7MnxhLV6hKcTKmS5uUNx2jnxGiQw"
+    coin = "DOGE-USDT"
+    bingx = BINGX(api, secret)
+    r = bingx.order_preset(coin)    
+    print(r)
