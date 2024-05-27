@@ -11,6 +11,7 @@ CONFIG = Config()
 
 ACTUAL_API = "https://open-api.bingx.com"
 DEMO_API = "https://open-api-vst.bingx.com"
+COIN_API = "/openApi/swap/v2/quote/contracts"
 SERVER_TIME = "/openApi/swap/v2/server/time"
 WALLET_API = "/openApi/swap/v2/user/balance"
 BATCH_ORDER_API = "/openApi/swap/v2/trade/batchOrders"
@@ -85,7 +86,6 @@ class BINGX:
                     error_message = r.json()
                 except:
                     pass
-            logger.warning({"code": r.status_code, "msg": error_message})
             return r.json()
         except Exception as e:
             logger.warning(f"Error [API]:  {str(e)}")
@@ -102,6 +102,14 @@ class BINGX:
             "recvWindow": 0
         }
         return self.__send_request(method, PRICE, param_map)
+    
+    def get_coin_info(self, symbol):
+        method = "GET"
+        param_map = {
+            "symbol": symbol,
+            "recvWindow": 0
+        }
+        return self.__send_request(method, COIN_API, param_map)
     
     def get_wallet(self):
         method = "GET"
@@ -151,6 +159,11 @@ class BINGX:
             "batchOrders": stringify
         }
         return self.__send_request(method, BATCH_ORDER_API, param_map)
+    
+    def place_single_order(self, player_order):
+        method = "POST"
+        param_map = player_order
+        return self.__send_request(method, ORDER, param_map)
     
     def close_order(self, symbol, player_order_list):
         method = "DELETE"
