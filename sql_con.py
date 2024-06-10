@@ -93,13 +93,13 @@ class ZonixDB():
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id
-        where f.player_id = '{}'
+        where f.player_id = ifnull((select group_name from {} where discord_id = '{}' limit 1),'{}')
         and a.platform = '{}'
         and
         (a.expiry_date is null
         or
         a.expiry_date > now())
-        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, player_id, platform)
+        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, self.config.GROUP_TRADER_TABLE, player_id, player_id, platform)
         return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):

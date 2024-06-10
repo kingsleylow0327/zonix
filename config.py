@@ -28,6 +28,7 @@ class Config():
         self.MESSAGE_PLAYER_TABLE=os.getenv('MESSAGE_PLAYER_TABLE')
         self.PLAYER_FOLLOWER_TABLE=os.getenv('PLAYER_FOLLOWER_TABLE')
         self.CLEINT_ORDER_ID_TABLE=os.getenv('CLEINT_ORDER_ID_TABLE')
+        self.GROUP_TRADER_TABLE=os.getenv('GROUP_TRADER_TABLE')
         self.SERVER_IP=os.getenv('SERVER_IP')
         self.POOL_SIZE=os.getenv('POOL_SIZE')
         self.IS_TEST=os.getenv('IS_TEST')
