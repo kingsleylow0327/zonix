@@ -47,6 +47,46 @@ ws_list = {}
 #         logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
 # logger.info("Done Creating websocket!")
 
+def is_strategy(message):
+    regex_pattern = re.compile(
+        r"^!"                                 # Start with an exclamation mark.
+        r"(?P<strategy>[A-Za-z]+)\s"          # Strategy Name
+        r"#(?P<wallet_margin>\d+(\.\d+)?%)\s" # Wallet margin - starts with a '#', one or more digits, optionally ending with a '%'.
+        r"(?P<trading_pair>[A-Za-z]+)\s"      # Trading Pair - Upper/Lower case characters
+        r"\[(?P<action>([Bb]uy|[Ss]ell))\]\s" # 'Buy' or 'Sell' enclosed in square brackets
+        r"\$(?P<entry_price>\d+(\.\d+)?)\s"   # Entry Price, which starts with a '$'
+        r"(?P<stop_loss>-\d+(\.\d+)?%?|-\d+(\.\d+)?)\s"     # Stop Loss - Can be percentage with ends with % or whole value with decimal
+        r"(\+(?P<take_profit>\d+(\.\d+)?%|\d+(\.\d+)?))?\s" # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
+        r"/(?P<trailing_stop_price>\d+(\.\d+)?)\s"          # Trailing Stop Price - Starts with '/'
+        r">(?P<trailing_stop_percentage>\d+(\.\d+)?%)$"     # Trailing Stop Percentage - Starts with '>', ends with '%'
+    )
+
+    match = re.match(regex_pattern, message)
+  
+    if match:
+        strategy = match.group("strategy")
+        wallet_margin = match.group("wallet_margin")
+        trading_pair = match.group("trading_pair")
+        action = match.group("action")
+        entry_price = float(match.group("entry_price"))  # Convert to float if needed
+        stop_loss = match.group("stop_loss")
+        take_profit = match.group("take_profit")
+        trailing_stop_price = float(match.group("trailing_stop_price"))  # Convert to float if needed
+        trailing_stop_percentage = match.group("trailing_stop_percentage")
+        
+        return {
+            "indicator": strategy,
+            "margin": wallet_margin,
+            "coinpair": trading_pair,
+            "long_short": action.upper(),
+            "entry1": entry_price,
+            "stop_lost": stop_loss,
+            "take_profit": take_profit,
+            "trailing_stop_price": trailing_stop_price,
+            "trailing_stop_percentage": trailing_stop_percentage
+        }
+    return False
+
 def is_order(message):
     word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
     pattern = '|'.join(word_list)
@@ -112,6 +152,7 @@ async def on_message(message):
 
         # Zonix ID block
         if message.author.id == int(config.ZONIX_ID) and not is_cancel(message.content) and not is_market_out(message.content) and not is_sp(message.content) and not is_ptp(message.content):
+
             # Change Title
             if "all take-profit" in message.content.lower():
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
@@ -322,6 +363,10 @@ This TradeCall was cancelled earlier or closed\n""")
             return
 
     if message.channel.id in SENDER_CHANNEL_LIST:
+
+        if is_strategy(message.content):
+            logger.info('here')
+
         if is_order(message.content): 
             ret = "Empty Row"
 
@@ -469,4 +514,31 @@ This TradeCall was cancelled earlier or closed\n""")
             await thread.send(message.content + "\n")
 
 
-client.run(config.TOKEN)
+# client.run(config.TOKEN)
+
+# if "__main__" == __name__:
+#     # api = "F6eW8CKNcfKtTzuBpda172yEk46tYd6DmJUJHcg2FriZdih08anP7YaBs3vY3RFdrzxIUUPfav02wujnKyVA"
+#     # secret = "IKqRAAhIS5QsPj9k5BTjH7J5x1KqtAAGIDsGS7pr7K3jKK0eUJQC7HMT7MnxhLV6hKcTKmS5uUNx2jnxGiQw"
+#     # coin = "DOGE-USDT"
+#     # bingx = BINGX(api, secret)
+#     # r = bingx.order_preset(coin)    
+#     # print(r)
+#     formulas = [
+#         "!BETA #10.5% BTCUSDT [Buy] $60000 -1.5% +3% /62000 >0.5%",
+#         "!ALPHA #5% ETHBTC [Sell] $4500 -2.0% /4000 >1.0%",
+#         "!GAMMA #8% XRPUSD [Buy] $1.25 -1.0% /1.30 >0.8%",
+#         "!DELTA #12% LTCETH [Sell] $120 -3.5% +5 /130 >2.0%",
+#         "!EPSILON #15% BTCUSD [Buy] $55000 -1.0% /56000 >0.5%"
+#     ]
+    
+#     for formula in formulas:
+#         match = is_strategy(formula)
+#         if match:
+#             print(f"Formula: {formula}")
+#             print("Parsed Values:")
+#             for key, value in match.items():
+#                 print(f"{key}: {value}")
+#             print("-" * 30)
+#         else:
+#             print(f"Failed to parse formula: {formula}")
+#             print("-" * 30)
