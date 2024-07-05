@@ -46,7 +46,7 @@ def forward_update_to_telegram(type: str, dbcon, config, order_id: str, update_m
 
 def message_order_wrapper(order_message: str, id: str):
     message = f"""
-👉 <b>New TradeCall Signal</b>
+👉 <b>New Trade Call</b>
 
 {order_message}
 
