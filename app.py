@@ -47,6 +47,47 @@ ws_list = {}
 #         logger.warning("Player {} is not connected: {}".format(player['player_id'], e))
 # logger.info("Done Creating websocket!")
 
+def is_strategy(message):
+    # Strategy Example: !BETA #10% BTCUSDT [Buy] $60000 -1.5% +3% /62000 >0.5%
+    regex_pattern = re.compile(
+        r"^!"                                               # Start with an exclamation mark.
+        r"(?P<strategy>[A-Za-z]+)\s"                        # Strategy Name
+        r"#(?P<wallet_margin>\d+(\.\d+)?%)\s"               # Wallet margin - starts with a '#', one or more digits, optionally ending with a '%'.
+        r"(?P<coin_pair>[A-Za-z]+)\s"                       # Coin Pair - Upper/Lower case characters
+        r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"         # 'Buy' or 'Sell' enclosed in square brackets
+        r"\$(?P<entry_price>\d+(\.\d+)?)\s"                 # Entry Price, which starts with a '$'
+        r"(?P<stop_loss>-\d+(\.\d+)?%?|-\d+(\.\d+)?)\s"     # Stop Loss - Can be percentage with ends with % or whole value with decimal
+        r"(\+(?P<take_profit>\d+(\.\d+)?%|\d+(\.\d+)?))?\s" # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
+        r"/(?P<trailing_stop_price>\d+(\.\d+)?)\s"          # Trailing Stop Price - Starts with '/'
+        r">(?P<trailing_stop_percentage>\d+(\.\d+)?%)$"     # Trailing Stop Percentage - Starts with '>', ends with '%'
+    )
+
+    match = re.match(regex_pattern, message)
+  
+    if match:
+        strategy = match.group("strategy")
+        wallet_margin = match.group("wallet_margin")
+        coin_pair = match.group("coin_pair")
+        order_action = match.group("order_action")
+        entry_price = float(match.group("entry_price"))  # Convert to float if needed
+        stop_loss = match.group("stop_loss")
+        take_profit = match.group("take_profit")
+        trailing_stop_price = float(match.group("trailing_stop_price"))  # Convert to float if needed
+        trailing_stop_percentage = match.group("trailing_stop_percentage")
+        
+        return {
+            "strategy" : strategy,
+            "margin" : wallet_margin,
+            "coin_pair" : coin_pair,
+            "order_action" : "LONG" if order_action.upper() == "BUY" else "SHORT", # Convert to LONG/SHORT
+            "entry1" : entry_price,
+            "stop_lost" : stop_loss,
+            "take_profit" : take_profit,
+            "trailing_stop_price" : trailing_stop_price,
+            "trailing_stop_percentage" : trailing_stop_percentage
+        }
+    return False
+
 def is_order(message):
     word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
     pattern = '|'.join(word_list)
@@ -322,6 +363,9 @@ This TradeCall was cancelled earlier or closed\n""")
             return
 
     if message.channel.id in SENDER_CHANNEL_LIST:
+        if is_strategy(message.content):
+            logger.info('here')
+
         if is_order(message.content): 
             ret = "Empty Row"
 
