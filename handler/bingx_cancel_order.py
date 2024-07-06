@@ -48,7 +48,7 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
         try:
             if is_not_tp:
                 # Cancel Position
-                order = player.close_all_pos(coin_pair, result["long_short"])
+                order = player.close_all_pos(coin_pair)
                 if order.get("code") != 0 and order.get("code") != 200:
                     ret_json["error"].append(f'Error [Close Position]: {item.get("player_id")} with message: {order.get("msg")}')
                 
@@ -56,7 +56,7 @@ def h_bingx_cancel_order(dbcon, order_detail, is_not_tp=True):
                     ret_json["error"].append(f'Error [Close Position]: {item.get("player_id")} closing position with id: {order.get("data").get("failed")} failed')
 
                 # Cancel Active order
-                order = player.close_all_order(coin_pair, result["long_short"])
+                order = player.close_all_order(coin_pair)
                 if order.get("code") != 0 and order.get("code") != 200:
                     ret_json["error"].append(f'Error [Close Order]: {item.get("player_id")} with message: {order.get("msg")}')
                 

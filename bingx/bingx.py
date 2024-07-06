@@ -22,7 +22,6 @@ CLOSE_ALL_POS = "/openApi/swap/v2/trade/closeAllPositions"
 ORDER = "/openApi/swap/v2/trade/order"
 PENDING_ORDER = "/openApi/swap/v2/trade/openOrders"
 POSITION = "/openApi/swap/v2/user/positions"
-CLOSE_POSITION = "/openApi/swap/v1/trade/closePosition"
 PRICE = "/openApi/swap/v2/quote/price"
 ALL_ORDER = "/openApi/swap/v2/trade/allOrders"
 
@@ -136,14 +135,6 @@ class BINGX:
         }
         return self.__send_request(method, POSITION, param_map)
     
-    def close_position(self, positionId):
-        method = "POST"
-        param_map = {
-            "positionId": positionId,
-            "recvWindow": 0
-        }
-        return self.__send_request(method, CLOSE_POSITION, param_map)
-    
     def get_all(self, symbol):
         method = "GET"
         param_map = {
@@ -184,26 +175,21 @@ class BINGX:
         }
         return self.__send_request(method, BATCH_ORDER_API, param_map)
     
-    def close_all_order(self, symbol, side=None):
-        pending = self.get_all_pending(symbol).get("data").get("orders")
-        pending_id_list = []
-        pending_res = {"code": "500", "msg": "No Pending Order Found"}
-        if side == None:
-            pending_id_list = [x.get("orderId") for x in pending]
-        else:
-            pending_id_list = [x.get("orderId") for x in pending if x.get("positionSide") == side.upper()]
-        if len(pending_id_list) > 0:
-            pending_res = bingx.close_order(coin, pending_id_list)
-            print(pending_res)
-        return pending_res
+    def close_all_order(self, symbol):
+        method = "DELETE"
+        param_map = {
+            "symbol": symbol.upper(),
+            "recvWindow": 0
+        }
+        return self.__send_request(method, CLOSE_ALL_ORDER_API, param_map)
     
-    def close_all_pos(self, symbol, side):
-        pos = self.get_position(symbol).get("data")
-        pos_id = [x.get("positionId") for x in pos if x.get("positionSide") == side.upper()]
-        pos_res = {"code": "500", "msg": "No Position Found"}
-        if len(pos_id) > 0:
-            pos_res = bingx.close_position(pos_id[0])
-        return pos_res
+    def close_all_pos(self, symbol):
+        method = "POST"
+        param_map = {
+            "symbol": symbol,
+            "recvWindow": 0
+        }
+        return self.__send_request(method, CLOSE_ALL_POS, param_map)
     
     def get_margin(self, symbol):
         method = "GET"
