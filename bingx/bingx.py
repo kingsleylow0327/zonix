@@ -185,24 +185,27 @@ class BINGX:
         return self.__send_request(method, BATCH_ORDER_API, param_map)
     
     def close_all_order(self, symbol, side=None):
-        pending = self.get_all_pending(symbol).get("data").get("orders")
+        pending = self.get_all_pending(symbol).get("data")
         pending_id_list = []
-        pending_res = {"code": "500", "msg": "No Pending Order Found"}
-        if side == None:
-            pending_id_list = [x.get("orderId") for x in pending]
-        else:
-            pending_id_list = [x.get("orderId") for x in pending if x.get("positionSide") == side.upper()]
-        if len(pending_id_list) > 0:
-            pending_res = bingx.close_order(coin, pending_id_list)
-            print(pending_res)
+        pending_res = {"code": "500", "msg": "No Active Order Found"}
+        if pending != None:
+            pending = pending.get("orders")
+            if side == None:
+                pending_id_list = [x.get("orderId") for x in pending]
+            else:
+                pending_id_list = [x.get("orderId") for x in pending if x.get("positionSide") == side.upper()]
+            if len(pending_id_list) > 0:
+                pending_res = self.close_order(symbol, pending_id_list)
+                print(pending_res)
         return pending_res
     
     def close_all_pos(self, symbol, side):
         pos = self.get_position(symbol).get("data")
-        pos_id = [x.get("positionId") for x in pos if x.get("positionSide") == side.upper()]
         pos_res = {"code": "500", "msg": "No Position Found"}
-        if len(pos_id) > 0:
-            pos_res = bingx.close_position(pos_id[0])
+        if pos != None:
+            pos_id = [x.get("positionId") for x in pos if x.get("positionSide") == side.upper()]
+            if len(pos_id) > 0:
+                pos_res = self.close_position(pos_id[0])
         return pos_res
     
     def get_margin(self, symbol):
