@@ -50,6 +50,7 @@ ws_list = {}
 
 def is_strategy(message):
     # Strategy Example: !BETA #10% BTCUSDT [Buy] $60000 -1.5% +3% /62000 >0.5%
+    # Strategy Format:  !<Strategy> #<Wallet Margin> <Coin Pair> [Order Action] $<Entry Price> -<Stop Lost> +<Take Profit> /<Trailing Stop Price> ><Trailing Stop Percentage>%
     regex_pattern = re.compile(
         r"^!"                                               # Start with an exclamation mark.
         r"(?P<strategy>[A-Za-z]+)\s"                        # Strategy
@@ -71,8 +72,8 @@ def is_strategy(message):
         coin_pair = match.group("coin_pair")
         order_action = match.group("order_action")
         entry_price = float(match.group("entry_price"))  # Convert to float
-        stop_loss = match.group("stop_loss")
-        take_profit = match.group("take_profit")
+        stop_loss = convert_percentage_value_to_value(entry_price, match.group("stop_loss"))
+        take_profit = convert_percentage_value_to_value(entry_price, match.group("take_profit"))
         trailing_stop_price = float(match.group("trailing_stop_price"))  # Convert to float
         trailing_stop_percentage = match.group("trailing_stop_percentage")
 
@@ -88,6 +89,17 @@ def is_strategy(message):
             "trailing_stop_percentage": trailing_stop_percentage
         }
     return None
+
+
+def convert_percentage_value_to_value(entry_price, price_to_convert):
+    if not price_to_convert:    # If no value is provided, return None
+        return None
+
+    if '%' in price_to_convert: # Price in Percentage
+        return entry_price * (1 + float(price_to_convert.strip('%')) / 100)
+    else:   # Price in Value
+        return float(price_to_convert)
+
 
 def is_order(message):
     word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
@@ -535,4 +547,4 @@ This TradeCall was cancelled earlier or closed\n""")
             await thread.send(message.content + "\n")
 
 
-client.run(config.TOKEN)
+# client.run(config.TOKEN)
