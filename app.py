@@ -8,6 +8,7 @@ import re
 from config import Config
 from datetime import datetime
 from handler.bingx_place_order import h_bingx_order
+from handler.bingx_stratery_place_order import h_bingx_strategy_order
 from handler.bingx_cancel_order import h_bingx_cancel_order, h_bingx_cancel_all
 from handler.bingx_safety_pin import h_bingx_safety_pin
 from handler.bingx_ptp import h_bingx_ptp
@@ -53,7 +54,7 @@ def is_strategy(message):
     regex_pattern = re.compile(
         r"^!"                                               # Start with an exclamation mark.
         r"(?P<strategy>[A-Za-z]+)\s"                        # Strategy
-        r"#(?P<wallet_margin>\d+(\.\d+)?%)\s"               # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
+        r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"               # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
         r"(?P<coin_pair>[A-Za-z]+)\s"                       # Coin Pair - Upper/Lower case characters
         r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"         # Order Action - 'Buy' or 'Sell' enclosed in square brackets
         r"\$(?P<entry_price>\d+(\.\d+)?)\s"                 # Entry Price, which starts with a '$'
@@ -77,11 +78,11 @@ def is_strategy(message):
         trailing_stop_percentage = match.group("trailing_stop_percentage")
 
         return {
-            "strategy": strategy,
+            "strategy": strategy.lower(),
             "margin": wallet_margin,
             "coin_pair": coin_pair,
             "order_action": "LONG" if order_action.upper() == "BUY" else "SHORT",  # Convert to LONG/SHORT
-            "entry1": entry_price,
+            "entry_price": entry_price,
             "stop_lost": stop_loss,
             "take_profit": take_profit,
             "trailing_stop_price": trailing_stop_price,
@@ -381,7 +382,19 @@ This TradeCall was cancelled earlier or closed\n""")
 
     if message.channel.id in SENDER_CHANNEL_LIST:
         if order := is_strategy(message.content):
-            print("KS Code here")
+            cur_date = datetime.now().strftime('%h %d')
+            thread_message = f'🔴 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
+            thread = await message.create_thread(name=thread_message)
+            await thread.send("Order In Progress... \n")
+            ret = h_bingx_strategy_order(dbcon, order)
+            if ret.get("error") and ret.get("error") != []:
+                await thread.send(f"MsgId - {message.id} having following Error: \n")
+                for error in spilt_discord_message(ret.get("error")):
+                    await thread.send(error)
+                    logger.info(error)
+            await thread.send("Order SUCCESSFUL ✅ \n")
+            thread_message = f'🟢 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
+            await thread.edit(name=thread_message, archived=True)
 
         if is_order(message.content): 
             ret = "Empty Row"
