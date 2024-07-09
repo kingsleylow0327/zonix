@@ -1,9 +1,8 @@
 import json
 
-
 class dtoBingXOrder():
 
-    def __init__(self, symbol, type, side, positionSide, price, quantity, takeProfit, tp_quan, stopLoss, sl_quant, clientOrderID=None, trailing_stop_price=None, trailing_stop_percentage=None) -> None:
+    def __init__(self, symbol, type, side, positionSide, price, quantity, takeProfit, tp_quan, stopLoss, sl_quant, clientOrderID=None) -> None:
         self.symbol = symbol
         self.type = type
         self.side = side
@@ -13,8 +12,6 @@ class dtoBingXOrder():
         self.takeProfit = self.set_tp(takeProfit, tp_quan)
         self.stopLoss = self.set_sl(stopLoss, sl_quant)
         self.clientOrderID = clientOrderID
-        self.trailing_stop_price = trailing_stop_price
-        self.trailing_stop_percentage = trailing_stop_percentage
 
     def set_tp(self, tp, quantity):
         if tp == None:
