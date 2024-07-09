@@ -1,10 +1,10 @@
 # bot.py
 import asyncio
 import datetime as dt
+from decimal import Decimal, ROUND_HALF_UP
 import discord
 import re
 
-from bybit_websock import bybit_ws
 from config import Config
 from datetime import datetime
 from handler.bingx_place_order import h_bingx_order
@@ -14,7 +14,6 @@ from handler.bingx_ptp import h_bingx_ptp
 from handler.test_api_key import h_test_api
 from handler.start_thread import h_get_order_detail
 from handler.monthly_close import h_monthly_close_by_order_id
-from dto.dto_order import dtoOrder
 from logger import Logger
 from random import randint
 from sql_con import ZonixDB
@@ -95,11 +94,16 @@ def convert_percentage_value_to_value(entry_price, price_to_convert):
     if not price_to_convert:    # If no value is provided, return None
         return None
 
-    if '%' in price_to_convert: # Price in Percentage
-        return entry_price * (1 + float(price_to_convert.strip('%')) / 100)
-    else:   # Price in Value
-        return float(price_to_convert)
+    if '%' in price_to_convert:  # Price in Percentage
+        result = Decimal(entry_price) * (1 + Decimal(price_to_convert.strip('%')) / 100)
+    else:  # Price in Value
+        result = Decimal(price_to_convert)
 
+    result = result.quantize(Decimal('1.0000'), rounding=ROUND_HALF_UP)
+
+    if isinstance(entry_price, Decimal):
+        return result
+    return float(result)
 
 def is_order(message):
     word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
@@ -376,29 +380,8 @@ This TradeCall was cancelled earlier or closed\n""")
             return
 
     if message.channel.id in SENDER_CHANNEL_LIST:
-        if is_strategy(message.content):
-            print('is strategy')
-            order = is_strategy(message.content)
-
-            # Thread Details
-            cur_date = datetime.now().strftime('%h %d')
-            thread_message = f'🔴 {cur_date} -- {order["coin_pair"]} {order["order_action"]}'
-            thread = await message.create_thread(name=thread_message)   # Create Thread
-
-            api_pair_list = dbcon.get_followers_api(order.get("strategy"), 'bingx')
-            order_obj = h_bingx_order(dbcon, order)
-            ret = order_obj.h_tapbit_place_order()
-            toArchive = True
-            # await thread.send(ret["data"])
-            # if ret["message"] == "Order Placed":
-            #     thread_message = f'🟢 {cur_date} -- {order["trading_pair"]} {order["order_action"]}'
-            # if "error" in ret:
-            #     thread_message = f'🟡 {cur_date} -- {order["trading_pair"]} {order["order_action"]}'
-            #     toArchive = False
-            #     await thread.send(ret["error"])
-
-            await thread.edit(name=thread_message, archived=toArchive)
-            return
+        if order := is_strategy(message.content):
+            print("KS Code here")
 
         if is_order(message.content): 
             ret = "Empty Row"
@@ -547,4 +530,4 @@ This TradeCall was cancelled earlier or closed\n""")
             await thread.send(message.content + "\n")
 
 
-# client.run(config.TOKEN)
+client.run(config.TOKEN)
