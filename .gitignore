@@ -6,3 +6,4 @@ venv/
 
 # jetbrains
 .idea
+__pycache__
