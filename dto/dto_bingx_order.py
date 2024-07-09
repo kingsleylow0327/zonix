@@ -24,7 +24,7 @@ class dtoBingXOrder():
             "workingType": "MARK_PRICE"
         })
         return json_string
-    
+
     def set_sl(self, sl, quantity):
         if sl == None:
             return None
