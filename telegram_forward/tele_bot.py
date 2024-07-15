@@ -51,7 +51,7 @@ def message_order_wrapper(order_message: str, id: str):
 {order_message}
 
 ID : {id}
-Signal By <b><i><a href="https://discord.gg/unitycrypto">Unity Crypto</a></i></b>
+Trade Call by <b><i><a href="https://discord.gg/unitycrypto">Unity Crypto</a></i></b>
 """
     return message
 
@@ -62,7 +62,7 @@ def message_update_wrapper(order_message: str, id: str, profit: str):
 {order_message}
 
 ID : {id}
-Signal By <b><i><a href="https://discord.gg/unitycrypto">Unity Crypto</a></i></b>
+Trade Call by <b><i><a href="https://discord.gg/unitycrypto">Unity Crypto</a></i></b>
 """
     return message
 
