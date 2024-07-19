@@ -44,7 +44,7 @@ async def place_bingx_order(order_json, player_session):
     if order_json['takeProfit'] == None:
         del order_json['takeProfit']
 
-    order = player_session.place_single_order(order_json)
+    # order = player_session.place_single_order(order_json)
 
     print("BingX Order Done")
 

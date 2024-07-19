@@ -1,6 +1,9 @@
 from flask import Flask
+from routes.bingx import bingx as bingx_route
 
 app = Flask(__name__)
+
+app.register_blueprint(bingx_route)
 
 @app.route('/')
 def hello_world():

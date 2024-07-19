@@ -3,6 +3,10 @@
 
 # venv
 venv/
+zonix_venv/
 
 # jetbrains
 .idea
+
+# ignore py cache
+*.pyc
