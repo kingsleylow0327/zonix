@@ -33,113 +33,53 @@ async def place_bingx_order(order_json, player_session):
 
     return order
 
-def place_order_main(dbcon, message_id, regex_json):
+def place_order_service(regex_data, follower_data):
     # Declare Variable from regex json
-    trader_id               = regex_json['strategy'] # player id (Trader ID)
-    wallet_margin           = regex_json['margin'] # damage cost (everyone follower be same margin)
-    coin_pair               = regex_json['coin_pair']
-    long_short              = regex_json['order_action']
-    entry_price             = regex_json['entry1']
-    stop_loss               = regex_json['stop_lost']
-    take_profit             = regex_json['take_profit']
-    trailing_stop_price     = regex_json['trailing_stop_price'] 
-    trailing_stop_percent   = regex_json['trailing_stop_percentage']
-    buy_sell                = "BUY" if long_short == "LONG" else "SHORT"
-    order_link_id           = datetime.datetime.now().strftime("%y%m%d%H%M%S") + '-' + coin_pair + '-' + str(trader_id)[-4:]
+    trader_id               = regex_data['trader_id'] # player id (Trader ID)
+    wallet_margin           = regex_data['wallet_margin'] # damage cost (everyone follower be same margin)
+    coin_pair               = regex_data['coin_pair']
+    long_short              = regex_data['long_short']
+    entry_price             = regex_data['entry_price']
+    stop_loss               = regex_data['stop_loss']
+    take_profit             = regex_data['take_profit']
+    trailing_stop_price     = regex_data['trailing_stop_price'] 
+    trailing_stop_percent   = regex_data['trailing_stop_percent']
+    buy_sell                = regex_data['buy_sell']
+    order_link_id           = regex_data['order_link_id']
 
-    # Change Coin Pair Format
-    coin_pair       = coin_pair.strip().replace("/","").replace("-","").upper()
-    coin_pair       = coin_pair[:-4] + "-" + coin_pair[-4:]
-
-    # Run async sample
-    json_ret            = {"message": "Order Placed"}
-
-    json_ret["error"]   = {
-        "api_setup_error"           : [], 
+    # Make Returning Json
+    # Returning Json 001
+    json_ret_err   = {
         "wallet_connection_error"   : [],
         "lower_wallet_amount"       : [],
         "place_order_error"         : [],
         "server_error"              : [],
         "fail_error"                : [],
     }
-    
-    # Connect DB & Get DB data by message id
-    # DB: get the follower of Player (Trader)
-    if (dbcon != 0):
-        api_pair_list       = dbcon.get_followers_api(trader_id, platform)
-        
-        if api_pair_list == None or len(api_pair_list) == 0:
-            # json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
-            json_ret["error"].append({
-                "message":  "Both Trader and Follower have not set API, actual order execution skipped"
-            })
-            return json_ret
-    else:
-        api_pair_list   = [
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 001',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '706898498888466563',
-                'follower_id'   : 'player 002',
-                'api_key'       : 'CghSXMMARbq8zIlVvoCUHwliqu5dHifpzTLZtKkhYDvmrRI8DLgOCGHrCSQr05JfYw10a3vt3wyLoYfyhdvew',
-                'api_secret'    : 'SiFApEd9EAOv71TXbU47VFP2g1eLR3dyZ5qJ2b7PXR5D0AwSBYjNG3dZkkBtbXEo2DgU2fJNEIGof8rZqk3Y7g',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 003',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            # {
-            #     'player_id'     : '706898498888466563',
-            #     'follower_id'   : 'player 004',
-            #     'api_key'       : 'CghSXMMARbq8zIlVvoCUHwliqu5dHifpzTLZtKkhYDvmrRI8DLgOCGHrCSQr05JfYw10a3vt3wyLoYfyhdvew',
-            #     'api_secret'    : 'SiFApEd9EAOv71TXbU47VFP2g1eLR3dyZ5qJ2b7PXR5D0AwSBYjNG3dZkkBtbXEo2DgU2fJNEIGof8rZqk3Y7g',
-            #     'role'          : '',
-            #     'damage_cost'   : '1',
-            # },
-        ]
-
-
-    session_list = [
-        {
-            "session"       : BINGX(x.get("api_key"), x.get("api_secret")),
-            "role"          : x.get("role"),
-            "player_id"     : x.get("follower_id"),
-            "damage_cost"   : int(x.get("damage_cost"))
-        } 
-        for x in api_pair_list
-    ]
-    
+    # Returning Json 002
     order_id_map = []
-
-    for player in session_list:
+    
+    # Loop the follower data
+    for follower in follower_data:
+        # Call platform API
+        platform_session = BINGX(follower['api_key'], follower['api_secret'])
+        
         # Check the Wallet Balance with BingX
         try:
-            wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
+            wallet = platform_session.get_wallet().get("data").get("balance").get("availableMargin")
         except:
-            json_ret["error"]['wallet_connection_error'].append(player.get("player_id"))
+            json_ret_err['wallet_connection_error'].append(follower['player_id'])
             continue
 
         if float(wallet) < minimum_wallet:
-            json_ret["error"]['lower_wallet_amount'].append(player.get("player_id"))
+            json_ret_err['lower_wallet_amount'].append(follower['player_id'])
             continue
-
+        
         # Get the qty
         qty = calculate_qty(wallet, entry_price, stop_loss, wallet_margin)
         qty = math.ceil((qty) * 10000) / 10000
         
-        player["session"].order_preset(coin_pair)
+        platform_session.order_preset(coin_pair)
 
         # Get the Json
         bingx_dto = dtoBingXOrder(
@@ -155,41 +95,42 @@ def place_order_main(dbcon, message_id, regex_json):
             qty,
             order_link_id
         )
-
-        # Place Order 
+        
+        # Place Order (Async)
         try:
-            async_order = asyncio.run(place_bingx_order(bingx_dto.to_json(), player["session"]))
+            async_order = asyncio.run(place_bingx_order(bingx_dto.to_json(), platform_session))
 
             order = async_order
         except Exception as e:
-            json_ret["error"]["place_order_error"].append({
-                "player":   player.get("player_id"),
+            json_ret_err["place_order_error"].append({
+                "player":   follower['player_id'],
                 "message":  str(e)
             })
             continue
 
         if order == None:
-            json_ret["error"]['server_error'].append(player.get("player_id"))
+            json_ret_err['server_error'].append(follower['player_id'])
             continue
 
         if order.get("code") != 0 and order.get("code") != 200:
-            json_ret["error"]["fail_error"].append({
-                "player":   player.get("player_id"),
+            json_ret_err["fail_error"].append({
+                "player":   follower['player_id'],
                 "message":  order.get("msg")
             })
             continue
 
         order_detail_pair = {
-            "player_id"         : player.get("player_id"),
+            "player_id"         : follower['player_id'],
             "client_order_id"   : order["data"]["order"]["clientOrderID"],
             "order_id"          : order["data"]["order"]["orderId"]
         }
 
         order_id_map.append(order_detail_pair)
+    
+    # Combine the return_json
+    return_json = {
+        'err_list'      : json_ret_err,
+        'order_id_map'  : order_id_map
+    }
         
-
-    if (dbcon != 0):    
-        if (order_id_map):
-            dbcon.set_client_order_id(order_id_map, message_id)
-        
-    return json_ret
+    return return_json
