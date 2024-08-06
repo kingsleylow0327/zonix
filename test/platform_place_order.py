@@ -3,7 +3,8 @@ import requests as url_requests
 import datetime
 import math
 
-bingx_main_url = 'http://platform:5000/bingx'
+bingx_main_url  = 'http://platform:5000/bingx'
+platform        = "bingx"
 
 async def bingx_conn():
     response = url_requests.get(bingx_main_url)
@@ -14,7 +15,7 @@ async def bingx_conn():
 
 async def place_order_conn(dbcon, message_id, regex_message):
     
-    print("Order Func Start 001")
+    print("Place Order Start")
     
     place_order_url = bingx_main_url + '/place_order'
     
@@ -35,12 +36,8 @@ async def place_order_conn(dbcon, message_id, regex_message):
     coin_pair       = coin_pair.strip().replace("/","").replace("-","").upper()
     coin_pair       = coin_pair[:-4] + "-" + coin_pair[-4:]
     
-    print(order_link_id)
-    print(coin_pair)
-
-    # Run async sample
+    # Prepare Json Return
     json_ret            = {"message": "Order Placed"}
-
     json_ret["error"]   = {
         "api_setup_error"           : [], 
         "wallet_connection_error"   : [],
@@ -97,7 +94,7 @@ async def place_order_conn(dbcon, message_id, regex_message):
             # },
         ]
     
-    # Prepare the db list which data from DB
+    # Prepare the follower list which data from DB
     follower_data = [
         {
             "api_key"       : x.get("api_key"),
@@ -108,7 +105,6 @@ async def place_order_conn(dbcon, message_id, regex_message):
         } 
         for x in api_pair_list
     ]
-    
     json_data = {
         'message_id'    : message_id,
         'follower_data' : follower_data,
@@ -127,17 +123,11 @@ async def place_order_conn(dbcon, message_id, regex_message):
         }
     }
     
-    # print(json_data)
-    
+    # Run the URL & get the response data
     response        = url_requests.post(place_order_url, json=json_data)
     
     response_data   = response.json()
-    
-    order_id_map = response_data['order_id_map']
-    
-    print(response_data)
-    
-    print("Order Placed (step 1)")
+    order_id_map    = response_data['order_id_map']
     
     json_ret["error"]['wallet_connection_error']    = response_data['err_list']['wallet_connection_error']
     json_ret["error"]['lower_wallet_amount']        = response_data['err_list']['lower_wallet_amount']

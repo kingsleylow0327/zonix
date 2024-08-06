@@ -1,6 +1,7 @@
 from flask import Flask, Blueprint, jsonify, request
 
 from service.place_order_service import place_order_service
+from service.cancel_order_service import cancel_order_service, cancel_all_service
 
 bingx = Blueprint('bingx', __name__, url_prefix='/bingx')
 
@@ -40,6 +41,12 @@ def take_profit():
 @bingx.route('/partial_take_profit', methods=['POST'])
 def partial_take_profit():
     data = request.json
+    
+    follower_data   = data['follower_data']
+    coin_pair       = data['coin_pair']
+    result          = data['result']
+    coin_info       = data['coin_info']
+    
 
     json = {'message' : 'BingX PTP'}
 
@@ -66,13 +73,25 @@ def cancel_order():
     data = request.json
 
     # Type
-    # 0 : Cancel One Order
+    # 0 : Cancel Part of Position / Order
     # 1 : Cancel All Order
     cancel_type = data['type']
+    
+    if (cancel_type == 0) :
+        follower_data   = data['follower_data']
+        coin_pair       = data['coin_pair']
+        result          = data['result']
+        is_not_tp       = data['is_not_tp']
+        
+        response = cancel_order_service(follower_data, coin_pair, is_not_tp, result)
+    
+    elif (cancel_type == 1) :
+        follower_data   = data['follower_data']
+        coin            = data['coin']
+        
+        response = cancel_all_service(follower_data, coin)
 
-    json = {'message' : 'BingX Cancel Order'}
-
-    return jsonify(json)  
+    return jsonify(response)  
 
 @bingx.route('/test_api', methods=['GET'])
 def test_api():
