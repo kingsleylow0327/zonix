@@ -6,6 +6,7 @@ import math
 
 from platform_api.bingx     import BINGX
 from dto.dto_bingx_order    import dtoBingXOrder
+from async_collection       import place_single_order
 
 maximum_wallet  = 3000
 minimum_wallet  = 300
@@ -23,15 +24,6 @@ def calculate_qty(wallet, entry_price, sl, percentage):
     order_margin = wallet * percentage/100
     qty = order_margin/price_diff 
     return qty
-
-async def place_single_order(player_session, order_json):
-    # When TP is None, remove it
-    if order_json['takeProfit'] == None:
-        del order_json['takeProfit']
-
-    order = player_session.place_single_order(order_json)
-
-    return order
 
 def place_order_service(regex_data, follower_data):
     # Declare Variable from regex json
@@ -98,7 +90,13 @@ def place_order_service(regex_data, follower_data):
         
         # Place Order (Async)
         try:
-            async_order = asyncio.run(place_single_order(platform_session, bingx_dto.to_json()))
+            order_json = bingx_dto.to_json()
+            
+            # When TP is None, remove it
+            if order_json['takeProfit'] == None:
+                del order_json['takeProfit']
+            
+            async_order = asyncio.run(place_single_order(platform_session, order_json))
 
             order = async_order
         except Exception as e:

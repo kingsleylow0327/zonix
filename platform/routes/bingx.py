@@ -2,6 +2,7 @@ from flask import Flask, Blueprint, jsonify, request
 
 from service.place_order_service import place_order_service
 from service.cancel_order_service import cancel_order_service, cancel_all_service
+from service.ptp_service import ptp_service
 
 bingx = Blueprint('bingx', __name__, url_prefix='/bingx')
 
@@ -47,10 +48,9 @@ def partial_take_profit():
     result          = data['result']
     coin_info       = data['coin_info']
     
+    response = ptp_service(follower_data, coin_pair, coin_info, result)
 
-    json = {'message' : 'BingX PTP'}
-
-    return jsonify(json)
+    return jsonify(response)
 
 @bingx.route('/safety_pin', methods=['POST'])
 def safety_pin():

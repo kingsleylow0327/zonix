@@ -1,27 +1,20 @@
 import asyncio
 import requests as url_requests
-import logging
 import sys
 import os
 
 # Get the parent directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-
-# Add the parent directory to the system path
 sys.path.append(parent_dir)
 
-# Now you can import parent.py
+from sql_con    import ZonixDB
+from logger     import Logger
+from config     import Config
 
-import traceback
-from sql_con import ZonixDB
-from config import Config
-
-config = Config()
-
-platform = "bingx"
-
-bingx_main_url = 'http://platform:5000/bingx'
-sql_conn = ZonixDB(config)
+config          = Config()
+platform        = "bingx"
+bingx_main_url  = 'http://platform:5000/bingx'
+sql_conn        = ZonixDB(config)
 
 async def cancel_all_conn(dbcon, coin, is_active=None):
     cancel_order_url = bingx_main_url + "/cancel_order"
