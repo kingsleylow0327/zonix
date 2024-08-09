@@ -3,6 +3,8 @@ from flask import Flask, Blueprint, jsonify, request
 from service.place_order_service import place_order_service
 from service.cancel_order_service import cancel_order_service, cancel_all_service
 from service.ptp_service import ptp_service
+from service.sp_service import sp_service
+from service.strategy_order_service import strategy_order_service
 
 bingx = Blueprint('bingx', __name__, url_prefix='/bingx')
 
@@ -16,20 +18,27 @@ def index():
 def place_order():
     data = request.json
 
-    regex_data      = data['regex_data']
     follower_data   = data['follower_data']
+    coin_pair       = data['coin_pair']
+    result          = data['result']
+    entry           = data['entry']
+    tp              = data['tp']
+    
 
-    order = place_order_service(regex_data, follower_data)
+    response = place_order_service(follower_data, coin_pair, result, entry, tp)
 
-    return jsonify(order)  
+    return jsonify(response)  
 
 @bingx.route('/strategy_place_order', methods=['POST'])
 def strategy_place_order():
     data = request.json
 
-    json = {'message' : 'BingX Strategy Place Order'}
+    regex_data      = data['regex_data']
+    follower_data   = data['follower_data']
 
-    return jsonify(json)
+    response = strategy_order_service(regex_data, follower_data)
+
+    return jsonify(response)  
 
 @bingx.route('/take_profit', methods=['POST'])
 def take_profit():
@@ -55,18 +64,14 @@ def partial_take_profit():
 @bingx.route('/safety_pin', methods=['POST'])
 def safety_pin():
     data = request.json
+    
+    follower_data   = data['follower_data']
+    coin_pair       = data['coin_pair']
+    result          = data['result']
 
-    json = {'message' : 'BingX SP'}
+    response = sp_service(follower_data, coin_pair, result)
 
-    return jsonify(json)
-
-@bingx.route('/order_details', methods=['GET'])
-def order_details():
-    data = request.json
-
-    json = {'message' : 'BingX get the order details'}
-
-    return jsonify(json)  
+    return jsonify(response)
 
 @bingx.route('/cancel_order', methods=['POST'])
 def cancel_order():
@@ -92,19 +97,3 @@ def cancel_order():
         response = cancel_all_service(follower_data, coin)
 
     return jsonify(response)  
-
-@bingx.route('/test_api', methods=['GET'])
-def test_api():
-    data = request.json
-
-    json = {'message' : 'BingX Test API'}
-
-    return jsonify(json)
-
-@bingx.route('/monthly_close_order', methods=['GET'])
-def monthly_close_order():
-    data = request.json
-
-    json = {'message' : 'BingX Close Order Monthly'}
-
-    return jsonify(json)    

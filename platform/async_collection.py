@@ -47,3 +47,13 @@ async def get_coin_info(player_session, coin_pair):
     response = player_session.get_coin_info(coin_pair).get("data")[0]
 
     return response
+
+async def get_wallet(player_session):
+    response = player_session.get_wallet().get("data").get("balance").get("availableMargin")
+
+    return response
+
+async def order_preset(player_session, coin_pair):
+    response = player_session.order_preset(coin_pair)
+
+    return response

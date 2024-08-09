@@ -42,11 +42,8 @@ def cancel_order_service(follower_data, coin_pair, is_not_tp, result):
         player = BINGX(follower['api_key'], follower['api_secret'])
         
         # Market Out
-        buy_sell = "BUY"
-        if result["long_short"] == "LONG":
-            buy_sell = "SELL"
-            
-        order_list = []
+        buy_sell    = "SELL" if (result["long_short"] == "LONG") else "BUY"
+        order_list  = []
         
         try:
             if is_not_tp:
