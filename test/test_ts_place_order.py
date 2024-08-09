@@ -83,52 +83,15 @@ def place_follower_order(dbcon, message_id, regex_json):
         "fail_error"                : [],
     }
     
-    # Connect DB & Get DB data by message id
-    # DB: get the follower of Player (Trader)
-    if (dbcon != 0):
-        api_pair_list       = dbcon.get_followers_api(trader_id, platform)
+    api_pair_list       = dbcon.get_followers_api(trader_id, platform)
         
-        if api_pair_list == None or len(api_pair_list) == 0:
-            # json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
-            json_ret["error"].append({
-                "message":  "Both Trader and Follower have not set API, actual order execution skipped"
-            })
-            return json_ret
-    else:
-        api_pair_list   = [
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 001',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '706898498888466563',
-                'follower_id'   : 'player 002',
-                'api_key'       : 'CghSXMMARbq8zIlVvoCUHwliqu5dHifpzTLZtKkhYDvmrRI8DLgOCGHrCSQr05JfYw10a3vt3wyLoYfyhdvew',
-                'api_secret'    : 'SiFApEd9EAOv71TXbU47VFP2g1eLR3dyZ5qJ2b7PXR5D0AwSBYjNG3dZkkBtbXEo2DgU2fJNEIGof8rZqk3Y7g',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 003',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            # {
-            #     'player_id'     : '706898498888466563',
-            #     'follower_id'   : 'player 004',
-            #     'api_key'       : 'CghSXMMARbq8zIlVvoCUHwliqu5dHifpzTLZtKkhYDvmrRI8DLgOCGHrCSQr05JfYw10a3vt3wyLoYfyhdvew',
-            #     'api_secret'    : 'SiFApEd9EAOv71TXbU47VFP2g1eLR3dyZ5qJ2b7PXR5D0AwSBYjNG3dZkkBtbXEo2DgU2fJNEIGof8rZqk3Y7g',
-            #     'role'          : '',
-            #     'damage_cost'   : '1',
-            # },
-        ]
+    if api_pair_list == None or len(api_pair_list) == 0:
+        # json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
+        json_ret["error"].append({
+            "message":  "Both Trader and Follower have not set API, actual order execution skipped"
+        })
+    
+        return json_ret
 
 
     session_list = [
