@@ -9,22 +9,22 @@ import time
 
 # CONFIG = Config()
 
-ACTUAL_API = "https://open-api.bingx.com"
-DEMO_API = "https://open-api-vst.bingx.com"
-COIN_API = "/openApi/swap/v2/quote/contracts"
-SERVER_TIME = "/openApi/swap/v2/server/time"
-WALLET_API = "/openApi/swap/v2/user/balance"
-BATCH_ORDER_API = "/openApi/swap/v2/trade/batchOrders"
-MARGIN_API = "/openApi/swap/v2/trade/marginType"
-LEVERAGE_API = "/openApi/swap/v2/trade/leverage"
+ACTUAL_API          = "https://open-api.bingx.com"
+DEMO_API            = "https://open-api-vst.bingx.com"
+COIN_API            = "/openApi/swap/v2/quote/contracts"
+SERVER_TIME         = "/openApi/swap/v2/server/time"
+WALLET_API          = "/openApi/swap/v2/user/balance"
+BATCH_ORDER_API     = "/openApi/swap/v2/trade/batchOrders"
+MARGIN_API          = "/openApi/swap/v2/trade/marginType"
+LEVERAGE_API        = "/openApi/swap/v2/trade/leverage"
 CLOSE_ALL_ORDER_API = "/openApi/swap/v2/trade/allOpenOrders"
-CLOSE_ALL_POS = "/openApi/swap/v2/trade/closeAllPositions"
-ORDER = "/openApi/swap/v2/trade/order"
-PENDING_ORDER = "/openApi/swap/v2/trade/openOrders"
-POSITION = "/openApi/swap/v2/user/positions"
-CLOSE_POSITION = "/openApi/swap/v1/trade/closePosition"
-PRICE = "/openApi/swap/v2/quote/price"
-ALL_ORDER = "/openApi/swap/v2/trade/allOrders"
+CLOSE_ALL_POS       = "/openApi/swap/v2/trade/closeAllPositions"
+ORDER               = "/openApi/swap/v2/trade/order"
+PENDING_ORDER       = "/openApi/swap/v2/trade/openOrders"
+POSITION            = "/openApi/swap/v2/user/positions"
+CLOSE_POSITION      = "/openApi/swap/v1/trade/closePosition"
+PRICE               = "/openApi/swap/v2/quote/price"
+ALL_ORDER           = "/openApi/swap/v2/trade/allOrders"
 
 APIDOMAIN = DEMO_API
 # if eval(CONFIG.IS_TEST):
