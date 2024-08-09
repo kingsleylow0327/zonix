@@ -10,6 +10,7 @@ sys.path.append(parent_dir)
 from sql_con    import ZonixDB
 from logger     import Logger
 from config     import Config
+from handler.platform.bingx.components import get_follower_data, coin_pair_format
 
 config          = Config()
 platform        = "bingx"

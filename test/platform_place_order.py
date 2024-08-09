@@ -11,6 +11,8 @@ from sql_con    import ZonixDB
 from logger     import Logger
 from config     import Config
 
+from handler.platform.bingx.components import get_follower_data, coin_pair_format
+
 config          = Config()
 platform        = "bingx"
 bingx_main_url  = 'http://platform:5000/bingx'
@@ -24,6 +26,8 @@ async def place_order_conn(dbcon, message_id):
     
     print("Place Order Start")
     
+    dbcon = sql_conn
+    
     place_order_url = bingx_main_url + '/place_order'        
     
     # Prepare Json Return
@@ -33,60 +37,16 @@ async def place_order_conn(dbcon, message_id):
         "placing_order_warning"     : [],
     }
     
-    result = dbcon.get_order_detail_by_order(message_id) if (dbcon != 0) else sql_conn.get_order_detail_by_order(message_id)
+    result              = dbcon.get_order_detail_by_order(message_id) if (dbcon != 0) else sql_conn.get_order_detail_by_order(message_id)
+    ret_follower_data   = get_follower_data(dbcon, result, platform)
     
-    if result is None:
-            json_ret["error"]["placing_order_error"].append("Order Detail Not found")
-            return json_ret
-    
-    # Connect DB & Get DB data by message id
-    # DB: get the follower of Player (Trader)
-    if (dbcon != 0):
-        # get api list
-        api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
+    if ret_follower_data["status_code"] == 400 :
+        json_ret["error"]["placing_order_error"]    = ret_follower_data["message"]["non-order"]
+        json_ret["error"]["placing_order_warning"]  = ret_follower_data["message"]["api-pair-fail"]
         
-        if api_pair_list == None or len(api_pair_list) == 0:
-            json_ret["error"]["placing_order_warning"].append("Both Trader and Follower have not set API, actual order execution skipped")
-            return json_ret
+        return json_ret
     else:
-        api_pair_list   = [
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 001',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '706898498888466563',
-                'follower_id'   : 'player 002',
-                'api_key'       : 'CghSXMMARbq8zIlVvoCUHwliqu5dHifpzTLZtKkhYDvmrRI8DLgOCGHrCSQr05JfYw10a3vt3wyLoYfyhdvew',
-                'api_secret'    : 'SiFApEd9EAOv71TXbU47VFP2g1eLR3dyZ5qJ2b7PXR5D0AwSBYjNG3dZkkBtbXEo2DgU2fJNEIGof8rZqk3Y7g',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-            {
-                'player_id'     : '696898498888466563',
-                'follower_id'   : 'player 003',
-                'api_key'       : 'Wc6XS79BfLPHtGKI5I5Jvh6hRCiAadMisrhmhHTtJFlbcWAkX0QVCA2gqE2c18EZO5P1MEF8sdTYPbWIzDkw',
-                'api_secret'    : 'fapk3IZ5bcp6ZhQVIiHLt0w2p9LZTm0yO2D9Tr4DYFlczBwxVbXVBpogewiC5pGTgND361lsZ9Q8ZK5fhWNA',
-                'role'          : '',
-                'damage_cost'   : '1',
-            },
-        ]
-    
-    # Prepare the follower list which data from DB
-    follower_data = [
-        {
-            "api_key"       : x.get("api_key"),
-            "api_secret"    : x.get("api_secret"),
-            "role"          : x.get("role"),
-            "player_id"     : x.get("follower_id"),
-            "damage_cost"   : int(x.get("damage_cost"))
-        } 
-        for x in api_pair_list
-    ]
+        follower_data = ret_follower_data["message"]
     
     # Count number of Entry Point
     entry_list = [float(x) for x in [result["entry1"], result["entry2"]] if x != -1.0]
@@ -97,8 +57,7 @@ async def place_order_conn(dbcon, message_id):
     tp_num = len(tp_list)
 
     # Get Coin Info
-    coin_pair = result["coinpair"].strip().replace("/","").replace("-","").upper()
-    coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
+    coin_pair = coin_pair_format(result["coinpair"])
     
     order_id_map = []
     

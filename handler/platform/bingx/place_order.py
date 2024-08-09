@@ -1,7 +1,8 @@
 import requests as url_requests
 
-from logger                         import Logger
-from global_setup.platform_config   import Config as bingx_config
+from logger import Logger
+from handler.platform.bingx.global_setup.platform_config import Config as bingx_config
+from handler.platform.bingx.components import coin_pair_format, get_follower_data
 
 platform        = bingx_config().platform
 bingx_main_url  = bingx_config().platform_url
@@ -18,30 +19,16 @@ def platform_place_order(dbcon, message_id):
         "placing_order_warning"     : [],
     }
     
-    result = dbcon.get_order_detail_by_order(message_id)
+    result              = dbcon.get_order_detail_by_order(message_id)
+    ret_follower_data   = get_follower_data(dbcon, result, platform)
     
-    if result is None:
-        json_ret["error"]["placing_order_error"].append("Order Detail Not found")
-        return json_ret
-    
-    # get api list
-    api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
+    if ret_follower_data["status_code"] == 400 :
+        json_ret["error"]["placing_order_error"]    = ret_follower_data["message"]["non-order"]
+        json_ret["error"]["placing_order_warning"]  = ret_follower_data["message"]["api-pair-fail"]
         
-    if api_pair_list == None or len(api_pair_list) == 0:
-        json_ret["error"]["placing_order_warning"].append("Both Trader and Follower have not set API, actual order execution skipped")
         return json_ret
-    
-    # Prepare the follower list which data from DB
-    follower_data = [
-        {
-            "api_key"       : x.get("api_key"),
-            "api_secret"    : x.get("api_secret"),
-            "role"          : x.get("role"),
-            "player_id"     : x.get("follower_id"),
-            "damage_cost"   : int(x.get("damage_cost"))
-        } 
-        for x in api_pair_list
-    ]
+    else:
+        follower_data = ret_follower_data["message"]
     
     # Count number of Entry Point
     entry_list  = [float(x) for x in [result["entry1"], result["entry2"]] if x != -1.0]
@@ -52,8 +39,7 @@ def platform_place_order(dbcon, message_id):
     tp_num      = len(tp_list)
 
     # Get Coin Info
-    coin_pair   = result["coinpair"].strip().replace("/","").replace("-","").upper()
-    coin_pair   = coin_pair[:-4] + "-" + coin_pair[-4:]
+    coin_pair = coin_pair_format(result["coinpair"])
     
     order_id_map = []
     

@@ -7,23 +7,11 @@ import math
 from platform_api.bingx     import BINGX
 from dto.dto_bingx_order    import dtoBingXOrder
 from async_collection       import place_order, get_wallet, order_preset
+from components.calculate_qty import calculate_qty
 
 maximum_wallet  = 3000
 minimum_wallet  = 300
 platform        = "bingx"
-
-def calculate_qty(wallet, entry_price, sl, percentage): 
-    wallet = float(wallet)
-    if wallet > maximum_wallet:
-        wallet = maximum_wallet
-    
-    price_diff = entry_price - sl
-    if price_diff < 0:
-        price_diff *= -1
-    
-    order_margin = wallet * percentage/100
-    qty = order_margin/price_diff 
-    return qty
 
 def place_order_service(follower_data, coin_pair, result, entry_arr, tp_arr):
     # Make Returning Json

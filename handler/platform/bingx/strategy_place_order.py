@@ -2,7 +2,8 @@ import datetime
 import requests as url_requests
 
 from logger                         import Logger
-from global_setup.platform_config   import Config as bingx_config
+from handler.platform.bingx.global_setup.platform_config import Config as bingx_config
+from handler.platform.bingx.components import coin_pair_format, get_follower_data
 
 platform            = bingx_config().platform
 bingx_main_url      = bingx_config().platform_url
@@ -26,8 +27,7 @@ def platform_strategy_order(dbcon, regex_message, message_id):
     order_link_id           = datetime.datetime.now().strftime("%y%m%d%H%M%S") + '-' + coin_pair + '-' + str(trader_id)[-4:]
 
     # Change Coin Pair Format
-    coin_pair       = coin_pair.strip().replace("/","").replace("-","").upper()
-    coin_pair       = coin_pair[:-4] + "-" + coin_pair[-4:]
+    coin_pair       = coin_pair_format(coin_pair)
     
     # Prepare Json Return
     json_ret            = {"message": "Strategy Order Placed"}

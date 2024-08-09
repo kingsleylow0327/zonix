@@ -1,7 +1,8 @@
 import requests as url_requests
 
 from logger                         import Logger
-from global_setup.platform_config   import Config as bingx_config
+from handler.platform.bingx.global_setup.platform_config import Config as bingx_config
+from handler.platform.bingx.components import coin_pair_format, get_follower_data
 
 platform        = bingx_config().platform
 bingx_main_url  = bingx_config().platform_url
@@ -40,31 +41,18 @@ def platform_cancel_order(dbcon, order_detail, is_not_tp=True):
         "closing_order_warning" : []
     }
     
-    if result is None:
-        ret_json["error"]["closing_order_error"].append("Order Detail Not found")
-        return ret_json
+    ret_follower_data   = get_follower_data(dbcon, result, platform)
     
-    # get api list
-    api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
+    if ret_follower_data["status_code"] == 400 :
+        ret_json["error"]["closing_order_error"]    = ret_follower_data["message"]["non-order"]
+        ret_json["error"]["closing_order_warning"]  = ret_follower_data["message"]["api-pair-fail"]
         
-    if api_pair_list == None or len(api_pair_list) == 0:
-        ret_json["error"]["closing_order_warning"].append("Both Trader and Follower have not set API, actual order execution skipped")
         return ret_json
-    
-    # Prepare the db list which data from DB
-    follower_data = [
-        {
-            "api_key"       : x.get("api_key"),
-            "api_secret"    : x.get("api_secret"),
-            "role"          : x.get("role"),
-            "player_id"     : x.get("follower_id")
-        } 
-        for x in api_pair_list
-    ]    
+    else:
+        follower_data = ret_follower_data["message"]
     
     # Coin Pair and Refer ID
-    coin_pair       = result["coinpair"].strip().replace("/","").replace("-","").upper()
-    coin_pair       = coin_pair[:-4] + "-" + coin_pair[-4:]
+    coin_pair = coin_pair_format(result["coinpair"])
     
     json_data = {
         "follower_data"     : follower_data,
