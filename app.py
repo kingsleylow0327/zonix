@@ -162,8 +162,6 @@ async def on_ready():
     ERROR_CHANNEL = client.get_channel(int(config.ERROR_CHANNEL_ID))
     global SENDER_CHANNEL_LIST
     SENDER_CHANNEL_LIST = [int(s) for s in config.SENDER_CHANNEL_ID.split(",")]
-    random_order_channel = client.get_channel(int(config.RANDOM_ORDER_CHANNEL_ID))
-    await random_order_channel.send("ok")
     #await channel.send('Cornix Is Booted Up!')
 
 @client.event
