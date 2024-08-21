@@ -14,6 +14,7 @@ def forward_order_to_telegram(config, order_message: str, author: str, id: str):
             "text":final_message}
     # body = {'chat_id': f'{channel}', "parse_mode":"html", "text":final_message, "disable_web_page_preview": "true"}  # for testing
     r = requests.get(webhook, json = body)
+    return final_message
 
 def forward_update_to_telegram(type: str, dbcon, config, order_id: str, update_message=""):
     player_order = dbcon.get_order_message_by_order_msg_id(order_id)

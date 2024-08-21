@@ -432,7 +432,9 @@ This TradeCall was cancelled earlier or closed\n""")
             await thread.edit(name=thread_message)
             tele_random = randint(1, 100)
             if tele_random > 50:
-                forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
+                forward_message = forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
+                random_order_channel = client.get_channel(int(config.RANDOM_ORDER_CHANNEL_ID))
+                random_order_channel.send(forward_message)
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
