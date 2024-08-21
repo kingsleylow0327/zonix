@@ -19,7 +19,7 @@ from logger import Logger
 from random import randint
 from sql_con import ZonixDB
 from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram, forward_picture
-from util import spilt_discord_message
+from util import spilt_discord_message, random_forward_order_message
 
 # Logger setup
 logger_mod = Logger("Event")
@@ -432,9 +432,9 @@ This TradeCall was cancelled earlier or closed\n""")
             await thread.edit(name=thread_message)
             tele_random = randint(1, 100)
             if tele_random > 50:
-                forward_message = forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
+                forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
                 random_order_channel = client.get_channel(int(config.RANDOM_ORDER_CHANNEL_ID))
-                random_order_channel.send(forward_message)
+                await random_order_channel.send(random_forward_order_message(message.content, message.id))
             return
 
     if message.channel.id == int(config.COMMAND_CHANNEL_ID):
