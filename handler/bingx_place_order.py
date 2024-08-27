@@ -30,6 +30,7 @@ def h_bingx_order(dbcon, message_id):
     json_ret["error"] = []
     result = dbcon.get_order_detail_by_order(message_id)
     if result is None:
+        logger.info(f"Error [Placing Order]: Order Detail Not found, message id {message_id}")
         json_ret["error"].append("Error [Placing Order]: Order Detail Not found")
         return json_ret
     
