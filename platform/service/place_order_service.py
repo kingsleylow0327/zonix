@@ -3,11 +3,12 @@ import asyncio
 import json
 import datetime
 import math
+import logging
 
-from platform_api.bingx     import BINGX
-from dto.dto_bingx_order    import dtoBingXOrder
-from async_collection       import place_order, get_wallet, order_preset
-from components.calculate_qty import calculate_qty
+from platform_api.bingx                 import BINGX
+from dto.dto_bingx_order                import dtoBingXOrder
+from async_collection                   import place_order, get_wallet, order_preset
+from service.components.calculate_qty   import calculate_qty
 
 maximum_wallet  = 3000
 minimum_wallet  = 300
@@ -25,7 +26,7 @@ def place_order_service(follower_data, coin_pair, result, entry_arr, tp_arr):
     order_id_map = []
     
     # Loop the follower data
-    for follower in follower_data:
+    for follower in follower_data:        
         player_session = BINGX(follower['api_key'], follower['api_secret'])
         
         try:
@@ -82,7 +83,7 @@ def place_order_service(follower_data, coin_pair, result, entry_arr, tp_arr):
                 continue
 
             if order.get("code") != 0 and order.get("code") != 200:
-                err_list["async_place_order_error"].append(f'{follower.get("player_id")} with message: {order.get("msg")}')
+                err_list["async_place_order_error"].append(f'{follower.get("player_id")} [status: {order.get("code")}] with message: {order.get("msg")}')
                 continue
 
             for item in order["data"]["orders"]:

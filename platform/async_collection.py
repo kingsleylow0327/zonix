@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 async def close_all_order(player_session, coin_pair, side=None):
     response = player_session.close_all_order(coin_pair, side)
     

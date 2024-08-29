@@ -8,7 +8,7 @@ def get_follower_data(dbcon, result, platform):
     if result is None:
         error_json["non-order"].append("Order Detail Not found")
         
-        return_json["status_code"] = "400"
+        return_json["status_code"] = 400
         return_json["message"]     = error_json
         
         return return_json
@@ -19,7 +19,7 @@ def get_follower_data(dbcon, result, platform):
     if api_pair_list == None or len(api_pair_list) == 0:
         error_json["api-pair-fail"].append("Both Trader and Follower have not set API, actual order execution skipped")
         
-        return_json["status_code"] = "400"
+        return_json["status_code"] = 400
         return_json["message"]     = error_json
         
         return return_json
@@ -36,7 +36,7 @@ def get_follower_data(dbcon, result, platform):
         for x in api_pair_list
     ]
     
-    return_json["status_code"] = "200"
+    return_json["status_code"] = 200
     return_json["message"]     = follower_data
         
     return return_json

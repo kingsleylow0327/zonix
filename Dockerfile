@@ -15,6 +15,6 @@ EXPOSE 8080
 
 # Run app.py when the container launches
 # Run the Test
-CMD ["python", "test/demo_app.py"]
+# CMD ["python", "temp_app.py"]
 # Run the app (Server)
-# CMD ["python", "app.py"]
+CMD ["python", "app.py"]

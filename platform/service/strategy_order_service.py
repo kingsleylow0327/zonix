@@ -4,10 +4,10 @@ import json
 import datetime
 import math
 
-from platform_api.bingx     import BINGX
-from dto.dto_bingx_order    import dtoBingXOrder
-from async_collection       import place_single_order, get_wallet, order_preset
-from components.calculate_qty import calculate_qty
+from platform_api.bingx                 import BINGX
+from dto.dto_bingx_order                import dtoBingXOrder
+from async_collection                   import place_single_order, get_wallet, order_preset
+from service.components.calculate_qty   import calculate_qty
 
 maximum_wallet  = 3000
 minimum_wallet  = 300

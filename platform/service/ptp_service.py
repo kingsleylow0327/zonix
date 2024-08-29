@@ -10,6 +10,9 @@ from async_collection           import get_all_pending, get_position, place_orde
 
 platform    = "bingx"
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
 def ptp_service(follower_data, coin_pair, coin_info, result):
     
     err_list = {
@@ -24,7 +27,11 @@ def ptp_service(follower_data, coin_pair, coin_info, result):
         player = BINGX(follower["api_key"], follower["api_secret"])
         
         if coin_info == None:
-            coin_info = asyncio.run(get_coin_info(player, coin_pair))
+            try:
+                coin_info = asyncio.run(get_coin_info(player, coin_pair))
+            except Exception as e:
+                err_list["ptp_fail"].append(f'{follower.get("player_id")} having issue: Failed to PTP, please check API and Secret ')
+                continue
             
         d = decimal.Decimal(str(coin_info.get("tradeMinQuantity")))
         d = d.as_tuple().exponent * -1
@@ -85,11 +92,12 @@ def ptp_service(follower_data, coin_pair, coin_info, result):
                 err_list["close_order_error"].append(f'{follower.get("player_id")} with message: {order.get("msg")}')
             
             # Place new TP and SL
-            order_list = []
-            tp_list = [x for x in [result["tp1"], result["tp2"], result["tp3"], result["tp4"]] if x != -1.0]
-            tp_num = len(tp_list)
-            tp_amt = round(half_qty / tp_num, d)
+            order_list  = []
+            tp_list     = [x for x in [result["tp1"], result["tp2"], result["tp3"], result["tp4"]] if x != -1.0]
+            tp_num      = len(tp_list)
+            tp_amt      = round(half_qty / tp_num, d)
             tp_amt_list = []
+            
             for i in range(tp_num):
                 if i == tp_num - 1:
                     tp_amt_list.append(round(half_qty - (tp_amt * (tp_num - 1)), d))
@@ -97,24 +105,23 @@ def ptp_service(follower_data, coin_pair, coin_info, result):
                 tp_amt_list.append(tp_amt)
             
             # Placing stoploss
-            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), result.get("stop"), amt/2)
-            
-            order = asyncio.run(place_single_order(player, bingx_dto.to_json()))
+            bingx_dto   = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), result.get("stop"), amt/2)
+            order       = asyncio.run(place_single_order(player, bingx_dto.to_json()))
             
             if order.get("code") != 0 and order.get("code") != 200:
                 err_list["placing_sl_error"].append(f'{follower.get("player_id")} with message: {order.get("msg")}')
             
             # Placing TP
             for i in range(tp_num):
-                bingx_dto = dtoBingXOrderTPSL(coin_pair, "tp", buy_sell, result.get("long_short"), tp_list[i], tp_amt_list[i])
-                order = asyncio.run(place_single_order(player, bingx_dto.to_json()))
+                bingx_dto   = dtoBingXOrderTPSL(coin_pair, "tp", buy_sell, result.get("long_short"), tp_list[i], tp_amt_list[i])
+                order       = asyncio.run(place_single_order(player, bingx_dto.to_json()))
                 
                 if order.get("code") != 0 and order.get("code") != 200:
                     err_list["placing_tp_error"].append(f'{follower.get("player_id")} with message: {order.get("msg")}')
 
         except Exception as e:
             try:
-                logging.error(traceback.format_exc())
+                logger.error(traceback.format_exc())
             except Exception as e:
                 pass
             err_list["ptp_fail"].append(f'{follower.get("player_id")} having issue: {e} ')

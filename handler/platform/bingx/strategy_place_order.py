@@ -18,7 +18,7 @@ def platform_strategy_order(dbcon, regex_message, message_id):
     wallet_margin           = regex_message['margin'] # damage cost (everyone follower be same margin)
     coin_pair               = regex_message['coin_pair']
     long_short              = regex_message['order_action']
-    entry_price             = regex_message['entry1']
+    entry_price             = regex_message['entry_price']
     stop_loss               = regex_message['stop_lost']
     take_profit             = regex_message['take_profit']
     trailing_stop_price     = regex_message['trailing_stop_price'] 

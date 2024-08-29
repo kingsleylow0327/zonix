@@ -2,7 +2,11 @@ maximum_wallet  = 3000
 minimum_wallet  = 300
 
 def calculate_qty(wallet, entry_price, sl, percentage): 
-    wallet = float(wallet)
+    wallet      = float(wallet)
+    entry_price = float(entry_price)
+    sl          = float(sl)
+    percentage  = float(percentage)  
+    
     if wallet > maximum_wallet:
         wallet = maximum_wallet
     

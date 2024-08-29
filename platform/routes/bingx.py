@@ -8,13 +8,13 @@ from service.strategy_order_service import strategy_order_service
 
 bingx = Blueprint('bingx', __name__, url_prefix='/bingx')
 
-@bingx.route('/', methods=['GET'])
+@bingx.route('/', methods=['GET']) # done
 def index():
     json = {'message' : 'Hello, BingX'}
 
     return jsonify(json)    
 
-@bingx.route('/place_order', methods=['POST'])
+@bingx.route('/place_order', methods=['POST']) # done
 def place_order():
     data = request.json
 
@@ -29,7 +29,7 @@ def place_order():
 
     return jsonify(response)  
 
-@bingx.route('/strategy_place_order', methods=['POST'])
+@bingx.route('/strategy_place_order', methods=['POST']) # done
 def strategy_place_order():
     data = request.json
 
@@ -40,15 +40,7 @@ def strategy_place_order():
 
     return jsonify(response)  
 
-@bingx.route('/take_profit', methods=['POST'])
-def take_profit():
-    data = request.json
-
-    json = {'message' : 'BingX TP'}
-
-    return jsonify(json)
-
-@bingx.route('/partial_take_profit', methods=['POST'])
+@bingx.route('/partial_take_profit', methods=['POST']) # done
 def partial_take_profit():
     data = request.json
     
@@ -61,7 +53,7 @@ def partial_take_profit():
 
     return jsonify(response)
 
-@bingx.route('/safety_pin', methods=['POST'])
+@bingx.route('/safety_pin', methods=['POST']) #done
 def safety_pin():
     data = request.json
     
@@ -73,7 +65,7 @@ def safety_pin():
 
     return jsonify(response)
 
-@bingx.route('/cancel_order', methods=['POST'])
+@bingx.route('/cancel_order', methods=['POST']) # done
 def cancel_order():
     data = request.json
 
