@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - zonix_vol:/app
+    ports:
+      - "8080:8080"
+    networks:
+      - webnet
+
+  platform:
+    build:
+      context: ./platform
+      dockerfile: Dockerfile
+    volumes:
+      - zonix_vol:/platform/app
+    ports:
+      - "5000:5000"
+    networks:
+      - webnet
+
+networks:
+  webnet:
+
+volumes:
+  zonix_vol:
