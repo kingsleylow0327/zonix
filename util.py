@@ -21,3 +21,13 @@ def spilt_discord_message(message_list, dot=False):
     
     ret_list.append(element_str)
     return ret_list
+
+def random_forward_order_message(message, id):
+    final_message = f"""
+## 👉 New Trade Call
+
+{message}
+
+ID : {id}
+"""
+    return final_message

@@ -15,7 +15,7 @@ from logger import Logger
 from random import randint
 from sql_con import ZonixDB
 from telegram_forward.tele_bot import forward_order_to_telegram, forward_update_to_telegram, forward_picture
-from util import spilt_discord_message
+from util import spilt_discord_message, random_forward_order_message
 
 # Import Platform Model
 from handler.platform.bingx             import platform_strategy_order, platform_ptp, platform_sp, platform_place_order, platform_cancel_order, platform_cancel_all
@@ -487,7 +487,7 @@ This TradeCall was cancelled earlier or closed\n""")
             
             if tele_random > 50:
                 forward_order_to_telegram(config, message.content, message.author.display_name, message.id)
-            
+                
             await timerFunc(start_time, thread, 1)    
             
             return
