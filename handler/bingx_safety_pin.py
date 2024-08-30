@@ -40,7 +40,7 @@ def h_bingx_safety_pin(dbcon, order_detail):
             sl_id_list = []
             pending_order = player.get_all_pending(coin_pair)
             for order in pending_order.get("data").get("orders"):
-                if order.get("type") == "STOP" or order.get("type") == "STOP_MARKET":
+                if order.get("positionSide") == result["long_short"] and (order.get("type") == "STOP" or order.get("type") == "STOP_MARKET"):
                     sl_id_list.append(order.get("orderId"))
             order = player.close_order(coin_pair, sl_id_list)
             if order.get("code") != 0 and order.get("code") != 200:
@@ -50,10 +50,21 @@ def h_bingx_safety_pin(dbcon, order_detail):
                 ret_json["error"].append(f'Error [Close order]: {item.get("player_id")} closing order with id: {order.get("data").get("failed")} failed')
 
             # Place new SL
-            position = player.get_position(coin_pair)
-            if len(position.get("data")) != 0:
-                qty = float(position.get("data")[0].get("positionAmt"))
-                entry = float(position.get("data")[0].get("avgPrice"))
+            pos_ret = player.get_position(coin_pair)
+            if pos_ret.get("code") != 0:
+                ret_json["error"].append(f'Error [SP]: {item.get("player_id")} having issue: {pos_ret.get("msg")} ')
+                continue
+            position_list = pos_ret.get("data")
+            if len(position_list) != 0:
+                qty = entry = 0
+                for position in position_list:
+                    if position.get("positionSide") == result["long_short"]:
+                        qty = float(position.get("positionAmt"))
+                        entry = float(position.get("avgPrice"))
+                        break
+                if qty == 0 or entry == 0:
+                    ret_json["error"].append(f'Error [SP]: {item.get("player_id")} didnt hold any position or entry ')
+                    continue
                 bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, qty)
                 order_list.append(bingx_dto.to_json())
                 order = player.place_order(order_list)

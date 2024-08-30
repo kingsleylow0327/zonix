@@ -43,7 +43,7 @@ def h_bingx_ptp(dbcon, order_detail):
             buy_sell = "SELL"
         try:
             # Get current coin's amount
-            amt = 0
+            amt = entry = 0
             pos_ret = player.get_position(coin_pair)
             # If error, skip
             if pos_ret.get("code") != 0:
@@ -53,7 +53,9 @@ def h_bingx_ptp(dbcon, order_detail):
             for position in position_list:
                 if position.get("positionSide") == result["long_short"]:
                     amt = float(position.get("positionAmt"))
-            if amt == 0:
+                    entry = float(position.get("avgPrice"))
+            if amt == 0 or entry == 0:
+                ret_json["error"].append(f'Error [PTP]: {item.get("player_id")} didnt hold any position or entry ')
                 continue
             half_qty = round(amt/2, d)
             # TP half (place order)
@@ -77,7 +79,7 @@ def h_bingx_ptp(dbcon, order_detail):
             pending_order = player.get_all_pending(coin_pair)
             for order in pending_order.get("data").get("orders"):
                 # need to test for 3 tp sl, if not, also need to remove sl
-                if order.get("type") in ["STOP_MARKET", "STOP", "TAKE_PROFIT_MARKET", "TAKE_PROFIT"]:
+                if order.get("positionSide") == result["long_short"] and (order.get("type") in ["STOP_MARKET", "STOP", "TAKE_PROFIT_MARKET", "TAKE_PROFIT"]):
                     tp_id_list.append(order.get("orderId"))
             order = player.close_order(coin_pair, tp_id_list)
             if order.get("code") != 0 and order.get("code") != 200:
@@ -96,7 +98,7 @@ def h_bingx_ptp(dbcon, order_detail):
                 tp_amt_list.append(tp_amt)
             
             # Placing stoploss
-            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), result.get("stop"), amt/2)
+            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, amt/2)
             order = player.place_single_order(bingx_dto.to_json())
             if order.get("code") != 0 and order.get("code") != 200:
                 ret_json["error"].append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')

@@ -184,7 +184,7 @@ async def on_message(message):
                 forward_update_to_telegram("🤑PROFIT🤑", dbcon, config, message.channel.id, message.content)
                 return
 
-            if "take-profit" and "target 1" in message.content.lower():
+            if "take-profit" in message.content.lower() and "target 1" in message.content.lower():
                 # Get Details
                 order_detail = dbcon.get_order_detail_by_order(message.channel.id)
                 player_id = order_detail["player_id"]
