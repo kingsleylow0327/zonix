@@ -41,8 +41,6 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
                      "role": x.get("role"),
                      "player_id": x.get("follower_id"),
                      "damage_cost": int(x.get("damage_cost"))} for x in api_pair_list]
-    logger.info("-----session_list-----")
-    logger.info(session_list)
     coin_pair = order_json.get("coin_pair").strip().replace("/","").replace("-","").upper()
     coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
     current_price = 0
@@ -54,8 +52,6 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     record_dto = None
     
     for player in session_list:
-        logger.info("-----player-----")
-        logger.info(player)
         try:
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
         except:
@@ -67,19 +63,11 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             stop_loss = convert_percent(current_price, order_json.get("stop_loss"), not is_lower)
         if trailing_stop_price == 0:
             trailing_stop_price = convert_percent(current_price, order_json.get("trailing_stop_price"), is_lower)
-        if float(wallet) < minimum_wallet:
-            json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
-            continue
         player["session"].order_preset(coin_pair)
         buy_sell = "BUY"
         if order_json.get("order_action") == "SHORT":
             buy_sell = "SELL"
         order_list = []
-        qty = calculate_qty(wallet,
-                            float(player["session"].get_price(coin_pair).get("data").get("price")),
-                            stop_loss,
-                            float(order_json.get("margin")))
-        qty = math.ceil((qty) * 10000) / 10000
         rate = float(order_json.get("trailing_stop_percentage"))
         rate = rate / 100
         if record_dto == None:
@@ -95,9 +83,14 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             record_dto.order_link_id = order_link_id
             record_dto.entry = current_price
             record_dto.stop = stop_loss
-        logger.info("-----record_dto-----")
-        logger.info(record_dto)
-        logger.info(record_dto != None)
+        if float(wallet) < minimum_wallet:
+            json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
+            continue
+        qty = calculate_qty(wallet,
+                            float(player["session"].get_price(coin_pair).get("data").get("price")),
+                            stop_loss,
+                            float(order_json.get("margin")))
+        qty = math.ceil((qty) * 10000) / 10000
         pos_bingx_dto = dtoBingXOrder(coin_pair,   
                                   "MARKET",
                                   buy_sell,
