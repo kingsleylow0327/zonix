@@ -41,7 +41,8 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
                      "role": x.get("role"),
                      "player_id": x.get("follower_id"),
                      "damage_cost": int(x.get("damage_cost"))} for x in api_pair_list]
-    
+    logger.info("-----session_list-----")
+    logger.info(session_list)
     coin_pair = order_json.get("coin_pair").strip().replace("/","").replace("-","").upper()
     coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
     current_price = 0
@@ -53,6 +54,8 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     record_dto = None
     
     for player in session_list:
+        logger.info("-----player-----")
+        logger.info(player)
         try:
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
         except:
@@ -92,7 +95,9 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             record_dto.order_link_id = order_link_id
             record_dto.entry = current_price
             record_dto.stop = stop_loss
-
+        logger.info("-----record_dto-----")
+        logger.info(record_dto)
+        logger.info(record_dto != None)
         pos_bingx_dto = dtoBingXOrder(coin_pair,   
                                   "MARKET",
                                   buy_sell,
