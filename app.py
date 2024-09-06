@@ -57,11 +57,11 @@ def is_strategy(message):
         r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"               # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
         r"(?P<coin_pair>[A-Za-z]+)\s"                       # Coin Pair - Upper/Lower case characters
         r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"         # Order Action - 'Buy' or 'Sell' enclosed in square brackets
-        r"\$(?P<entry_price>\d+(\.\d+)?)\s"                 # Entry Price, which starts with a '$'
-        r"(?P<stop_loss>-\d+(\.\d+)?%?|-\d+(\.\d+)?)\s"     # Stop Loss - Can be percentage with ends with % or whole value with decimal
+        r"(\$(?P<entry_price>\d+(\.\d+)?))?\s?"                 # Entry Price, which starts with a '$'
+        r"-(?P<stop_loss>\d+(\.\d+)?)%\s"     # Stop Loss - Can be percentage with ends with % or whole value with decimal
         r"(\+(?P<take_profit>\d+(\.\d+)?%?))?\s?"           # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
-        r"/(?P<trailing_stop_price>\d+(\.\d+)?)\s"          # Trailing Stop Price - Starts with '/'
-        r">(?P<trailing_stop_percentage>\d+(\.\d+)?%)$"     # Trailing Stop Percentage - Starts with '>', ends with '%'
+        r"/(?P<trailing_stop_price>\d+(\.\d+)?)%\s"          # Trailing Stop Price - Starts with '/'
+        r">(?P<trailing_stop_percentage>\d+(\.\d+)?)%$"     # Trailing Stop Percentage - Starts with '>', ends with '%'
     )
 
     match = re.match(regex_pattern, message)
@@ -71,40 +71,25 @@ def is_strategy(message):
         wallet_margin = match.group("wallet_margin")
         coin_pair = match.group("coin_pair")
         order_action = match.group("order_action")
-        entry_price = float(match.group("entry_price"))  # Convert to float
-        stop_loss = convert_percentage_value_to_value(entry_price, match.group("stop_loss"))
-        take_profit = convert_percentage_value_to_value(entry_price, match.group("take_profit"))
+        entry_price = float(match.group("entry_price")) if match.group("entry_price") else None # Convert to float
+        # stop_loss = float(convert_percentage_value_to_value(entry_price, match.group("stop_loss")))
+        stop_loss = float(match.group("stop_loss"))
+        # take_profit = convert_percentage_value_to_value(entry_price, match.group("take_profit"))
         trailing_stop_price = float(match.group("trailing_stop_price"))  # Convert to float
         trailing_stop_percentage = match.group("trailing_stop_percentage")
 
         return {
             "strategy": strategy.lower(),
             "margin": wallet_margin,
-            "coin_pair": coin_pair,
+            "coin_pair": coin_pair.upper(),
             "order_action": "LONG" if order_action.upper() == "BUY" else "SHORT",  # Convert to LONG/SHORT
             "entry_price": entry_price,
-            "stop_lost": stop_loss,
-            "take_profit": take_profit,
+            "stop_loss": stop_loss,
+            # "take_profit": take_profit,
             "trailing_stop_price": trailing_stop_price,
             "trailing_stop_percentage": trailing_stop_percentage
         }
     return None
-
-
-def convert_percentage_value_to_value(entry_price, price_to_convert):
-    if not price_to_convert:    # If no value is provided, return None
-        return None
-
-    if '%' in price_to_convert:  # Price in Percentage
-        result = Decimal(entry_price) * (1 + Decimal(price_to_convert.strip('%')) / 100)
-    else:  # Price in Value
-        result = Decimal(price_to_convert)
-
-    result = result.quantize(Decimal('1.0000'), rounding=ROUND_HALF_UP)
-
-    if isinstance(entry_price, Decimal):
-        return result
-    return float(result)
 
 def is_order(message):
     word_list = ['entry', 'tp', '\\bstop\\b(?![a-zA-Z])']
@@ -386,7 +371,7 @@ This TradeCall was cancelled earlier or closed\n""")
             thread_message = f'🔴 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
             thread = await message.create_thread(name=thread_message)
             await thread.send("Order In Progress... \n")
-            ret = h_bingx_strategy_order(dbcon, order)
+            ret = h_bingx_strategy_order(dbcon, order, message.author.id, message.id)
             if ret.get("error") and ret.get("error") != []:
                 await thread.send(f"MsgId - {message.id} having following Error: \n")
                 for error in spilt_discord_message(ret.get("error")):

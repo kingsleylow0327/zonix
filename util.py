@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 MAX_CHAR = 1500 # Max is 2000, 500 char as buffer
 
 def spilt_discord_message(message_list):
@@ -27,3 +29,13 @@ def random_forward_order_message(message, id):
 ID : {id}
 """
     return final_message
+
+def convert_percentage_value_to_value(entry_price, price_to_convert, is_lower=False):
+
+    if is_lower:
+        result = Decimal(entry_price) * (1 - Decimal(price_to_convert) / 100)
+    else:
+        result = Decimal(entry_price) * (1 + Decimal(price_to_convert) / 100)
+    result = result.quantize(Decimal('1.0000'), rounding=ROUND_HALF_UP)
+
+    return float(result)

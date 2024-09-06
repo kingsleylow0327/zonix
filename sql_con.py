@@ -1,5 +1,6 @@
 from mysql.connector import pooling
 from logger import Logger
+from dto.dto_bingx_order_trailing import dtoTrailingOrder
 
 # Logger setup
 logger_mod = Logger("DB")
@@ -60,6 +61,24 @@ class ZonixDB():
         """.format(self.config.PLAYER_ORDER,
                     message_id)
         return self.dbcon_manager(sql)
+    
+    def set_order_detail_strategy(self, dto_bingx_order_trailing:dtoTrailingOrder):
+        dto = dto_bingx_order_trailing
+        sql = f"""INSERT INTO {self.config.ORDER_TABLE}(player_id, message_id, coinpair, long_short, order_link_id, trigger_time, entry1, entry1per, tp1, tp1per, stop)
+        VALUES (
+        '{dto.player_id}', 
+        '{dto.message_id}',
+        '{dto.coin_pair}',
+        '{dto.position_side}',
+        '{dto.order_link_id}',
+        NOW(),
+        '{dto.entry}',
+        '{100}',
+        '{dto.activation_price}',
+        '{100}',
+        '{dto.stop}')
+        """
+        return self.dbcon_manager(sql, get_all=True)
 
     def get_order_detail_by_order(self, order_msg_id):
         sql = """SELECT p.order_msg_id, p.status as p_status, o.* 
