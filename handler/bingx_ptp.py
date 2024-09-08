@@ -98,7 +98,7 @@ def h_bingx_ptp(dbcon, order_detail):
                 tp_amt_list.append(tp_amt)
             
             # Placing stoploss
-            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), entry, amt/2)
+            bingx_dto = dtoBingXOrderTPSL(coin_pair, "sl", buy_sell, result.get("long_short"), result.get("stop"), amt/2)
             order = player.place_single_order(bingx_dto.to_json())
             if order.get("code") != 0 and order.get("code") != 200:
                 ret_json["error"].append(f'Error [Placing SL]: {item.get("player_id")} with message: {order.get("msg")}')
