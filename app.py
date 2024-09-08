@@ -277,7 +277,7 @@ This TradeCall was cancelled earlier or closed\n""")
                     await message.channel.send(error)
                     logger.info(error)
             
-            await message.channel.send(f"PTP Successfull, StopLoss reset(based on original order)\n")
+            await message.channel.send(f"PTP Successfull, SL Price reset(based on original order)\n")
             return
 
         if is_cancel(message.content):
