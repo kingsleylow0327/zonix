@@ -27,29 +27,100 @@ def calculate_qty(wallet, entry_price, sl, percentage):
     qty = order_margin/price_diff 
     return qty
 
+def AtmFunc(player_session, err_array, player_id, order_list):  
+    
+    try:
+        pos_order = player_session.place_order(order_list)
+    except Exception as e:
+        err_array.append(f'Error [Placing Order]: {player_id} with message: {e}')
+        return False
+
+    if pos_order == None:
+        err_array.append(f'Error [Placing Order]: {player_id} server error')
+        return False
+
+    if pos_order.get("code") != 0 and pos_order.get("code") != 200:
+        err_array.append(f'Error [Placing Order]: {player_id} with message: {pos_order.get("msg")}')
+        return False
+    
+    return True
+
+def StrategyFunc(player_session, err_array, player_id, order):
+    
+    try:
+        trailing_order = player_session.place_single_order(order)
+    except Exception as e:
+        err_array.append(f'Error [Placing Trailing Order]: {player_id} with message: {e}')
+        return False
+
+    if trailing_order == None:
+        err_array.append(f'Error [Placing Trailing Order]: {player_id} server error')
+        return False
+
+    if trailing_order.get("code") != 0 and trailing_order.get("code") != 200:
+        err_array.append(f'Error [Placing Trailing Order]: {player_id} with message: {trailing_order.get("msg")}')
+        return False
+    
+    return True
+
+def PlaceOrderFunc(player_session, err_array, player_id, order_list, place_order_type):
+    # place_order_type - 0: position order, 1: trailing order
+    error_label = 'Placing Order' if place_order_type == 0 else 'Placing Trailing Order'
+    
+    try:
+        if place_order_type == 0:
+            place_order = player_session.place_order(order_list)
+        else:
+            place_order = player_session.place_single_order(order_list)
+
+    except Exception as e:
+        err_array.append(f'Error [{error_label}]: {player_id} with message: {e}')
+        return False
+
+    if place_order == None:
+        err_array.append(f'Error [{error_label}]: {player_id} server error')
+        return False
+
+    if place_order.get("code") != 0 and place_order.get("code") != 200:
+        err_array.append(f'Error [{error_label}]: {player_id} with message: {place_order.get("msg")}')
+        return False
+    
+    return True
 
 def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
-    json_ret = {"msg": "Order Placed"}
-    json_ret["error"] = []
+    json_ret            = {"msg": "Order Placed"}
+    json_ret["error"]   = []
     
-    api_pair_list = dbcon.get_followers_api(order_json.get("strategy"), platform)
+    try:
+        strategy            = dbcon.get_strategy_where('name', order_json.get("strategy").lower())
+    except Exception as e:
+        json_ret["error"].append(f"Error [Call Strategy]: {player_id} with message: {e}")
+        return json_ret
+    
+    api_pair_list       = dbcon.get_strategy_follower(strategy.get("id"), platform, order_type=1)
+    
     if api_pair_list == None or len(api_pair_list) == 0:
         json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
         return json_ret
 
-    session_list = [{"session":BINGX(x.get("api_key"), x.get("api_secret")),
-                     "role": x.get("role"),
-                     "player_id": x.get("follower_id"),
-                     "damage_cost": int(x.get("damage_cost"))} for x in api_pair_list]
-    coin_pair = order_json.get("coin_pair").strip().replace("/","").replace("-","").upper()
-    coin_pair = coin_pair[:-4] + "-" + coin_pair[-4:]
-    current_price = 0
-    stop_loss = 0
+    session_list = [{
+        "session"       : BINGX(x.get("api_key"), x.get("api_secret")),
+        "role"          : x.get("role"),
+        "player_id"     : x.get("follower_id"),
+        "damage_cost"   : int(x.get("damage_cost")),
+        "type"          : int(x.get("type")),
+        }for x in api_pair_list
+    ]
+    
+    coin_pair           = order_json.get("coin_pair").strip().replace("/","").replace("-","").upper()
+    coin_pair           = coin_pair[:-4] + "-" + coin_pair[-4:]
+    current_price       = 0
+    stop_loss           = 0
     trailing_stop_price = 0
-    is_lower = order_json.get("order_action") == "SHORT"
-    current_time = datetime.now().strftime('%y%m%d%H%M%S')
-    order_link_id = f"{current_time}-{coin_pair.replace('-', '')}-{str(player_id)[-4:]}"
-    record_dto = None
+    is_lower            = order_json.get("order_action") == "SHORT"
+    current_time        = datetime.now().strftime('%y%m%d%H%M%S')
+    order_link_id       = f"{current_time}-{coin_pair.replace('-', '')}-{str(player_id)[-4:]}"
+    record_dto          = None
     
     for player in session_list:
         try:
@@ -57,6 +128,7 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
         except:
             json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
             continue
+        
         if current_price == 0:
             current_price = float(player["session"].get_price(coin_pair).get("data").get("price"))
         if stop_loss == 0:
@@ -67,78 +139,69 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
         buy_sell = "BUY"
         if order_json.get("order_action") == "SHORT":
             buy_sell = "SELL"
-        order_list = []
-        rate = float(order_json.get("trailing_stop_percentage"))
-        rate = rate / 100
+        
+        order_list  = []
+        rate        = float(order_json.get("trailing_stop_percentage"))
+        rate        = rate / 100
+        
         if record_dto == None:
-            record_dto = dtoTrailingOrder(coin_pair,   
-                                  buy_sell,
-                                  order_json.get("order_action"),
-                                  None,
-                                  rate,
-                                  trailing_stop_price
-                                  )
-            record_dto.player_id = player_id
-            record_dto.message_id = message_id
-            record_dto.order_link_id = order_link_id
-            record_dto.entry = current_price
-            record_dto.stop = stop_loss
+            record_dto                  = dtoTrailingOrder(
+                coin_pair,   
+                buy_sell,
+                order_json.get("order_action"),
+                None,
+                rate,
+                trailing_stop_price
+            )
+            record_dto.player_id        = player_id
+            record_dto.message_id       = message_id
+            record_dto.order_link_id    = order_link_id
+            record_dto.entry            = current_price
+            record_dto.stop             = stop_loss
+        
         if float(wallet) < minimum_wallet:
             json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
             continue
-        qty = calculate_qty(wallet,
-                            float(player["session"].get_price(coin_pair).get("data").get("price")),
-                            stop_loss,
-                            float(order_json.get("margin")))
+        qty = calculate_qty(
+            wallet,
+            float(player["session"].get_price(coin_pair).get("data").get("price")),
+            stop_loss,
+            float(order_json.get("margin"))
+        )
         qty = math.ceil((qty) * 10000) / 10000
-        pos_bingx_dto = dtoBingXOrder(coin_pair,   
-                                  "MARKET",
-                                  buy_sell,
-                                  order_json.get("order_action"),
-                                  order_json.get("entry_price"),
-                                  qty,
-                                  None,
-                                  None,
-                                  stop_loss,
-                                  qty,
-                                  None
-                                  )
-        trailing_bingx_dto = dtoTrailingOrder(coin_pair,   
-                                  buy_sell,
-                                  order_json.get("order_action"),
-                                  qty,
-                                  rate,
-                                  trailing_stop_price
-                                  )
+        
+        # Place Position Order 
+        pos_bingx_dto = dtoBingXOrder(
+            coin_pair,   
+            "MARKET",
+            buy_sell,
+            order_json.get("order_action"),
+            order_json.get("entry_price"),
+            qty,
+            None,
+            None,
+            stop_loss,
+            qty,
+            None
+        )
         order_list.append(pos_bingx_dto.to_json())
-        try:
-            pos_order = player["session"].place_order(order_list)
-        except Exception as e:
-            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
-            continue
-
-        if pos_order == None:
-            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} server error')
-            continue
-
-        if pos_order.get("code") != 0 and pos_order.get("code") != 200:
-            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {pos_order.get("msg")}')
-            continue
-
-        # Place trailing stop loss
-        try:
-            trailing_order = player["session"].place_single_order(trailing_bingx_dto.to_json())
-        except Exception as e:
-            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} with message: {e}')
-            continue
-
-        if trailing_order == None:
-            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} server error')
-            continue
-
-        if trailing_order.get("code") != 0 and trailing_order.get("code") != 200:
-            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} with message: {trailing_order.get("msg")}')
-            continue
-    
-    dbcon.set_order_detail_strategy(record_dto)
+            
+        order_bool = PlaceOrderFunc(player["session"], json_ret["error"], player.get("player_id"), order_list, 0)
+        if order_bool is False: continue
+        
+        # Place Trailing Order
+        trailing_bingx_dto = dtoTrailingOrder(
+            coin_pair,   
+            buy_sell,
+            order_json.get("order_action"),
+            qty,
+            rate,
+            trailing_stop_price
+        )
+            
+        order_bool = PlaceOrderFunc(player["session"], json_ret["error"], player.get("player_id"), trailing_bingx_dto.to_json(), 1)  
+        if order_bool is False: continue
+        
+        dbcon.set_order_detail_strategy(record_dto)
+            
     return json_ret
