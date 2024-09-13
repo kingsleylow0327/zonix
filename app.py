@@ -60,7 +60,7 @@ def is_strategy(message):
         r"(\$(?P<entry_price>\d+(\.\d+)?))?\s?"                 # Entry Price, which starts with a '$'
         r"-(?P<stop_loss>\d+(\.\d+)?)%\s"                       # Stop Loss - Can be percentage with ends with % or whole value with decimal
         r"(\+(?P<take_profit>\d+(\.\d+)?%?))?\s?"               # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
-        r"/(?P<trailing_stop_price>\d+(\.\d+)?)%?\s"            # Trailing Stop Price - Starts with '/'
+        r"/(?P<trailing_stop_price>\d+(\.\d+)?)%\s"            # Trailing Stop Price - Starts with '/'
         r">(?P<trailing_stop_percentage>\d+(\.\d+)?)%$"         # Trailing Stop Percentage - Starts with '>', ends with '%'
     )
 
