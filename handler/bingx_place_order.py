@@ -26,14 +26,14 @@ def calculate_qty(wallet, entry_price, sl, percentage):
 
 
 def h_bingx_order(dbcon, message_id):
-    json_ret = {"msg": "Order Placed"}
+    json_ret = {}
     json_ret["error"] = []
     result = dbcon.get_order_detail_by_order(message_id)
     if result is None:
         logger.info(f"Error [Placing Order]: Order Detail Not found, message id {message_id}")
         json_ret["error"].append("Error [Placing Order]: Order Detail Not found")
         return json_ret
-    
+    json_ret["msg"] = "Order Placed"
     # get api list
     api_pair_list = dbcon.get_followers_api(result["player_id"], platform)
     if api_pair_list == None or len(api_pair_list) == 0:

@@ -130,7 +130,8 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     for player in session_list:
         try:
             wallet = player["session"].get_wallet().get("data").get("balance").get("availableMargin")
-        except:
+        except Exception as e:
+            logger.info(f"Error [Placing Strategy]: Wallet issue: {e}")
             json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Failed to get Wallet, please check API and Secret')
             continue
         
