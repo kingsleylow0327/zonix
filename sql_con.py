@@ -124,16 +124,16 @@ class ZonixDB():
     
     def get_strategy_follower(self, strategy_id, platform, order_type = 1):
         sql = """
-            select follower.follower_id, follower_api.api_key, follower_api.api_secret, follower.player_id as 'strategy_list' 
+            select follower.follower_id, follower_api.api_key, follower_api.api_secret, follower.player_id as 'strategy_list', follower.damage_cost
             from {} as follower_api
             join {} as follower on follower_api.player_id = follower.follower_id
             where follower.type = {}
-            and follower_api.platform = {}
+            and follower_api.platform = '{}'
             and FIND_IN_SET({}, follower.player_id) > 0
         """.format(
             self.config.API_TABLE, self.config.FOLLOWER_TABLE, order_type, platform, strategy_id
         )
-        return self.dbcon_manager(sql)
+        return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):
         giant_string = ", \n".join(["('{}', '{}')".format(message_id, id) for id in order_id_list])
@@ -255,7 +255,7 @@ class ZonixDB():
         sql = """
         Select * from {}
         where deleted_at is null
-        and {} = {}
+        and {} = '{}'
         """.format(
             self.config.STRATEGIES_TABLE, attribute, data
         )

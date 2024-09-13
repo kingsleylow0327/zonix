@@ -52,16 +52,16 @@ def is_strategy(message):
     # Strategy Example: !BETA #10% BTCUSDT [Buy] $60000 -1.5% +3% /62000 >0.5%
     # Strategy Format:  !<Strategy> #<Wallet Margin> <Coin Pair> [Order Action] $<Entry Price> -<Stop Lost> +<Take Profit> /<Trailing Stop Price> ><Trailing Stop Percentage>%
     regex_pattern = re.compile(
-        r"^!"                                               # Start with an exclamation mark.
-        r"(?P<strategy>[A-Za-z]+)\s"                        # Strategy
-        r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"               # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
-        r"(?P<coin_pair>[A-Za-z]+)\s"                       # Coin Pair - Upper/Lower case characters
-        r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"         # Order Action - 'Buy' or 'Sell' enclosed in square brackets
+        r"^!"                                                   # Start with an exclamation mark.
+        r"(?P<strategy>[A-Za-z]\w+(\d+)?)\s"                    # Strategy
+        r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"                  # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
+        r"(?P<coin_pair>[A-Za-z]+)\s"                           # Coin Pair - Upper/Lower case characters
+        r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"             # Order Action - 'Buy' or 'Sell' enclosed in square brackets
         r"(\$(?P<entry_price>\d+(\.\d+)?))?\s?"                 # Entry Price, which starts with a '$'
-        r"-(?P<stop_loss>\d+(\.\d+)?)%\s"     # Stop Loss - Can be percentage with ends with % or whole value with decimal
-        r"(\+(?P<take_profit>\d+(\.\d+)?%?))?\s?"           # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
-        r"/(?P<trailing_stop_price>\d+(\.\d+)?)%\s"          # Trailing Stop Price - Starts with '/'
-        r">(?P<trailing_stop_percentage>\d+(\.\d+)?)%$"     # Trailing Stop Percentage - Starts with '>', ends with '%'
+        r"-(?P<stop_loss>\d+(\.\d+)?)%\s"                       # Stop Loss - Can be percentage with ends with % or whole value with decimal
+        r"(\+(?P<take_profit>\d+(\.\d+)?%?))?\s?"               # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
+        r"/(?P<trailing_stop_price>\d+(\.\d+)?)%?\s"            # Trailing Stop Price - Starts with '/'
+        r">(?P<trailing_stop_percentage>\d+(\.\d+)?)%$"         # Trailing Stop Percentage - Starts with '>', ends with '%'
     )
 
     match = re.match(regex_pattern, message)
@@ -377,8 +377,17 @@ This TradeCall was cancelled earlier or closed\n""")
                 for error in spilt_discord_message(ret.get("error")):
                     await thread.send(error)
                     logger.info(error)
-            await thread.send("Order SUCCESSFUL ✅ \n")
-            thread_message = f'🟢 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
+                    
+                if ret.get("status") and ret.get("status") == 400:
+                    await thread.send("Order Skipped ❌ \n")
+                else:
+                    await thread.send("Order SUCCESSFUL ✅ \n")
+                    thread_message = f'🟡 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
+            
+            else:
+                await thread.send("Order SUCCESSFUL ✅ \n")
+                thread_message = f'🟢 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'
+            
             await thread.edit(name=thread_message, archived=True)
 
         if is_order(message.content): 

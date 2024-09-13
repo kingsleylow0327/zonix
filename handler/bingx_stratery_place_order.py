@@ -93,6 +93,12 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     
     try:
         strategy            = dbcon.get_strategy_where('name', order_json.get("strategy").lower())
+        
+        if strategy == None or len(strategy) == 0:
+            json_ret["error"].append("Error [Call Strategy]: Strategy was not existed")
+            json_ret["status"] = 400
+            return json_ret
+        
     except Exception as e:
         json_ret["error"].append(f"Error [Call Strategy]: {player_id} with message: {e}")
         return json_ret
@@ -100,15 +106,14 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     api_pair_list       = dbcon.get_strategy_follower(strategy.get("id"), platform, order_type=1)
     
     if api_pair_list == None or len(api_pair_list) == 0:
-        json_ret["error"].append("Warning [Placing Order]: Both Trader and Follower have not set API, actual order execution skipped")
+        json_ret["error"].append("Error [Placing Order]: Not follower following this strategy, actual order execution skipped")
+        json_ret["status"] = 400
         return json_ret
 
     session_list = [{
         "session"       : BINGX(x.get("api_key"), x.get("api_secret")),
-        "role"          : x.get("role"),
         "player_id"     : x.get("follower_id"),
         "damage_cost"   : int(x.get("damage_cost")),
-        "type"          : int(x.get("type")),
         }for x in api_pair_list
     ]
     
