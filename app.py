@@ -53,7 +53,7 @@ def is_strategy(message):
     # Strategy Format:  !<Strategy> #<Wallet Margin> <Coin Pair> [Order Action] $<Entry Price> -<Stop Lost> +<Take Profit> /<Trailing Stop Price> ><Trailing Stop Percentage>%
     regex_pattern = re.compile(
         r"^!"                                                   # Start with an exclamation mark.
-        r"(?P<strategy>[A-Za-z]\w+(\d+)?)\s"                    # Strategy
+        r"(?P<strategy>[A-Za-z0-9]+)\s"                         # Strategy
         r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"                  # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
         r"(?P<coin_pair>[A-Za-z]+)\s"                           # Coin Pair - Upper/Lower case characters
         r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"             # Order Action - 'Buy' or 'Sell' enclosed in square brackets

@@ -27,42 +27,6 @@ def calculate_qty(wallet, entry_price, sl, percentage):
     qty = order_margin/price_diff 
     return qty
 
-def AtmFunc(player_session, err_array, player_id, order_list):  
-    
-    try:
-        pos_order = player_session.place_order(order_list)
-    except Exception as e:
-        err_array.append(f'Error [Placing Order]: {player_id} with message: {e}')
-        return False
-
-    if pos_order == None:
-        err_array.append(f'Error [Placing Order]: {player_id} server error')
-        return False
-
-    if pos_order.get("code") != 0 and pos_order.get("code") != 200:
-        err_array.append(f'Error [Placing Order]: {player_id} with message: {pos_order.get("msg")}')
-        return False
-    
-    return True
-
-def StrategyFunc(player_session, err_array, player_id, order):
-    
-    try:
-        trailing_order = player_session.place_single_order(order)
-    except Exception as e:
-        err_array.append(f'Error [Placing Trailing Order]: {player_id} with message: {e}')
-        return False
-
-    if trailing_order == None:
-        err_array.append(f'Error [Placing Trailing Order]: {player_id} server error')
-        return False
-
-    if trailing_order.get("code") != 0 and trailing_order.get("code") != 200:
-        err_array.append(f'Error [Placing Trailing Order]: {player_id} with message: {trailing_order.get("msg")}')
-        return False
-    
-    return True
-
 def PlaceOrderFunc(player_session, err_array, player_id, order_list, place_order_type):
     # place_order_type - 0: position order, 1: trailing order
     error_label = 'Placing Order' if place_order_type == 0 else 'Placing Trailing Order'
