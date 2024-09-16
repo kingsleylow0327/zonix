@@ -38,4 +38,3 @@ class Config():
         self.TELEGRAM_CHANNEL=os.getenv('TELEGRAM_CHANNEL')
         self.TELEGRAM_PNL_TOPIC=os.getenv('TELEGRAM_PNL_TOPIC')
         self.TELEGRAM_TRADECALL_TOPIC=os.getenv('TELEGRAM_TRADECALL_TOPIC')
-        
