@@ -379,7 +379,7 @@ This TradeCall was cancelled earlier or closed\n""")
                     logger.info(error)
                     
                 if ret.get("status") and ret.get("status") == 400:
-                    await thread.send("Order Skipped ❌ \n")
+                    await thread.send("Order skipped ❌ due to not registered strategy \n")
                 else:
                     await thread.send("Order SUCCESSFUL ✅ \n")
                     thread_message = f'🟡 {cur_date} -- {order.get("coin_pair")} {order.get("coin_pair")}'

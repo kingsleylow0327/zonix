@@ -241,5 +241,3 @@ class ZonixDB():
 
     def close_cursor(self):
         self.cursor.close()
-    
-    
