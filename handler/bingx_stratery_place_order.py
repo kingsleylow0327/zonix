@@ -118,6 +118,14 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             qty,
             None
         )
+        trailing_bingx_dto = dtoTrailingOrder(
+            coin_pair,   
+            buy_sell,
+            order_json.get("order_action"),
+            qty,
+            rate,
+            trailing_stop_price
+        )
         order_list.append(pos_bingx_dto.to_json())
         
         try:
@@ -134,16 +142,7 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {pos_order.get("msg")}')
             continue
         
-        # Place Trailing Order
-        trailing_bingx_dto = dtoTrailingOrder(
-            coin_pair,   
-            buy_sell,
-            order_json.get("order_action"),
-            qty,
-            rate,
-            trailing_stop_price
-        )
-            
+        # Place trailing stop loss    
         try:
             trailing_order = player["session"].place_single_order(trailing_bingx_dto.to_json())
         except Exception as e:
