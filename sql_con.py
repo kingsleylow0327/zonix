@@ -242,25 +242,4 @@ class ZonixDB():
     def close_cursor(self):
         self.cursor.close()
     
-    def get_all_strategies(self):
-        sql = """
-        Select id, name from {}
-        where deleted_at is null
-        """.format(
-            self.config.STRATEGY_TABLE
-        )
-        
-        return self.dbcon_manager(sql, get_all=True)
-    
-    def get_strategy_where(self, attribute, data):
-        sql = """
-        Select * from {}
-        where deleted_at is null
-        and {} = '{}'
-        """.format(
-            self.config.STRATEGY_TABLE, attribute, data
-        )
-        
-        return self.dbcon_manager(sql)
-    
     
