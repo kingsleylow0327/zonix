@@ -158,6 +158,6 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} with message: {trailing_order.get("msg")}')
             continue
 
-        dbcon.set_order_detail_strategy(record_dto)
+    dbcon.set_order_detail_strategy(record_dto)
             
     return json_ret
