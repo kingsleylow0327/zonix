@@ -27,50 +27,14 @@ def calculate_qty(wallet, entry_price, sl, percentage):
     qty = order_margin/price_diff 
     return qty
 
-def PlaceOrderFunc(player_session, err_array, player_id, order_list, place_order_type):
-    # place_order_type - 0: position order, 1: trailing order
-    error_label = 'Placing Order' if place_order_type == 0 else 'Placing Trailing Order'
-    
-    try:
-        if place_order_type == 0:
-            place_order = player_session.place_order(order_list)
-        else:
-            place_order = player_session.place_single_order(order_list)
-
-    except Exception as e:
-        err_array.append(f'Error [{error_label}]: {player_id} with message: {e}')
-        return False
-
-    if place_order == None:
-        err_array.append(f'Error [{error_label}]: {player_id} server error')
-        return False
-
-    if place_order.get("code") != 0 and place_order.get("code") != 200:
-        err_array.append(f'Error [{error_label}]: {player_id} with message: {place_order.get("msg")}')
-        return False
-    
-    return True
-
 def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     json_ret            = {"msg": "Order Placed"}
     json_ret["error"]   = []
     
-    try:
-        strategy            = dbcon.get_strategy_where('name', order_json.get("strategy").lower())
-        
-        if strategy == None or len(strategy) == 0:
-            json_ret["error"].append("Error [Call Strategy]: Strategy was not existed")
-            json_ret["status"] = 400
-            return json_ret
-        
-    except Exception as e:
-        json_ret["error"].append(f"Error [Call Strategy]: {player_id} with message: {e}")
-        return json_ret
-    
-    api_pair_list       = dbcon.get_strategy_follower(strategy.get("id"), platform, order_type=1)
+    api_pair_list       = dbcon.get_strategy_follower(order_json.get("strategy").lower(), platform)
     
     if api_pair_list == None or len(api_pair_list) == 0:
-        json_ret["error"].append("Error [Placing Order]: Not follower following this strategy, actual order execution skipped")
+        json_ret["error"].append("Error [Call Strategy]: Strategy was not existed")
         json_ret["status"] = 400
         return json_ret
 
@@ -155,9 +119,20 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             None
         )
         order_list.append(pos_bingx_dto.to_json())
-            
-        order_bool = PlaceOrderFunc(player["session"], json_ret["error"], player.get("player_id"), order_list, 0)
-        if order_bool is False: continue
+        
+        try:
+            pos_order = player["session"].place_order(order_list)
+        except Exception as e:
+            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {e}')
+            continue
+
+        if pos_order == None:
+            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} server error')
+            continue
+
+        if pos_order.get("code") != 0 and pos_order.get("code") != 200:
+            json_ret["error"].append(f'Error [Placing Order]: {player.get("player_id")} with message: {pos_order.get("msg")}')
+            continue
         
         # Place Trailing Order
         trailing_bingx_dto = dtoTrailingOrder(
@@ -169,9 +144,20 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
             trailing_stop_price
         )
             
-        order_bool = PlaceOrderFunc(player["session"], json_ret["error"], player.get("player_id"), trailing_bingx_dto.to_json(), 1)  
-        if order_bool is False: continue
-        
+        try:
+            trailing_order = player["session"].place_single_order(trailing_bingx_dto.to_json())
+        except Exception as e:
+            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} with message: {e}')
+            continue
+
+        if trailing_order == None:
+            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} server error')
+            continue
+
+        if trailing_order.get("code") != 0 and trailing_order.get("code") != 200:
+            json_ret["error"].append(f'Error [Placing Trailing Order]: {player.get("player_id")} with message: {trailing_order.get("msg")}')
+            continue
+
         dbcon.set_order_detail_strategy(record_dto)
             
     return json_ret

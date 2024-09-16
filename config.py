@@ -30,6 +30,7 @@ class Config():
         self.PLAYER_FOLLOWER_TABLE=os.getenv('PLAYER_FOLLOWER_TABLE')
         self.CLEINT_ORDER_ID_TABLE=os.getenv('CLEINT_ORDER_ID_TABLE')
         self.GROUP_TRADER_TABLE=os.getenv('GROUP_TRADER_TABLE')
+        self.STRATEGY_TABLE = os.getenv('STRATEGY_TABLE')
         self.SERVER_IP=os.getenv('SERVER_IP')
         self.POOL_SIZE=os.getenv('POOL_SIZE')
         self.IS_TEST=os.getenv('IS_TEST')
@@ -37,7 +38,4 @@ class Config():
         self.TELEGRAM_CHANNEL=os.getenv('TELEGRAM_CHANNEL')
         self.TELEGRAM_PNL_TOPIC=os.getenv('TELEGRAM_PNL_TOPIC')
         self.TELEGRAM_TRADECALL_TOPIC=os.getenv('TELEGRAM_TRADECALL_TOPIC')
-        
-        # Ks Added
-        self.STRATEGIES_TABLE = "strategies"
         

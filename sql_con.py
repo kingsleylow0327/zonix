@@ -107,32 +107,33 @@ class ZonixDB():
         """.format(self.config.API_TABLE, player_id)
         return self.dbcon_manager(sql, get_all=True)
 
-    def get_followers_api(self, player_id, platform, order_type = 0):
+    def get_followers_api(self, player_id, platform):
         sql = """SELECT f.player_id, a.player_id as follower_id, a.api_key, a.api_secret, IF(f.player_id=follower_id,'player','') as role, f.damage_cost
         FROM {} as a
         Left JOIN {} as f
         ON f.follower_id = a.player_id
         where f.player_id = ifnull((select group_name from {} where discord_id = '{}' limit 1),'{}')
         and a.platform = '{}'
-        and f.type = {}
+        and f.type = 'atm'
         and
         (a.expiry_date is null
         or
         a.expiry_date > now())
-        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, self.config.GROUP_TRADER_TABLE, player_id, player_id, platform, order_type)
+        order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, self.config.GROUP_TRADER_TABLE, player_id, player_id, platform)
         return self.dbcon_manager(sql, get_all=True)
     
-    def get_strategy_follower(self, strategy_id, platform, order_type = 1):
-        sql = """
-            select follower.follower_id, follower_api.api_key, follower_api.api_secret, follower.player_id as 'strategy_list', follower.damage_cost
-            from {} as follower_api
-            join {} as follower on follower_api.player_id = follower.follower_id
-            where follower.type = {}
-            and follower_api.platform = '{}'
-            and FIND_IN_SET({}, follower.player_id) > 0
-        """.format(
-            self.config.API_TABLE, self.config.FOLLOWER_TABLE, order_type, platform, strategy_id
-        )
+    def get_strategy_follower(self, strategy_name, platform):
+        sql = f"""
+            select follower.follower_id, follower_api.api_key, follower_api.api_secret, follower.player_id as 'strategy_list', follower.damage_cost, strategy.id as 'strategy_id', strategy.name as 'strategy_name'
+            from {self.config.API_TABLE} as follower_api
+            join {self.config.FOLLOWER_TABLE} as follower on follower_api.player_id = follower.follower_id
+            join {self.config.STRATEGY_TABLE} as strategy on strategy.name = '{strategy_name}'
+            where follower.type = 'strategy'
+            and follower_api.platform = '{platform}'
+            and strategy.deleted_at is null
+            and FIND_IN_SET(strategy.id, follower.player_id) > 0
+        """
+        
         return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):
@@ -199,12 +200,12 @@ class ZonixDB():
         """.format(self.config.API_TABLE)
         return self.dbcon_manager(sql, get_all=True)
     
-    def get_follow_to(self, follower_id, order_type = 0):
+    def get_follow_to(self, follower_id):
         sql = """SELECT * FROM {}
         where follower_id != player_id
         and follower_id = '{}'
-        and type = {}
-        """.format(self.config.FOLLOWER_TABLE, follower_id, order_type)
+        and type = 'atm'
+        """.format(self.config.FOLLOWER_TABLE, follower_id)
         return self.dbcon_manager(sql, get_all=True)
     
     def is_admin(self, player_id):
@@ -246,7 +247,7 @@ class ZonixDB():
         Select id, name from {}
         where deleted_at is null
         """.format(
-            self.config.STRATEGIES_TABLE
+            self.config.STRATEGY_TABLE
         )
         
         return self.dbcon_manager(sql, get_all=True)
@@ -257,7 +258,7 @@ class ZonixDB():
         where deleted_at is null
         and {} = '{}'
         """.format(
-            self.config.STRATEGIES_TABLE, attribute, data
+            self.config.STRATEGY_TABLE, attribute, data
         )
         
         return self.dbcon_manager(sql)
