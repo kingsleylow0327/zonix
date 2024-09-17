@@ -114,11 +114,26 @@ class ZonixDB():
         ON f.follower_id = a.player_id
         where f.player_id = ifnull((select group_name from {} where discord_id = '{}' limit 1),'{}')
         and a.platform = '{}'
+        and f.type = 'atm'
         and
         (a.expiry_date is null
         or
         a.expiry_date > now())
         order by role DESC""".format(self.config.API_TABLE, self.config.FOLLOWER_TABLE, self.config.GROUP_TRADER_TABLE, player_id, player_id, platform)
+        return self.dbcon_manager(sql, get_all=True)
+    
+    def get_strategy_follower(self, strategy_name, platform):
+        sql = f"""
+            select follower.follower_id, follower_api.api_key, follower_api.api_secret, follower.player_id as 'strategy_list', follower.damage_cost, strategy.id as 'strategy_id', strategy.name as 'strategy_name'
+            from {self.config.API_TABLE} as follower_api
+            join {self.config.FOLLOWER_TABLE} as follower on follower_api.player_id = follower.follower_id
+            join {self.config.STRATEGY_TABLE} as strategy on strategy.name = '{strategy_name}'
+            where follower.type = 'strategy'
+            and follower_api.platform = '{platform}'
+            and strategy.deleted_at is null
+            and FIND_IN_SET(strategy.id, follower.player_id) > 0
+        """
+        
         return self.dbcon_manager(sql, get_all=True)
     
     def set_message_player_order(self, message_id, order_id_list):
@@ -188,8 +203,8 @@ class ZonixDB():
     def get_follow_to(self, follower_id):
         sql = """SELECT * FROM {}
         where follower_id != player_id
-        and
-        follower_id = '{}'
+        and follower_id = '{}'
+        and type = 'atm'
         """.format(self.config.FOLLOWER_TABLE, follower_id)
         return self.dbcon_manager(sql, get_all=True)
     
