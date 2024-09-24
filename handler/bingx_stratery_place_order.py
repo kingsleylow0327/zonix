@@ -8,23 +8,20 @@ import math
 import json
 
 # Logger setup
-logger_mod = Logger("Place Order")
-logger = logger_mod.get_logger()
-maximum_wallet = 3000
-minimum_wallet = 300
-platform = "bingx"
+logger_mod      = Logger("Place Order")
+logger          = logger_mod.get_logger()
+maximum_wallet  = 3000
+minimum_wallet  = 300
+platform        = "bingx"
 
-def calculate_qty(wallet, entry_price, sl, percentage):
+def calculate_qty(wallet, entry_price, percentage, leverage):
     wallet = float(wallet)
     if wallet > maximum_wallet:
         wallet = maximum_wallet
     
-    price_diff = entry_price - sl
-    if price_diff < 0:
-        price_diff *= -1
+    order_margin    = wallet * percentage/100
+    qty             = order_margin/entry_price * leverage
     
-    order_margin = wallet * percentage/100
-    qty = order_margin/price_diff 
     return qty
 
 def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
@@ -96,11 +93,16 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
         if float(wallet) < minimum_wallet:
             json_ret["error"].append(f'Error [Wallet]: {player.get("player_id")} with message: Wallet Amount is lesser than {minimum_wallet}')
             continue
+        
+        # Calculate Margin
+        # Confirm will have the damage cost, this function juz prevent accident
+        margin =  player.get("damage_cost") or order_json.get("margin")
+        
         qty = calculate_qty(
             wallet,
             float(player["session"].get_price(coin_pair).get("data").get("price")),
-            stop_loss,
-            float(order_json.get("margin"))
+            float(margin),
+            float(player['session'].get_leverage(coin_pair)['data']['maxLongLeverage'])
         )
         qty = math.ceil((qty) * 10000) / 10000
         
