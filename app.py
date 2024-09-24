@@ -54,7 +54,7 @@ def is_strategy(message):
     regex_pattern = re.compile(
         r"^!"                                                   # Start with an exclamation mark.
         r"(?P<strategy>[A-Za-z0-9]+)\s"                         # Strategy
-        r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"                  # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
+        r"(#(?P<wallet_margin>\d+(\.\d+)?)%)?\s?"               # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
         r"(?P<coin_pair>[A-Za-z]+)\s"                           # Coin Pair - Upper/Lower case characters
         r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"             # Order Action - 'Buy' or 'Sell' enclosed in square brackets
         r"(\$(?P<entry_price>\d+(\.\d+)?))?\s?"                 # Entry Price, which starts with a '$'
@@ -80,7 +80,7 @@ def is_strategy(message):
 
         return {
             "strategy": strategy.lower(),
-            "margin": wallet_margin,
+            "margin": wallet_margin or 5, # Default 5% or follow regex
             "coin_pair": coin_pair.upper(),
             "order_action": "LONG" if order_action.upper() == "BUY" else "SHORT",  # Convert to LONG/SHORT
             "entry_price": entry_price,
