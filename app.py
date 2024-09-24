@@ -35,7 +35,7 @@ config = Config()
 dbcon = ZonixDB(config)
 CHANNEL = None
 SENDER_CHANNEL_LIST = None
-MAX_TRIES = 2
+MAX_TRIES = 3
 ws_list = {}
 # player_api_list = dbcon.get_all_player()
 # logger.info("Creating player websocket, Number: {}".format(len(player_api_list)))
@@ -404,7 +404,7 @@ This TradeCall was cancelled earlier or closed\n""")
             # Place Actual Order
             await thread.send("Order In Progress... \n")
             for i in range(MAX_TRIES):
-                await asyncio.sleep(2)
+                await asyncio.sleep(3)
                 # ret = h_place_order(dbcon, message.id)
                 ret = h_bingx_order(dbcon, message.id)
                 if ret.get("msg") == "Order Placed" or ret == "Order Placed (NR)":
