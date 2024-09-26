@@ -56,7 +56,7 @@ def is_strategy(message):
         r"(?P<strategy>[A-Za-z0-9]+)\s"                         # Strategy
         r"#(?P<wallet_margin>\d+(\.\d+)?)%\s?"                  # Wallet Margin - starts with a '#', one or more digits, ending with a '%'.
         r"(?P<coin_pair>[A-Za-z]+)\s"                           # Coin Pair - Upper/Lower case characters
-        r"\[(?P<order_action>([Bb]uy|[Ss]ell))\]\s"             # Order Action - 'Buy' or 'Sell' enclosed in square brackets
+        r"(?i)\[(?P<order_action>(long|short))\]\s"             # Order Action - 'Buy' or 'Sell' enclosed in square brackets
         r"(\$(?P<entry_price>\d+(\.\d+)?))?\s?"                 # Entry Price, which starts with a '$'
         r"-(?P<stop_loss>\d+(\.\d+)?)%\s"                       # Stop Loss - Can be percentage with ends with % or whole value with decimal
         r"(\+(?P<take_profit>\d+(\.\d+)?%?))?\s?"               # Take profit (Optional) - Can be percentage with ends with % or whole value with decimal
@@ -82,7 +82,7 @@ def is_strategy(message):
             "strategy": strategy.lower(),
             "margin": wallet_margin,
             "coin_pair": coin_pair.upper(),
-            "order_action": "LONG" if order_action.upper() == "BUY" else "SHORT",  # Convert to LONG/SHORT
+            "order_action": order_action.upper(),  # Convert to LONG/SHORT
             "entry_price": entry_price,
             "stop_loss": stop_loss,
             # "take_profit": take_profit,

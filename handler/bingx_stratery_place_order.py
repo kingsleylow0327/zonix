@@ -47,6 +47,7 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
     current_price       = 0
     stop_loss           = 0
     trailing_stop_price = 0
+    leverage            = 0
     is_lower            = order_json.get("order_action") == "SHORT"
     current_time        = datetime.now().strftime('%y%m%d%H%M%S')
     order_link_id       = f"{current_time}-{coin_pair.replace('-', '')}-{str(player_id)[-4:]}"
@@ -97,12 +98,13 @@ def h_bingx_strategy_order(dbcon, order_json, player_id, message_id):
         # Calculate Margin
         # Confirm will have the damage cost, this function juz prevent accident
         margin =  player.get("damage_cost") or order_json.get("margin")
-        
+        if leverage == 0:
+            leverage = player['session'].get_leverage(coin_pair).get("data").get('maxLongLeverage')
         qty = calculate_qty(
             wallet,
             float(player["session"].get_price(coin_pair).get("data").get("price")),
             float(margin),
-            float(player['session'].get_leverage(coin_pair)['data']['maxLongLeverage'])
+            float(leverage)
         )
         qty = math.ceil((qty) * 10000) / 10000
         
