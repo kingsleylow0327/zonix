@@ -131,7 +131,7 @@ class ZonixDB():
             where follower.type = 'strategy'
             and follower_api.platform = '{platform}'
             and strategy.deleted_at is null
-            and FIND_IN_SET(strategy.id, follower.player_id) > 0
+            and FIND_IN_SET(strategy.id, REPLACE(follower.player_id, ' ', '')) > 0
         """
         
         return self.dbcon_manager(sql, get_all=True)
